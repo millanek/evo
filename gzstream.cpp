@@ -32,7 +32,7 @@
 // Standard C++ Library".
 // ============================================================================
 
-#ifdef __cplus
+
 #include "gzstream.h"
 #include <iostream>
 #include <string.h>  // for memcpy
@@ -166,7 +166,6 @@ namespace GZSTREAM_NAMESPACE {
     
 #ifdef GZSTREAM_NAMESPACE
 } // namespace GZSTREAM_NAMESPACE
-#endif
 #endif
 // ============================================================================
 // EOF //

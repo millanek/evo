@@ -35,15 +35,13 @@
 
 #ifndef GZSTREAM_H
 #define GZSTREAM_H 1
-#ifdef __cplus
 // standard C++ with new header file names and std:: namespace
 #include <iostream>
 #include <fstream>
 #include <zlib.h>
 
-#ifdef GZSTREAM_NAMESPACE
-namespace GZSTREAM_NAMESPACE {
-#endif
+
+
     
     // ----------------------------------------------------------------------------
     // Internal classes to implement gzstream. See below for user classes.
@@ -117,11 +115,7 @@ namespace GZSTREAM_NAMESPACE {
             gzstreambase::open( name, open_mode);
         }
     };
-    
-#ifdef GZSTREAM_NAMESPACE
-} // namespace GZSTREAM_NAMESPACE
-#endif
-#endif
+
 #endif // GZSTREAM_H
 // ============================================================================
 // EOF //

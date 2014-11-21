@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include "zreaderDaniel.h"
+#include "gzstream.h"
 #include "process_vcf_utils.h"
 
 
@@ -66,12 +67,15 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         }
         std::vector<std::string> genotypeData = split(fields[i], ':');
         
-        if (atoi(genotypeData[2].c_str()) < thisVariantCounts.minimumDepthInAnIndividual) {
-            thisVariantCounts.minimumDepthInAnIndividual = atoi(genotypeData[2].c_str());
+        if (genotypeData.size() >= 3) {
+            if (atoi(genotypeData[2].c_str()) < thisVariantCounts.minimumDepthInAnIndividual) {
+                thisVariantCounts.minimumDepthInAnIndividual = atoi(genotypeData[2].c_str());
+            }
+            // read depth at the variant site per individual
+            thisVariantCounts.depthPerIndividual.push_back(atoi(genotypeData[2].c_str()));
+        } else {
+            thisVariantCounts.depthPerIndividual.push_back(999);
         }
-        // read depth at the variant site per individual
-        thisVariantCounts.depthPerIndividual.push_back(atoi(genotypeData[2].c_str()));
-        
     }
     // Also get overall depth for this variant
     std::vector<std::string> info = split(fields[7], ';');
@@ -349,6 +353,16 @@ void assertFileOpen(std::ifstream& fh, const std::string& fn)
     }
 }
 
+//
+void assertGZOpen(gzstreambase& gh, const std::string& fn)
+{
+    if(!gh.good())
+    {
+        std::cerr << "Error: could not open " << fn << std::endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
 // Open a file that may or may not be gzipped for reading
 // The caller is responsible for freeing the handle
 std::istream* createReader(const std::string& filename)
@@ -366,6 +380,25 @@ std::istream* createReader(const std::string& filename)
         return pReader;
     }
 }
+
+// Open a file that may or may not be gzipped for reading
+// The caller is responsible for freeing the handle
+std::istream* createReader(const std::string& filename, std::ios_base::openmode mode)
+{
+    if(isGzip(filename))
+    {
+        igzstream* pGZ = new igzstream(filename.c_str(), mode);
+        assertGZOpen(*pGZ, filename);
+        return pGZ;
+    }
+    else
+    {
+        std::ifstream* pReader = new std::ifstream(filename.c_str(), mode);
+        assertFileOpen(*pReader, filename);
+        return pReader;
+    }
+}
+
 
 
 void print80bpPerLineStdOut(std::ostream& outStream, string toPrint) {
