@@ -31,6 +31,8 @@
 #include "process_vcf_get_aa_seq.h"
 #include "process_vcf_fill_aa.h"
 #include "process_vcf_join_multiFasta.h"
+#include "process_vcf_shortRNA.h"
+#include "process_vcf_linkGeneNames.h"
 
 
 //#define TESTING 1
@@ -67,11 +69,13 @@ static const char *USAGE_MESSAGE =
 " Various utils:    \n"
 "           aa-seq              Final steps in generating an ancestral sequence from a multiple alignment (.maf)\n"
 "           aa-fill             Adding the AA (ancestral allele) info field to a VCF (only for SNPs), given an ancestral sequence from aa-seq\n"
+"           linkGeneNames                                                                   \n"
 "           map                 Use a genetic map to link scaffolds in an assembly\n"
 "           merge               Merge two VCF files containing the same variants but different samples\n"
 "           reorder             Shuffle columns in a vcf file\n"
 "           fixed-search        Search for fixed (and nearly fixed) variants between two (arbitrary) sets of samples\n"
 "           fst                 Calculating Fst values from VCF, ms simulations, or summarising eigensoft output\n"
+"           smallRNA            Generate a distribution showing read lengths and the starting nucleotide for a smallRNA library\n"
 "           multi-fasta         A utility tool for dealing with a multi-fasta file (e.g. join all sequences)\n"
 "           statsTest           Testing statistical routines in development\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
@@ -99,6 +103,8 @@ int main(int argc, char **argv) {
         
         if(command == "filter")
             filterMain(argc - 1, argv + 1);
+        else if(command == "linkGeneNames")
+            linkGNMain(argc - 1, argv + 1);
         else if(command == "abba-baba")
             abbaBabaMain(argc - 1, argv + 1);
         else if(command == "aa-seq")
@@ -133,6 +139,8 @@ int main(int argc, char **argv) {
             fixedSearchMain(argc - 1, argv + 1);
         else if(command == "sex-search")
             sexSearchMain(argc - 1, argv + 1);
+        else if(command == "smallRNA")
+            shortRNAMain(argc - 1, argv + 1);
         else if (command == "getMtSeq")
             getMtSeqMain(argc - 1, argv + 1);
         else if (command == "statsTest")

@@ -35,6 +35,7 @@ public:
     int minimumDepthInAnIndividual;
     int overallDepth;
     std::vector<int> individualsWithVariant;
+    std::vector<int> depthPerIndividual;
 };
 
 class SingleSetCounts {
@@ -124,7 +125,7 @@ public:
     std::vector<int> homsWithYellow;
 };
 
-// Converting numbers (int, double, size_t) to string
+// Converting numbers (int, double, size_t, and char) to string
 template <typename T> std::string numToString(T i) {
     std::string ret;
     std::stringstream out;

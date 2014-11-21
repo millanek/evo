@@ -69,6 +69,8 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         if (atoi(genotypeData[2].c_str()) < thisVariantCounts.minimumDepthInAnIndividual) {
             thisVariantCounts.minimumDepthInAnIndividual = atoi(genotypeData[2].c_str());
         }
+        // read depth at the variant site per individual
+        thisVariantCounts.depthPerIndividual.push_back(atoi(genotypeData[2].c_str()));
         
     }
     // Also get overall depth for this variant

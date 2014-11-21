@@ -27,8 +27,12 @@ static const char *FST_USAGE_MESSAGE =
 "                                               (default: sample ids from the vcf file are used)\n"
 "       -w SIZE,STEP --window=SIZE,STEP         (optional) sliding window based computation of Fst, Dxy, and  expected heterozygosity\n"
 "                                               windows contain SIZE SNPs and move by STEP\n"
+"       --ancSets=ANCESTRAL_SAMPLE_SETS.txt     (optional)two sets of samples the form outgroup populations to the two populations for which Fst is calculated\n"
+"                                               for particular Fst levels outputs whether the SNPs are segregating in the outgroups\n"
 "       --annot=ANNOTATION.gffExtract           (optional)gene annotation in the same format as for the 'getCodingSeq' subprogram\n"
 "                                               outputs the location of SNPs with particular Fst levels with respect to exons, introns, UTRs, non-coding regions\n\n"
+"       --regions-above=minFst                  (optional, requires -w) outputs the boundaries of regions whose Fst in windows of size set in -w is at least minFst\n"
+"                                               the output file has the suffix '_fst_above_minFst.txt'\n"
 "       To calculate Fst statistics from ms simulation output:\n"
 "       --ms=MS_OUTPUT.txt                      (required)\n"
 "       --set1msSimSize=NUM                     (required) set 1 (population 1) was simulated with size NUM in ms\n"
@@ -43,14 +47,16 @@ static const char *FST_USAGE_MESSAGE =
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_HELP = 1, OPT_VCF, OPT_SETS, OPT_ANNOT, OPT_MS, OPT_EIGEN, OPT_MS_SET1_SIZE, OPT_MS_SET1_SAMPLE, OPT_MS_SET2_SIZE, OPT_MS_SET2_SAMPLE, OPT_MS_PVALS  };
+enum { OPT_HELP = 1, OPT_VCF, OPT_SETS, OPT_ANNOT, OPT_MS, OPT_EIGEN, OPT_MS_SET1_SIZE, OPT_MS_SET1_SAMPLE, OPT_MS_SET2_SIZE, OPT_MS_SET2_SAMPLE, OPT_MS_PVALS, OPT_ANC_SETS, OPT_REG_ABOVE  };
 
 static const char* shortopts = "hn:s:w:";
 
 static const struct option longopts[] = {
     { "vcf",   required_argument, NULL, OPT_VCF },
     { "sets",   required_argument, NULL, OPT_SETS },
+    { "ancSets",   required_argument, NULL, OPT_ANC_SETS },
     { "window",   required_argument, NULL, 'w' },
+    { "regions-above", required_argument, NULL, OPT_REG_ABOVE },
     { "annot",   required_argument, NULL, OPT_ANNOT },
     { "ms",   required_argument, NULL, OPT_MS },
     { "set1msSimSize",   required_argument, NULL, OPT_MS_SET1_SIZE },
@@ -69,9 +75,11 @@ namespace opt
 {
     static string vcfFile;
     static string sampleSets;
+    static string ancSets;
     static string sampleNameFile;
     static int windowSize = 0;
     static int windowStep = 0;
+    static double regAbove = 0;
     static string annotFile;
     static string eigensoftFile;
     static string msFile;
@@ -145,6 +153,7 @@ double calculateFst(const std::vector<double>& fstNumerators, const std::vector<
     double numeratorAverage = vector_average(fstNumerators);
     double denominatorAverage = vector_average(fstDenominators);
     double Fst = numeratorAverage/denominatorAverage;
+    if (Fst < 0) Fst = 0;
     return Fst;
 }
 
@@ -172,6 +181,9 @@ void getFstFromVCF() {
     std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
     std::ifstream* annotFile;
     std::ofstream* snpCategoryFstFile;
+    std::ofstream* regionsAboveFstFile; bool inRegAbove = false;
+    std::ifstream* ancSetsFile; std::ofstream* ancSetsOutFile;
+    std::vector<string> ancSet1; std::vector<string> ancSet2;
     Annotation wgAnnotation;
     if (!opt::annotFile.empty()) {
         annotFile = new std::ifstream(opt::annotFile.c_str());
@@ -181,6 +193,23 @@ void getFstFromVCF() {
         snpCategoryFstFile = new std::ofstream(snpCategoryFstFileName.c_str());
         *snpCategoryFstFile << "SNPcategory" << "\t" << "thisSNPFst" << "\t" << "thisSNPDxy" << "\t" << "scaffold" << "\t" << "position" << std::endl;
     }
+    if (!opt::ancSets.empty()) {
+        ancSetsFile = new std::ifstream(opt::ancSets);
+        string ancOutFileName = fileRoot + "_" + opt::runName + "ancestralSNPs_fst.txt";
+        ancSetsOutFile = new std::ofstream(ancOutFileName);
+        *ancSetsOutFile << "scaffold" << "\t" << "position" << "\t" << "AncAllelePopulation" << "\t" << "Fst" << "\t" << "ancSet1_segregating" << "\t" << "ancSet2_segregating" << std::endl;
+        string ancSet1String; string ancSet2String;
+        getline(*ancSetsFile, ancSet1String);
+        getline(*ancSetsFile, ancSet2String);
+        ancSet1 = split(ancSet1String, ','); ancSet2 = split(ancSet2String, ',');
+        std::sort(ancSet1.begin(),ancSet1.end()); std::sort(ancSet2.begin(),ancSet2.end());
+    }
+    
+    if (opt::regAbove > 0) {
+        string regionsAboveFstFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst_above" + numToString(opt::regAbove) + ".txt";
+        regionsAboveFstFile = new std::ofstream(regionsAboveFstFileName.c_str());
+    }
+    
     string FstResultsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
@@ -199,11 +228,12 @@ void getFstFromVCF() {
     int totalVariantNumber = 0;
     int countedVariantNumber = 0;
     string windowMiddleVariant = "first\tWindow";
+    string windowStartEnd = "scaffold_0\t0";
     std::vector<string> sampleNames;
     std::vector<string> fields;
-    std::vector<size_t> set1Loci;
-    std::vector<size_t> set2Loci;
-    short n1; short n2;
+    std::vector<size_t> set1Loci; std::vector<size_t> set2Loci;
+    std::vector<size_t> ancSet1Loci; std::vector<size_t> ancSet2Loci;
+    short n1; short n2; short n1anc; short n2anc;
     string line;
     std::map<std::string, double> loc_pval;
     std::vector<double> fstNumerators; fstNumerators.reserve(30000000);
@@ -232,15 +262,30 @@ void getFstFromVCF() {
             }
             set1Loci = locateSet(sampleNames, set1);
             set2Loci = locateSet(sampleNames, set2);
-            
+            n1 = set1Loci.size()*2; n2 = set2Loci.size()*2;
             std::cerr << "Set1 loci: " << std::endl;
             print_vector_stream(set1Loci, std::cerr);
             std::cerr << "Set2 loci: " << std::endl;
             print_vector_stream(set2Loci, std::cerr);
-            n1 = set1Loci.size()*2;
-            n2 = set2Loci.size()*2;
+            
+            if (!opt::ancSets.empty()) {
+                ancSet1Loci = locateSet(sampleNames, ancSet1);
+                ancSet2Loci = locateSet(sampleNames, ancSet2);
+                std::cerr << "Ancestral Set1 loci: " << std::endl;
+                print_vector_stream(ancSet1Loci, std::cerr);
+                std::cerr << "Ancestral Set2 loci: " << std::endl;
+                print_vector_stream(ancSet2Loci, std::cerr);
+                n1anc = ancSet1Loci.size() * 2; n2anc = ancSet2Loci.size() * 2;
+            }
+            
             if (opt::windowSize > 0) {
-                *pHetSets << "Middle_SNP_position" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << std::endl;
+                if (opt::windowSize == opt::windowStep) {
+                    *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << std::endl;
+                    *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "windowSize" << std::endl;
+                    if (opt::regAbove > 0) *regionsAboveFstFile << "scaffold" << "\t" << "Start" << "\t" << "End" << std::endl;
+                } else {
+                    *pHetSets << "Middle_SNP_position" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << std::endl;
+                }
             }
         } else {
             totalVariantNumber++;
@@ -264,13 +309,61 @@ void getFstFromVCF() {
                         double thisSNPFst = FstNumerator/FstDenominator;
                         *snpCategoryFstFile << SNPcategory << "\t" << thisSNPFst << "\t" << thisSNPDxy << "\t" << scaffold << "\t" << loc << std::endl;
                     }
-                    if ((opt::windowSize > 0) && (countedVariantNumber % opt::windowStep == 0) && countedVariantNumber >= opt::windowSize) {
+                    if (!opt::ancSets.empty()) {
+                        double thisSNPFst = FstNumerator/FstDenominator;
+                        if (thisSNPFst < 0) { thisSNPFst = 0; }
+                        string AA = split(info[info.size()-1],'=')[1];
+                        //std::cerr << "AA=" << " " << AA << std::endl;
+                        FourSetCounts c;
+                        if (AA == fields[3]) {
+                            c = getFourSetVariantCounts(fields,set1Loci,set2Loci,ancSet1Loci,ancSet2Loci,"ref");
+                            *ancSetsOutFile << fields[0] << "\t" << fields[1] << "\t" << c.set1daAF-c.set2daAF << "\t" << thisSNPFst << "\t";
+                            if (c.set3daAF > 0 & c.set3daAF < 1) { *ancSetsOutFile << "1" << "\t"; } else { *ancSetsOutFile << "0" << "\t"; }
+                            if (c.set4daAF > 0 & c.set4daAF < 1) { *ancSetsOutFile << "1" << std::endl; } else { *ancSetsOutFile << "0" << std::endl; }
+                        } else if (AA == fields[4]) {
+                            c = getFourSetVariantCounts(fields,set1Loci,set2Loci,ancSet1Loci,ancSet2Loci,"alt");
+                            *ancSetsOutFile << fields[0] << "\t" << fields[1] << "\t" << c.set1daAF-c.set2daAF << "\t" << thisSNPFst << "\t";
+                            if (c.set3daAF > 0 & c.set3daAF < 1) { *ancSetsOutFile << "1" << "\t"; } else { *ancSetsOutFile << "0" << "\t"; }
+                            if (c.set4daAF > 0 & c.set4daAF < 1) { *ancSetsOutFile << "1" << std::endl; } else { *ancSetsOutFile << "0" << std::endl; }
+                            // std::cerr << "AA=alt" << " " << c.set1daAF << " " << c.set2daAF << std::endl;
+                        } else {
+                            c = getFourSetVariantCounts(fields,set1Loci,set2Loci,ancSet1Loci,ancSet2Loci,"N");
+                            *ancSetsOutFile << fields[0] << "\t" << fields[1] << "\t" << "-888" << "\t" << thisSNPFst << "\t";
+                            if (c.set3AltAF > 0 & c.set3AltAF < 1) { *ancSetsOutFile << "1" << "\t"; } else { *ancSetsOutFile << "0" << "\t"; }
+                            if (c.set4AltAF > 0 & c.set4AltAF < 1) { *ancSetsOutFile << "1" << std::endl; } else { *ancSetsOutFile << "0" << std::endl; }
+                        }
+                        
+                        
+                    }
+                    if (opt::windowSize == 1) {
+                        double Fst = FstNumerator/FstDenominator;
+                        if (Fst < 0) Fst = 0;
+                        *pFst << countedVariantNumber << "\t" << fields[0] + "\t" + fields[1] << "\t" << Fst << "\t" << thisSNPDxy << std::endl;
+                        
+                    } else if ((opt::windowSize > 0) && (countedVariantNumber % opt::windowStep == 0) && countedVariantNumber >= opt::windowSize) {
                         std::vector<double> windowFstNumerators(fstNumerators.end()-opt::windowSize, fstNumerators.end());
                         std::vector<double> windowFstDenominators(fstDenominators.end()-opt::windowSize, fstDenominators.end());
-                        double windowFst = calculateFst(windowFstNumerators, windowFstDenominators);
+                        double windowFst = calculateFst(windowFstNumerators, windowFstDenominators); if (windowFst < 0) windowFst = 0;
                         std::vector<double> windowDxyVec(DxyVector.end()-opt::windowSize, DxyVector.end());
                         double windowDxy = vector_average(windowDxyVec);
-                        *pFst << countedVariantNumber-opt::windowSize+1 << "\t" << windowMiddleVariant << "\t" << windowFst << "\t" << windowDxy << "\t" << windowFstDenominators.size() << std::endl;
+                        if (opt::windowSize == opt::windowStep) {
+                            std::vector<string> s = split(windowStartEnd, '\t');
+                            if (s[0] == fields[0]) {
+                                windowStartEnd = windowStartEnd + "\t" + fields[1];
+                                *pFst << countedVariantNumber-opt::windowSize+1 << "\t" << windowStartEnd << "\t" << windowFst << "\t" << windowDxy << "\t" << windowFstDenominators.size() << std::endl;
+                                if (opt::regAbove > 0) {
+                                    if (windowFst >= opt::regAbove && !inRegAbove) {
+                                        inRegAbove = true;
+                                        *regionsAboveFstFile << s[0] << "\t" << s[1] << "\t";
+                                    } else if (windowFst < opt::regAbove && inRegAbove) {
+                                        inRegAbove = false;
+                                        *regionsAboveFstFile << s[1] << std::endl;
+                                    }
+                                }
+                            }
+                        } else {
+                            *pFst << countedVariantNumber-opt::windowSize+1 << "\t" << windowMiddleVariant << "\t" << windowFst << "\t" << windowDxy << "\t" << windowFstDenominators.size() << std::endl;
+                        }
                         // Now calculate and output expected heterozygosities for this window
                         std::vector<double> windowHetS1Vec(set1heterozygositiesSimple.end()-opt::windowSize, set1heterozygositiesSimple.end());
                         double windowHetS1 = vector_average(windowHetS1Vec);
@@ -280,8 +373,18 @@ void getFstFromVCF() {
                         double windowHetNei1 = vector_average(windowHetNei1Vec);
                         std::vector<double> windowHetNei2Vec(set2heterozygositiesNei.end()-opt::windowSize, set2heterozygositiesNei.end());
                         double windowHetNei2 = vector_average(windowHetNei2Vec);
-                        *pHetSets << windowMiddleVariant << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;
-                        windowMiddleVariant = fields[0] + "\t" + fields[1];     // works only if STEP is half SIZE for the window
+                        if (opt::windowSize == opt::windowStep) {
+                            std::vector<string> s = split(windowStartEnd, '\t');
+                            if (s[0] == fields[0]) {
+                                *pHetSets << windowStartEnd << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;
+                                windowStartEnd = fields[0] + "\t" + fields[1];
+                            } else {
+                                windowStartEnd = fields[0] + "\t0";
+                            }
+                        } else {
+                            *pHetSets << windowMiddleVariant << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;
+                            windowMiddleVariant = fields[0] + "\t" + fields[1];     // works only if STEP is half SIZE for the window
+                        }
                     }
                 }
             }
@@ -313,7 +416,7 @@ void getFstFromMs() {
     std::ofstream* pValFile;
     if (opt::msPvalCutoff > 0) {
         pValFile = new std::ofstream(PvalFileName.c_str());
-        *pValFile << "Fisher p-val" << "\t" << "chi-sq pval" << "\t" << "set1Alt" << "\t" << "set1Ref" << "\t" << "set2Alt" << "\t" << "set2Ref" << std::endl;
+        *pValFile << "Fisher p-val" << "\t" << "chi-sq pval" << "\t" << "set1Alt" << "\t" << "set1Ref" << "\t" << "set2Alt" << "\t" << "set2Ref" << "\t" << "Fst" << std::endl;
     }
     
     
@@ -353,6 +456,10 @@ void getFstFromMs() {
     std::cerr << "Selected population 1 individuals: "; print_vector_stream(set1_loci, std::cerr);
     std::cerr << "Selected population 2 individuals: "; print_vector_stream(set2_loci, std::cerr);
     
+    if (opt::msSet1Size != opt::msSet1FstSample || opt::msSet2Size != opt::msSet2FstSample) {
+        std::cerr << "Warning: the Fst column is going to contain '-1' values where the site is not a segregating site in the sampled individuals for Fst calcultation" << std::endl;
+    }
+    
     std::vector<double> fstNumerators; fstNumerators.reserve(500000000);
     std::vector<double> fstDenominators; fstDenominators.reserve(500000000);
     
@@ -367,6 +474,7 @@ void getFstFromMs() {
     std::vector<int> lessSet2;
     while (getline(*msFile, line)) {
         SetCounts counts;
+        double thisFst = -1;
         for (std::vector<int>::iterator it = set1_loci.begin(); it != set1_loci.end(); it++) {
             // std::cerr << line[*it] << std::endl;
             if (line[*it] == '1') {
@@ -380,8 +488,12 @@ void getFstFromMs() {
         }
         
         if (counts.set1Count > 0 || counts.set2Count > 0) {
-            fstNumerators.push_back(calculateFstNumerator(counts, opt::msSet1FstSample, opt::msSet2FstSample));
-            fstDenominators.push_back(calculateFstDenominator(counts, opt::msSet1FstSample, opt::msSet2FstSample));
+            double FstNum = calculateFstNumerator(counts, opt::msSet1FstSample, opt::msSet2FstSample);
+            double FstDenom = calculateFstDenominator(counts, opt::msSet1FstSample, opt::msSet2FstSample);
+            thisFst = FstNum/FstDenom; if (thisFst < 0) thisFst = 0;
+            fstNumerators.push_back(FstNum);
+            fstDenominators.push_back(FstDenom);
+            
         }
         
         if ((counts.set1Count == 0 && counts.set2Count == opt::msSet2FstSample) || (counts.set1Count == opt::msSet1FstSample && counts.set2Count == 0)) {
@@ -420,7 +532,7 @@ void getFstFromMs() {
         }
         
         if (counts.fisher_pval < opt::msPvalCutoff || counts.chi_sq_pval < opt::msPvalCutoff) {
-            *pValFile << counts.fisher_pval << "\t" << counts.chi_sq_pval << "\t" << counts.set1Count << "\t" << set1WithoutVariant << "\t" << counts.set2Count << "\t" << set2WithoutVariant << std::endl;
+            *pValFile << counts.fisher_pval << "\t" << counts.chi_sq_pval << "\t" << counts.set1Count << "\t" << set1WithoutVariant << "\t" << counts.set2Count << "\t" << set2WithoutVariant << "\t" << thisFst << std::endl;
         }
     }
     
@@ -527,11 +639,13 @@ void parseFstOptions(int argc, char** argv) {
         {
             case OPT_VCF: arg >> opt::vcfFile; break;
             case OPT_SETS: arg >> opt::sampleSets; break;
+            case OPT_ANC_SETS: arg >> opt::ancSets; break;
             case 'w':
                 windowSizeStep = split(arg.str(), ',');
                 opt::windowSize = atoi(windowSizeStep[0].c_str());
                 opt::windowStep = atoi(windowSizeStep[1].c_str());
                 break;
+            case OPT_REG_ABOVE: arg >> opt::regAbove; break;
             case OPT_ANNOT: arg >> opt::annotFile; break;
             case OPT_MS: arg >> opt::msFile; break;
             case OPT_EIGEN: arg >> opt::eigensoftFile; break;
@@ -565,6 +679,12 @@ void parseFstOptions(int argc, char** argv) {
     
     if (opt::msPvalCutoff > 1) {
         std::cerr << "The pvalue cutoff cannot be more than one...\n";
+        die = true;
+    }
+    
+    if (opt::regAbove > 0 && opt::windowSize == 0) {
+        std::cerr << "The window size (-w option) needs to be set for --regions-above option to work (you can set -w 1,1 for per variant Fst)\n";
+        die = true;
     }
     
     

@@ -181,7 +181,20 @@ inline double fisher_exact(int a, int b, int c, int d) {
             double thisP = fisher_exactTable(i,r1-i,m-i,r2-(m-i));
             allPvals.push_back(thisP);
         }
+    } else if (m == r2) {
+        for (int i = 0; i <= m; i++) {
+            double thisP = fisher_exactTable(c1-(m-i),c2-i,m-i,i);
+            allPvals.push_back(thisP);
+        }
+    } else if (m == r1){
+        for (int i = 0; i <= m; i++) {
+            double thisP = fisher_exactTable(m-i,i,c1-(m-i),c2-i);
+            allPvals.push_back(thisP);
+        }
     } else {
+        std::cerr << "a: " << a << " b: " << b << std::endl;
+        std::cerr << "c: " << c << " d: " << d << std::endl;
+        std::cerr << "m: " << m << " c1: " << c1 << " c2: " << c2 << " r1: " << r1 << " r2: " << r2 << std::endl;
         assert(false);
     }
     
@@ -192,6 +205,12 @@ inline double fisher_exact(int a, int b, int c, int d) {
             p += allPvals[i];
         }
     }
+    /*if (m == r2) {
+        std::cerr << "a: " << a << " b: " << b << std::endl;
+        std::cerr << "c: " << c << " d: " << d << std::endl;
+        std::cerr << "p: " << p << std::endl;
+    } */
+    
 //    std::cerr << "this pval:" << thisTablePval << std::endl;
 //    print_vector_stream(allPvals, std::cerr);
     return p;

@@ -114,7 +114,7 @@ int getSeqMain(int argc, char** argv) {
             // Initialize vectors
             scaffoldStrings.resize(numSamples);
             for (std::vector<string>::size_type i = 0; i != scaffoldStrings.size(); i++) {
-                scaffoldStrings[i].reserve(100000000);
+                scaffoldStrings[i].reserve(30000000);
                 scaffoldStrings[i] = "";
             }
             
@@ -213,8 +213,7 @@ int getSeqMain(int argc, char** argv) {
                     //std::cerr << "Going through genotypes1:" << i << std::endl;
                     //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
                     std::vector<string> genotypeFields = split(fields[i], ':');
-                    // Unphased vcf
-                    std::vector<string> genotype = split(genotypeFields[0], '/');
+                    std::vector<string> genotype; genotype.push_back(numToString(genotypeFields[0][0])); genotype.push_back(numToString(genotypeFields[0][2]));
                     if (opt::bLDhat) {
                         for (int j = 0; j != ((atoi(fields[1].c_str()) - 1)-inStrPos); j++) {
                             scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");

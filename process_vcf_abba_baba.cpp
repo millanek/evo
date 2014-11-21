@@ -25,18 +25,25 @@ static const char *ABBA_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       -f, --frequency                         use allele frequency data instead of single sequences for each of (P1,P2,P3,O)\n"
 "       --AAeqO                                 ancestral allele infor in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
+"       -w SIZE, --window=SIZE                  (optional) output D statistics for nonoverlapping windows containing SIZE SNPs with nonzero D (default: 50)\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   (optional) supply a file of sample identifiers\n"
 "                                               (default: sample ids from the vcf file are used)\n"
+"       -n, --run-name                          run-name will be included in the output file name\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 
 enum { OPT_AA_EQ_O };
 
-static const char* shortopts = "hs:f";
+static const char* shortopts = "hs:fw:n:";
+
+static const int JACKKNIVE_WINDOW_SIZE_FREQUENCY = 5000;
+static const int JACKKNIVE_WINDOW_SIZE_SEQUENCE = 2000;
 
 static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
+    { "run-name",   required_argument, NULL, 'n' },
+    { "window",   required_argument, NULL, 'w' },
     { "AAeqO",   no_argument, NULL, OPT_AA_EQ_O },
     { "frequency",   no_argument, NULL, 'f' },
     { "help",   no_argument, NULL, 'h' },
@@ -48,116 +55,119 @@ namespace opt
     static string vcfFile;
     static string setsFile;
     static string sampleNameFile;
+    static string runName = "";
     static bool bFrequency = false;
     static bool bAaEqO = false;
     static int minScLength = 0;
+    static int windowSize = 50;
+    int jackKniveWindowSize = JACKKNIVE_WINDOW_SIZE_SEQUENCE;
 }
 
+namespace ABBABABAcounts {
+    int AABA = 0;
+    int XXAA = 0;
+    int BBBA = 0;
+    int XXBA = 0;
+    int ABBA = 0;
+    int BABA = 0;
+    int indels = 0;
+    int noDafInfo = 0;
+    int usedVariantsCounter = 0;
+    // int ABBABABA = 0;
+}
 
-void singleSequence() {
-    string line; // for reading the input files
-    
-    std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
-    std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
-    
-    //
-    string outgroup; size_t Opos; if (!opt::bAaEqO) { getline(*setsFile, outgroup); } else { outgroup = "VCF AA field"; }
-    string P3; getline(*setsFile, P3); size_t P3pos;
-    string P2; getline(*setsFile, P2); size_t P2pos;
-    string P1; getline(*setsFile, P1); size_t P1pos;
-    
-    // Now go through the vcf and find the ABBA and BABA sites
-    int totalVariantNumber = 0;
-    int ABBA = 0; int BABA = 0; int XXBA = 0;
-    int Dnumerator = 0; int Ddenominator = 0;
-    std::vector<string> sampleNames;
-    while (getline(*vcfFile, line)) {
-        if (line[0] == '#' && line[1] == '#')
-            continue;
-        else if (line[0] == '#' && line[1] == 'C') {
-            std::vector<std::string> fields = split(line, '\t');
-            if (opt::sampleNameFile.empty()) {
-                for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-                    sampleNames.push_back(fields[i]);
-                }
-            } else {
-                sampleNames = readSampleNamesFromTextFile(opt::sampleNameFile);
-            }
-            if (opt::bAaEqO) { Opos = locateOneSample(sampleNames, outgroup); } else { Opos = 1000; }
-            P3pos = locateOneSample(sampleNames, P3);
-            P2pos = locateOneSample(sampleNames, P2); P1pos = locateOneSample(sampleNames, P1);
-            
-            
-            if (! opt::bAaEqO) { assert(fields[Opos+NUM_NON_GENOTYPE_COLUMNS] == outgroup); std::cerr << "Outgroup: " << outgroup << " Pos: " << Opos << std::endl; }
-            else { std::cerr << "Outgroup: " << outgroup << std::endl; }
-            assert(fields[P3pos+NUM_NON_GENOTYPE_COLUMNS] == P3); std::cerr << "P3: " << P3 << " Pos: " << P3pos << std::endl;
-            assert(fields[P2pos+NUM_NON_GENOTYPE_COLUMNS] == P2); std::cerr << "P2: " << P2 << " Pos: " << P2pos << std::endl;
-            assert(fields[P1pos+NUM_NON_GENOTYPE_COLUMNS] == P1); std::cerr << "P1: " << P1 << " Pos: " << P1pos << std::endl;
-        } else {
-            totalVariantNumber++;
-            std::vector<std::string> fields = split(line, '\t');
-            std::vector<std::string> info = split(fields[7], ';');
-            if (info[0] != "INDEL") {
-                string AA = split(info[info.size()-1],'=')[1];
-                if ((AA == fields[3]) &&
-                    (fields[Opos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "0/0") && (fields[P3pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "1/1")) {
-                    XXBA++;
-                    //
-                    if ((fields[P2pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "1/1") && (fields[P1pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "0/0")) {
-                        ABBA++; Ddenominator++; Dnumerator++;
-                    }
-                    // BABA
-                    if ((fields[P2pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "0/0") && (fields[P1pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "1/1")) {
-                        BABA++; Ddenominator++; Dnumerator--;
-                    }
-                }
-                if ((AA == fields[4]) &&
-                    (fields[Opos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "1/1") && (fields[P3pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "0/0")) {
-                    XXBA++;
-                    // ABBA
-                    if ((fields[P2pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "0/0") && (fields[P1pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "1/1")) {
-                        ABBA++; Ddenominator++; Dnumerator++;
-                    }
-                    // BABA
-                    if ((fields[P2pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "1/1") && (fields[P1pos+NUM_NON_GENOTYPE_COLUMNS].substr(0,3) == "0/0")) {
-                        BABA++; Ddenominator++; Dnumerator--;
-                    }
-                }
-            } else {
-                // Ignoring INDELS for now
-            }
-            if (totalVariantNumber % 100000 == 0) {
-                std::cerr << totalVariantNumber << " variants processed. XXBA=" << XXBA << "; ABBA=" << ABBA << "; BABA=" << BABA << "; D=" << (double)Dnumerator/Ddenominator << std::endl;
+inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, double& Dnumerator, double& Ddenominator,double& lastVarsDnum, double& lastVarsDdenom,double& windowDnum, double& windowDdenom) {
+    if (c.set1daAF == -1) {
+        ABBABABAcounts::noDafInfo++;
+    } else if (c.set3daAF == 0) {
+        ABBABABAcounts::XXAA++;
+    } else if (c.set1daAF == 0 && c.set2daAF == 0) {
+        ABBABABAcounts::AABA++;
+    } else if (c.set1daAF == 1 && c.set2daAF == 1) {
+        ABBABABAcounts::BBBA++;
+    } else {
+        ABBABABAcounts::usedVariantsCounter++;
+        // Green et al. (2010) eq. S15.2
+        
+        double thisDnumerator = ((1-c.set1daAF)*c.set2daAF*c.set3daAF) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
+        double thisDdenominator = ((1-c.set1daAF)*c.set2daAF*c.set3daAF) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
+        Dnumerator += thisDnumerator; lastVarsDnum += thisDnumerator; windowDnum += thisDnumerator;
+        Ddenominator += thisDdenominator; lastVarsDdenom += thisDdenominator; windowDdenom += thisDdenominator;
+        if (thisDdenominator == 0) {
+            std::cerr << "P1:" << c.set1daAF << " P2:" << c.set2daAF << " P3:" << c.set3daAF << std::endl;
+        }
+        assert(thisDdenominator != 0);
+    }
+}
+
+inline int sample01(const double& p1) {
+    double r = rand() / (RAND_MAX + 1.0f);
+    return r > p1;
+}
+
+inline void incrementDnumDdenomSingleSequence(ThreeSetCounts& c, double& Dnumerator, double& Ddenominator,double& lastVarsDnum, double& lastVarsDdenom,double& windowDnum, double& windowDdenom) {
+    if (c.set1daAF == -1) {
+        ABBABABAcounts::noDafInfo++;
+    } else if (c.set3daAF == 0) {
+        ABBABABAcounts::XXAA++;
+    } else {
+        if (c.set3daAF == 0.5) { c.set3daAF = sample01(0.5); } // If hets then randomly sample one of the alleles
+        if (c.set2daAF == 0.5) { c.set2daAF = sample01(0.5); }
+        if (c.set1daAF == 0.5) { c.set1daAF = sample01(0.5); }
+        
+        if (c.set3daAF == 1) {
+            ABBABABAcounts::XXBA++;
+            // Green et al. (2010) eq. S15.1
+            if (c.set1daAF == 0 && c.set2daAF == 1) {
+                ABBABABAcounts::ABBA++; ABBABABAcounts::usedVariantsCounter++;
+                Ddenominator++; Dnumerator++; lastVarsDdenom++; lastVarsDnum++; windowDdenom++; windowDnum++;
+            } else if (c.set1daAF == 1 && c.set2daAF == 0) {
+                ABBABABAcounts::BABA++; ABBABABAcounts::usedVariantsCounter++;
+                Ddenominator++; Dnumerator--; lastVarsDdenom++; lastVarsDnum--; windowDdenom++; windowDnum--;
             }
         }
     }
-    // Final summary
-    // double totalAAfilled = aaRefCount + aaAltCount + aaDashCount + aaDiffCount;
-    std::cerr << std::endl;
-    std::cerr << totalVariantNumber << " variants processed. ABBA=" << ABBA << "; BABA=" << BABA << "; D=" << (double)Dnumerator/Ddenominator << std::endl;
-    // std::cerr << "All " << totalVariantNumber << " variants processed. AA=Ref:" << aaRefCount << "("<< 100*(aaRefCount/totalAAfilled) <<"%); AA=Alt:" << aaAltCount << "("<< 100*(aaAltCount/totalAAfilled) <<"%); AA='-':" << aaDashCount << "("<< 100*(aaDashCount/totalAAfilled) << "%); AA=?(Neither Ref nor Alt):" << aaDiffCount << "("<< 100*(aaDiffCount/totalAAfilled) <<"%)" << std::endl;
+}
+
+inline std::string getAAfromInfo(const std::vector<std::string>& info) {
+    string AA = "?";
+    for (std::vector<std::string>::size_type i = 0; i != info.size(); i++) {
+        string infoKey = split(info[i],'=')[0];
+        if (infoKey == "AA") {
+            AA = split(info[i],'=')[1];
+        }
+    }
+    return AA;
 }
 
 
-void frequencyData() {
+void doAbbaBaba() {
     string line; // for reading the input files
     
     std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
+    string setsFileRoot = stripExtension(opt::setsFile);
+    std::ofstream* outFile = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_abbaBaba.txt");
+    string windowStartEnd = "scaffold_0\t0";
     
-    //
+    // Get the sample sets
     string outgroupString; std::vector<size_t> Opos; std::vector<string> outgroup;
     if (!opt::bAaEqO) { getline(*setsFile, outgroupString); outgroup = split(outgroupString, ','); } else { outgroupString = "VCF AA field"; }
     string P3string; getline(*setsFile, P3string); std::vector<string> P3 = split(P3string, ','); std::vector<size_t> P3pos;
     string P2string; getline(*setsFile, P2string); std::vector<string> P2 = split(P2string, ','); std::vector<size_t> P2pos;
     string P1string; getline(*setsFile, P1string); std::vector<string> P1 = split(P1string, ','); std::vector<size_t> P1pos;
+    if (!opt::bFrequency && (P1.size() > 1 || P2.size() > 1 || P3.size() > 1)) {
+        std::cerr << "There are more than one individual on some line of the SETS.txt file" << std::endl;
+        std::cerr << "Perhaps you want to use the -f option?" << std::endl;
+        exit(1);
+    }
     
     // Now go through the vcf and calculate D
-    int AABA = 0; int XXAA = 0; int BBBA = 0; int indels = 0; // int ABBABABA = 0;
-    int totalVariantNumber = 0; int usedVariantsCounter = 0;
+    int totalVariantNumber = 0;
     double Dnumerator = 0; double Ddenominator = 0;
     double lastVarsDnum = 0; double lastVarsDdenom = 0;
-    int lastPrint = 0;
+    double windowDnum = 0; double windowDdenom = 0;
+    int lastPrint = 0; int lastWindowVariant = 0;
     std::vector<double> regionDs;
     std::vector<string> sampleNames;
     while (getline(*vcfFile, line)) {
@@ -186,7 +196,7 @@ void frequencyData() {
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {
-                string AA = split(info[info.size()-1],'=')[1];
+                string AA = getAAfromInfo(info);
                 if (!opt::bAaEqO) {
                     FourSetCounts c;
                     if (AA == fields[3]) {
@@ -203,43 +213,45 @@ void frequencyData() {
                     } else if (AA == fields[4]) {
                         c = getThreeSetVariantCounts(fields,P1pos,P2pos,P3pos,"alt");
                     }
-                    if (c.set3daAF == 0) {
-                        XXAA++; continue;
-                    } else if (c.set1daAF == 0 && c.set2daAF == 0) {
-                        AABA++; continue;
-                    } else if (c.set1daAF == 1 && c.set2daAF == 1 && c.set3daAF == 1) {
-                        BBBA++; continue;
+                    if (opt::bFrequency) {
+                        incrementDnumDdenomFrequency(c, Dnumerator, Ddenominator,lastVarsDnum,lastVarsDdenom,windowDnum,windowDdenom);
                     } else {
-                        usedVariantsCounter++;
-                        // Green et al. (2010) eq. S15.2
-                        Dnumerator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
-                        Ddenominator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
-                        lastVarsDnum += ((1-c.set1daAF)*c.set2daAF*c.set3daAF) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
-                        lastVarsDdenom += ((1-c.set1daAF)*c.set2daAF*c.set3daAF) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
-                        if (Dnumerator == 0) {
-                            std::cerr << "P1:" << c.set1daAF << " P2:" << c.set2daAF << " P3:" << c.set3daAF << std::endl;
-                        }
-                        assert(Dnumerator != 0);
+                        incrementDnumDdenomSingleSequence(c, Dnumerator, Ddenominator,lastVarsDnum,lastVarsDdenom,windowDnum,windowDdenom);
                     }
                 }
                 // if (totalVariantNumber % 100000 == 0) { std::cerr << Dnumerator << std::endl; }
             } else {
-                indels++;
+                ABBABABAcounts::indels++;
             }
-            if (usedVariantsCounter % 5000 == 0 && usedVariantsCounter != lastPrint) {
-            //if (totalVariantNumber % 100000 == 0) {
-                assert(XXAA + AABA + BBBA + indels + usedVariantsCounter == totalVariantNumber);
-                if (usedVariantsCounter > 30000) {
-                    double Dstd_err = jackknive_std_err(regionDs);
-                    std::cerr << totalVariantNumber << " variants processed. " << usedVariantsCounter << " variants used. \tD=" << (double)Dnumerator/Ddenominator << " std_err=" <<Dstd_err << std::endl;
+            
+            if (ABBABABAcounts::usedVariantsCounter % opt::windowSize == 0 && ABBABABAcounts::usedVariantsCounter != lastWindowVariant) {
+                std::vector<string> s = split(windowStartEnd, '\t');
+                if (s[0] == fields[0]) {
+                    windowStartEnd = windowStartEnd + "\t" + fields[1];
+                    *outFile << windowStartEnd << "\t" << (double)windowDnum/windowDdenom << std::endl;
+                    windowStartEnd = fields[0] + "\t" + fields[1];
                 } else {
-                    std::cerr << totalVariantNumber << " variants processed. " << usedVariantsCounter << " variants used. \tD=" << (double)Dnumerator/Ddenominator << std::endl;
+                    windowStartEnd = fields[0] + "\t0";
                 }
-                std::cerr << "Last used 5000 variants \t\t\t\tD=" << lastVarsDnum/lastVarsDdenom << std::endl;
+                windowDnum = 0; windowDdenom = 0; lastWindowVariant = ABBABABAcounts::usedVariantsCounter;
+            }
+            
+            
+            if (ABBABABAcounts::usedVariantsCounter % opt::jackKniveWindowSize == 0 && ABBABABAcounts::usedVariantsCounter != lastPrint) {
+            //if (totalVariantNumber % 100000 == 0) {
+                if (opt::bFrequency)
+                    assert(ABBABABAcounts::XXAA + ABBABABAcounts::AABA + ABBABABAcounts::BBBA + ABBABABAcounts::indels + ABBABABAcounts::noDafInfo + ABBABABAcounts::usedVariantsCounter == totalVariantNumber);
+                if (ABBABABAcounts::usedVariantsCounter > (6 * opt::jackKniveWindowSize)) {
+                    double Dstd_err = jackknive_std_err(regionDs);
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tD=" << (double)Dnumerator/Ddenominator << " std_err=" <<Dstd_err << std::endl;
+                } else {
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tD=" << (double)Dnumerator/Ddenominator << std::endl;
+                }
+                std::cerr << "Last used "<< opt::jackKniveWindowSize << " variants \t\t\t\tD=" << lastVarsDnum/lastVarsDdenom << std::endl;
                 // std::cerr << "AAAA=" << XXAA << "; AABA=" << AABA << "; BBBA=" << BBBA << std::endl;
                 regionDs.push_back(lastVarsDnum/lastVarsDdenom);
                 lastVarsDnum = 0; lastVarsDdenom = 0;
-                lastPrint = usedVariantsCounter;
+                lastPrint = ABBABABAcounts::usedVariantsCounter;
             }
         }
     }
@@ -254,10 +266,7 @@ void frequencyData() {
 
 int abbaBabaMain(int argc, char** argv) {
     parseAbbaBabaOptions(argc, argv);
-    
-    if (opt::bFrequency) { frequencyData(); }
-    else { singleSequence(); }
-    
+    doAbbaBaba();
     return 0;
     
 }
@@ -271,12 +280,19 @@ void parseAbbaBabaOptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 's': arg >> opt::sampleNameFile; break;
-            case 'f': opt::bFrequency = true; break;
+            case 'f': opt::bFrequency = true; opt::jackKniveWindowSize = JACKKNIVE_WINDOW_SIZE_FREQUENCY; break;
+            case 'w': arg >> opt::windowSize; break;
+            case 'n': arg >> opt::runName; break;
             case OPT_AA_EQ_O: opt::bAaEqO = true; break;
             case 'h':
                 std::cout << ABBA_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
         }
+    }
+    
+    if (opt::runName == "") {
+        if (opt::bFrequency) { opt::runName = "frequency"; }
+        if (!opt::bFrequency) { opt::runName = "sequence"; }
     }
     if (argc - optind < 2) {
         std::cerr << "missing arguments\n";
