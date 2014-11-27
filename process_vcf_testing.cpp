@@ -53,6 +53,7 @@ namespace opt
 {
     static int min_copies=1;
     static int max_overall_depth = std::numeric_limits<int>::max();
+    static int min_overall_depth = 0;
     static int max_het_indiv = std::numeric_limits<int>::max();
     static int min_depth_in_any_individual = 3;
     static string vcfFile;
@@ -103,7 +104,7 @@ int testMain(int argc, char** argv) {
             
             
             if (result.overallQuality >= MIN_OVERALL_VARIANT_PHRED_QUAL) {
-                result.maxDepthPassed = testOverallReadDepth(opt::max_overall_depth,fields[7]); 
+                result.overallDepthPassed = testOverallReadDepth(opt::max_overall_depth,opt::min_overall_depth,fields[7]);
                 result.biallelicPassed = testBiallelic(fields[4]);
             }
                 
@@ -115,7 +116,7 @@ int testMain(int argc, char** argv) {
                 if (result.counts.minimumDepthInAnIndividual >= opt::min_depth_in_any_individual) {
                     // filter out sites where more than MAX_NUM_HET individuals are heterozygous
                     bool mnhPassed = testMaxNumHet(result, depthsHetFailed, depthsHetPassed, numVariantsPerHetCount, opt::max_het_indiv,num_indiv_het_vs_depth);
-                    if (result.maxDepthPassed && mnhPassed) {
+                    if (result.overallDepthPassed && mnhPassed) {
                         std::cout << line << std::endl;
                     }
                 }

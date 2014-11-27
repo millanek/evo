@@ -24,6 +24,7 @@ static const char *FILTER_USAGE_MESSAGE =
 "       The filtereing parameters that can be changed are:\n"
 "       -d, --overall-max-depth (DEFAULT +Inf)  Maximum read depth allowed at the putative variant site - filters out variants due to\n"
 "                                               collapsed repeats in the reference (reads from multiple sites are all mapped to one)\n"
+"       -m, --overall-min-depth (DEFAULT 0)     Minimum read depth allowed at the putative variant site - filters out strange regions where very few reads align\n"
 "       -c, --min-copies=MIN (DEFAULT 1)        The variant needs to be present in at least MIN copies\n"
 "                                               (i.e. setting --min_copies==1 gives all segregating sites including singletons)\n"
 "       -s, --min-depth-per-sample=MIN (DEFAULT 3)        Minimum read depth at the variant position for any sample\n"
@@ -40,10 +41,11 @@ static const char *FILTER_USAGE_MESSAGE =
 
 enum { OPT_HELP = 1, OPT_TRIALLELIC, OPT_ALLOW_MISSING_GENOTYPES, OPT_MAX_NUM_HET };
 
-static const char* shortopts = "d:c:s:";
+static const char* shortopts = "d:c:s:m:";
 
 static const struct option longopts[] = {
     { "overall-max-depth",       required_argument, NULL, 'd' },
+    { "overall-min-depth",       required_argument, NULL, 'm' },
     { "min-copies",       required_argument, NULL, 'c' },
     { "min-depth-per-sample",       required_argument, NULL, 's' },
     { "help",   no_argument, NULL, OPT_HELP },
@@ -57,6 +59,7 @@ namespace opt
 {
     static int min_copies=1;
     static int max_overall_depth = std::numeric_limits<int>::max();
+    static int min_overall_depth = 0;
     static int max_het_indiv = std::numeric_limits<int>::max();
     static int min_depth_in_any_individual = 3;
     static bool bBiallelicFilter = true;
@@ -79,6 +82,7 @@ int filterMain(int argc, char** argv) {
 
     std::cerr << "Filtering variants from: " << fileName << std::endl;
     std::cerr << "Maximum read depth (overall) set to: " << opt::max_overall_depth << std::endl;
+    std::cerr << "Minimum read depth (overall) set to: " << opt::min_overall_depth << std::endl;
     std::cerr << "Minimum copies for a variant (e.g. 1 for allowing singletons): " << opt::min_copies << std::endl;
     std::cerr << "Minimum read depth at the variant position: " << opt::min_depth_in_any_individual << std::endl;
     if (opt::bAllowMissingGenotpyes)
@@ -112,9 +116,9 @@ int filterMain(int argc, char** argv) {
             result.overallQuality = atoi(fields[5].c_str());
             
             if (result.overallQuality >= MIN_OVERALL_VARIANT_PHRED_QUAL) 
-                result.maxDepthPassed = testOverallReadDepth(opt::max_overall_depth,fields[7]); 
+                result.overallDepthPassed = testOverallReadDepth(opt::max_overall_depth,opt::min_overall_depth,fields[7]);
             
-            if (result.maxDepthPassed) {
+            if (result.overallDepthPassed) {
                 if (opt::bBiallelicFilter) 
                     result.biallelicPassed = testBiallelic(fields[4]);
                 else
@@ -170,6 +174,7 @@ void parseFilterOptions(int argc, char** argv) {
         switch (c) 
         {
             case 'd': arg >> opt::max_overall_depth; break;
+            case 'm': arg >> opt::min_overall_depth; break;
             case 'c': arg >> opt::min_copies; break;
             case 's': arg >> opt::min_depth_in_any_individual; break;
             case '?': die = true; break;

@@ -96,10 +96,10 @@ public:
 class FilterResult
 {
 public:
-    FilterResult() : overallQuality(0), maxDepthPassed(false), counts(), biallelicPassed(false), degenPassed(false) {}
+    FilterResult() : overallQuality(0), overallDepthPassed(false), counts(), biallelicPassed(false), degenPassed(false) {}
     
     int overallQuality;  // -10log_10 p(no variant)
-    bool maxDepthPassed;
+    bool overallDepthPassed;
     Counts counts;
     bool biallelicPassed;
     bool degenPassed;
@@ -229,7 +229,7 @@ FourSetCounts getFourSetVariantCounts(const std::vector<std::string>& fields, co
 
 bool testBiallelic(const std::string& altField);
 
-bool testOverallReadDepth(const int maxReadDepth, const std::string& infoField);
+bool testOverallReadDepth(const int maxReadDepth, const int minReadDepth, const std::string& infoField);
 
 // filter out sites where more than maxNumHet individuals are heterozygous 
 bool testMaxNumHet(FilterResult& result, std::vector<int>& depthsHetFailed, std::vector<int>& depthsHetPassed, std::vector<int>& numVariantsPerHetCount, int maxNumHet, std::vector<std::vector<int> >& num_indiv_het_vs_depth);

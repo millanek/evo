@@ -195,7 +195,7 @@ bool testBiallelic(const std::string& altField) {
     else { return false; }
 }
 
-bool testOverallReadDepth(const int maxReadDepth, const std::string& infoField) {
+bool testOverallReadDepth(const int maxReadDepth,const int minReadDepth, const std::string& infoField) {
     std::vector<std::string> info = split(infoField, ';');
     if (info[0] == "INDEL") {
         split(info[1], '=', info);
@@ -203,7 +203,7 @@ bool testOverallReadDepth(const int maxReadDepth, const std::string& infoField) 
         split(info[0], '=', info);
     }
     int DP = atoi((info.back()).c_str());
-    if (DP <= maxReadDepth) { return true; }
+    if (DP <= maxReadDepth && DP >= minReadDepth) { return true; }
     else { return false; }
 }
 

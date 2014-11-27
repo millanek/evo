@@ -50,6 +50,7 @@ namespace opt
 {
     static int min_copies=1;
     static int max_overall_depth = std::numeric_limits<int>::max();
+    static int min_overall_depth = 0;
     static int max_het_indiv = std::numeric_limits<int>::max();
     static int min_depth_in_any_individual = 3;
     static string vcfFile;
@@ -176,7 +177,7 @@ int massokoMain(int argc, char** argv) {
             
             
             if (result.overallQuality >= MIN_OVERALL_VARIANT_PHRED_QUAL) 
-                result.maxDepthPassed = testOverallReadDepth(opt::max_overall_depth,fields[7]); 
+                result.maxDepthPassed = testOverallReadDepth(opt::max_overall_depth,opt::min_overall_depth,fields[7]);
             
             if (result.maxDepthPassed)
                 result.biallelicPassed = testBiallelic(fields[4]);
