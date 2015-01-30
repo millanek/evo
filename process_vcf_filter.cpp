@@ -27,7 +27,7 @@ static const char *FILTER_USAGE_MESSAGE =
 "       -m, --overall-min-depth (DEFAULT 0)     Minimum read depth allowed at the putative variant site - filters out strange regions where very few reads align\n"
 "       -c, --min-copies=MIN (DEFAULT 1)        The variant needs to be present in at least MIN copies\n"
 "                                               (i.e. setting --min_copies==1 gives all segregating sites including singletons)\n"
-"       -s, --min-depth-per-sample=MIN (DEFAULT 3)        Minimum read depth at the variant position for any sample\n"
+"       -s, --min-depth-per-sample=MIN (DEFAULT 0)        Minimum read depth at the variant position for any sample\n"
 "                                               (i.e. all samples need to have at least MIN reads at the variant position)\n"
 "       --allow-missing                         Allow missing genotypes (./.) where read depth < min-depth-per-sample\n"
 "       --keep-triallelic                       Do not filter out sites that are not biallelic\n"
@@ -61,7 +61,7 @@ namespace opt
     static int max_overall_depth = std::numeric_limits<int>::max();
     static int min_overall_depth = 0;
     static int max_het_indiv = std::numeric_limits<int>::max();
-    static int min_depth_in_any_individual = 3;
+    static int min_depth_in_any_individual = 0;
     static bool bBiallelicFilter = true;
     static bool bAllowMissingGenotpyes = false;
     static string vcfFile;
