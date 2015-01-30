@@ -52,10 +52,45 @@ std::string stripExtension(const std::string& filename)
         return filename.substr(0, suffixPos);
 }
 
+bool isDPinfo (std::string infoField) {
+    if (infoField.find("DP="))
+        return true;
+    else
+        return false;
+}
+
+bool isFSinfo (std::string infoField) {
+    if (infoField.find("FS="))
+        return true;
+    else
+        return false;
+}
+
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
+    bool hasGQ = false; bool hasDP = false;
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
+    // Find the position of DP (per sample read depth) in the genotypeData vector below
+    std::vector<std::string> format = split(fields[8], ':');
+    std::vector<std::string>::iterator DPit; int DPi = std::numeric_limits<int>::min();
+    DPit = find (format.begin(), format.end(), "DP");
+    if (DPit == format.end()) {
+        std::cerr << "This variant hasn't got associated per-sample DP info" << std::endl;
+    } else {
+        DPi = (int)std::distance( format.begin(), DPit );
+        hasDP = true;
+    }
+    // Find the position of GQ (genotype quality) in the genotypeData vector below
+    std::vector<std::string>::iterator GQit; int GQi = std::numeric_limits<int>::min();
+    GQit = find (format.begin(), format.end(), "GQ");
+    if (GQit == format.end()) {
+        std::cerr << "This variant hasn't got associated per-sample GQ info" << std::endl;
+    } else {
+        GQi = (int)std::distance( format.begin(), GQit );
+        hasGQ = true;
+    }
+    
     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
         if (fields[i][0] == '1') { 
             thisVariantCounts.overall++;
@@ -67,24 +102,42 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         }
         std::vector<std::string> genotypeData = split(fields[i], ':');
         
-        if (genotypeData.size() >= 3) {
-            if (atoi(genotypeData[2].c_str()) < thisVariantCounts.minimumDepthInAnIndividual) {
-                thisVariantCounts.minimumDepthInAnIndividual = atoi(genotypeData[2].c_str());
+        
+        // read depth at the variant site per individual
+        if (hasDP) {
+            if (atoi(genotypeData[DPi].c_str()) < thisVariantCounts.minimumDepthInAnIndividual) {
+                thisVariantCounts.minimumDepthInAnIndividual = atoi(genotypeData[DPi].c_str());
             }
-            // read depth at the variant site per individual
-            thisVariantCounts.depthPerIndividual.push_back(atoi(genotypeData[2].c_str()));
-        } else {
-            thisVariantCounts.depthPerIndividual.push_back(999);
+            thisVariantCounts.depthPerIndividual.push_back(atoi(genotypeData[DPi].c_str()));
+        }
+        // genotype quality at the variant site per individual
+        if (hasGQ) {
+            thisVariantCounts.genotypeQualitiesPerIndividual.push_back(atoi(genotypeData[GQi].c_str()));
         }
     }
     // Also get overall depth for this variant
     std::vector<std::string> info = split(fields[7], ';');
-    if (info[0] == "INDEL") {
-        split(info[1], '=', info);
+    std::vector<std::string>::iterator overallDPit; int overallDPi = std::numeric_limits<int>::min();
+    overallDPit = find_if(info.begin(), info.end(), isDPinfo);
+    if (overallDPit == info.end()) {
+        std::cerr << "This variant hasn't got associated overall DP info" << std::endl;
+        thisVariantCounts.overallDepth = 0;
     } else {
-        split(info[0], '=', info);
+        overallDPi = (int)std::distance( info.begin(), DPit );
+        std::vector<std::string> overallDP = split(info[overallDPi], '=');
+        thisVariantCounts.overallDepth = atoi((overallDP.back()).c_str());
     }
-    thisVariantCounts.overallDepth = atoi((info.back()).c_str());
+    // And get FS (phred-scaled strand-bias p-val) for this variant
+    std::vector<std::string>::iterator FSit; int FSi = std::numeric_limits<int>::min();
+    FSit = find_if(info.begin(), info.end(), isFSinfo);
+    if (FSit == info.end()) {
+        std::cerr << "This variant hasn't got associated FS (strand-bias) info" << std::endl;
+    } else {
+        FSi = (int)std::distance( info.begin(), FSit );
+        std::vector<std::string> overallFS = split(info[FSi], '=');
+        thisVariantCounts.FSpval = atoi((overallFS.back()).c_str());
+    }
+    
     return thisVariantCounts;
 }
 

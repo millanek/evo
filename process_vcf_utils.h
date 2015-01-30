@@ -29,13 +29,15 @@ static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column 
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), FSpval(0) {};
     
     int overall;
     int minimumDepthInAnIndividual;
     int overallDepth;
+    double FSpval; // Phred-scaled pvalue
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
+    std::vector<int> genotypeQualitiesPerIndividual;
 };
 
 class SingleSetCounts {
