@@ -115,18 +115,22 @@ int filterMain(int argc, char** argv) {
             }
             result.overallQuality = atoi(fields[5].c_str());
             
-            if (result.overallQuality >= MIN_OVERALL_VARIANT_PHRED_QUAL) 
-                result.overallDepthPassed = testOverallReadDepth(opt::max_overall_depth,opt::min_overall_depth,fields[7]);
+            if (result.overallQuality < MIN_OVERALL_VARIANT_PHRED_QUAL)
+                continue;
+        
             
-            if (result.overallDepthPassed) {
-                if (opt::bBiallelicFilter) 
-                    result.biallelicPassed = testBiallelic(fields[4]);
-                else
-                    result.biallelicPassed = true;
-            }
+            if (opt::bBiallelicFilter) {
+                result.biallelicPassed = testBiallelic(fields[4]);
+                if (!result.biallelicPassed) continue;
+            } else
+                result.biallelicPassed = true;
             
-            if (result.biallelicPassed) 
-                result.counts = getThisVariantCounts(fields);
+            result.counts = getThisVariantCounts(fields);
+            
+            if (result.counts.overallDepth >= opt::min_overall_depth && result.counts.overallDepth <= opt::max_overall_depth) {
+                result.overallDepthPassed = true;
+            } else
+                continue;
             
             // filter out sites where more than MAX_NUM_HET individuals are heterozygous
             int num_hets = 0; bool mnhPassed;
