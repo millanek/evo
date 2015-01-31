@@ -69,7 +69,7 @@ bool findIfPolymorhicInSet(const std::vector<std::string>& fields, const std::ve
     }
 }
 
-int getNumHets(SetCounts& counts) {
+int getNumHetsPol(SetCounts& counts) {
     int num_hets = 0;
     for (std::vector<std::vector<int> >::size_type i = 0; i < counts.individualsWithVariant.size(); i++) {
         if (counts.individualsWithVariant[i] == 1)

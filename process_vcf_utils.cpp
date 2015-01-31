@@ -53,17 +53,17 @@ std::string stripExtension(const std::string& filename)
 }
 
 bool isDPinfo (std::string infoField) {
-    if (infoField.find("DP="))
-        return true;
-    else
+    if (infoField.find("DP=") == string::npos)
         return false;
+    else
+        return true;
 }
 
 bool isFSinfo (std::string infoField) {
-    if (infoField.find("FS="))
-        return true;
-    else
+    if (infoField.find("FS=") == string::npos)
         return false;
+    else
+        return true;
 }
 
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
@@ -104,14 +104,14 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         
         
         // read depth at the variant site per individual
-        if (hasDP) {
+        if (hasDP && fields[i][0] != '.') {
             if (atoi(genotypeData[DPi].c_str()) < thisVariantCounts.minimumDepthInAnIndividual) {
                 thisVariantCounts.minimumDepthInAnIndividual = atoi(genotypeData[DPi].c_str());
             }
             thisVariantCounts.depthPerIndividual.push_back(atoi(genotypeData[DPi].c_str()));
         }
         // genotype quality at the variant site per individual
-        if (hasGQ) {
+        if (hasGQ && fields[i][0] != '.') {
             thisVariantCounts.genotypeQualitiesPerIndividual.push_back(atoi(genotypeData[GQi].c_str()));
         }
     }
@@ -123,7 +123,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         std::cerr << "This variant hasn't got associated overall DP info" << std::endl;
         thisVariantCounts.overallDepth = 0;
     } else {
-        overallDPi = (int)std::distance( info.begin(), DPit );
+        overallDPi = (int)std::distance( info.begin(), overallDPit );
         std::vector<std::string> overallDP = split(info[overallDPi], '=');
         thisVariantCounts.overallDepth = atoi((overallDP.back()).c_str());
     }
