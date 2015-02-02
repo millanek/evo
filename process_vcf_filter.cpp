@@ -35,11 +35,14 @@ static const char *FILTER_USAGE_MESSAGE =
 "\n"
 "       The filtereing parameters that are hard coded are:\n"
 "       MIN_OVERALL_VARIANT_PHRED_QUAL=30   The minimum accepted phred scaled [10*log_10*p(variant)] variant quality\n"
+"\n"
+"       You can also just output statistics on the first 2,000,000 variants:\n"
+"       --stats                                 Get stats to help with selecting parameters for filtering\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 
-enum { OPT_HELP = 1, OPT_TRIALLELIC, OPT_ALLOW_MISSING_GENOTYPES, OPT_MAX_NUM_HET };
+enum { OPT_HELP = 1, OPT_TRIALLELIC, OPT_ALLOW_MISSING_GENOTYPES, OPT_MAX_NUM_HET, OPT_STATS };
 
 static const char* shortopts = "d:c:s:m:";
 
@@ -52,6 +55,7 @@ static const struct option longopts[] = {
     { "max-het-individuals", required_argument, NULL, OPT_MAX_NUM_HET },
     { "keep-triallelic",   no_argument, NULL, OPT_TRIALLELIC },
     { "allow-missing",   no_argument, NULL, OPT_ALLOW_MISSING_GENOTYPES },
+    { "stats",   no_argument, NULL, OPT_STATS },
     { NULL, 0, NULL, 0 }
 };
 
@@ -64,6 +68,7 @@ namespace opt
     static int min_depth_in_any_individual = 0;
     static bool bBiallelicFilter = true;
     static bool bAllowMissingGenotpyes = false;
+    static bool bStats = false;
     static string vcfFile;
 }
 
@@ -79,20 +84,32 @@ int filterMain(int argc, char** argv) {
     std::vector<int> numVariantsPerHetCount;
     std::vector<std::vector<int> > num_indiv_het_vs_depth;
     
-
-    std::cerr << "Filtering variants from: " << fileName << std::endl;
-    std::cerr << "Maximum read depth (overall) set to: " << opt::max_overall_depth << std::endl;
-    std::cerr << "Minimum read depth (overall) set to: " << opt::min_overall_depth << std::endl;
-    std::cerr << "Minimum copies for a variant (e.g. 1 for allowing singletons): " << opt::min_copies << std::endl;
-    std::cerr << "Minimum read depth at the variant position: " << opt::min_depth_in_any_individual << std::endl;
-    if (opt::bAllowMissingGenotpyes)
-        std::cerr << "Genotypes for individuals with lower read depth at the variant position will be set to missing (./.)" << std::endl;
-    if (opt::max_het_indiv < std::numeric_limits<int>::max())
-        std::cerr << "Filter out sites where more than " << opt::max_het_indiv << " individuals are heterozygous"  << std::endl;
+    std::ofstream* statsFFile;
+    std::ofstream* statsVarDepthFile;
+    std::ofstream* statsStrandBiasFile;
+    std::ofstream* statsVariantQualityFile;
     
+    
+    if (opt::bStats) {
+        statsFFile = new std::ofstream(fileRoot + ".inbreeding");
+        statsVarDepthFile = new std::ofstream(fileRoot + ".varDepth");
+        statsStrandBiasFile = new std::ofstream(fileRoot + ".strandBias");
+        statsVariantQualityFile = new std::ofstream(fileRoot + ".varQual");
+        std::cerr << "Getting statistics for variants from: " << fileName << " to help with setting filtering criteria" << std::endl;
+    } else {
+        std::cerr << "Filtering variants from: " << fileName << std::endl;
+        std::cerr << "Maximum read depth (overall) set to: " << opt::max_overall_depth << std::endl;
+        std::cerr << "Minimum read depth (overall) set to: " << opt::min_overall_depth << std::endl;
+        std::cerr << "Minimum copies for a variant (e.g. 1 for allowing singletons): " << opt::min_copies << std::endl;
+        std::cerr << "Minimum read depth at the variant position: " << opt::min_depth_in_any_individual << std::endl;
+        if (opt::bAllowMissingGenotpyes)
+            std::cerr << "Genotypes for individuals with lower read depth at the variant position will be set to missing (./.)" << std::endl;
+        if (opt::max_het_indiv < std::numeric_limits<int>::max())
+            std::cerr << "Filter out sites where more than " << opt::max_het_indiv << " individuals are heterozygous"  << std::endl;
+    }
     // Open connection to read from the vcf file
     // std::ifstream* inFile = new std::ifstream(fileName.c_str(), mode);
-    std::istream* inFile =createReader(fileName);
+    std::istream* inFile = createReader(fileName);
     
     
     bool gotChromosomeNumber = false;
@@ -115,6 +132,19 @@ int filterMain(int argc, char** argv) {
             }
             result.overallQuality = atoi(fields[5].c_str());
             
+            result.counts = getThisVariantCounts(fields);
+            
+            if (opt::bStats) {
+                *statsFFile << result.counts.inbreedingCoefficient << std::endl;
+                *statsVarDepthFile << result.counts.overallDepth << std::endl;
+                *statsStrandBiasFile << result.counts.FSpval << std::endl;
+                *statsVariantQualityFile << result.overallQuality << std::endl;
+                if (totalVariantNumber >= 1000000)
+                    exit(EXIT_SUCCESS);
+                else
+                    continue;
+            }
+            
             if (result.overallQuality < MIN_OVERALL_VARIANT_PHRED_QUAL)
                 continue;
         
@@ -125,7 +155,6 @@ int filterMain(int argc, char** argv) {
             } else
                 result.biallelicPassed = true;
             
-            result.counts = getThisVariantCounts(fields);
             
             if (result.counts.overallDepth >= opt::min_overall_depth && result.counts.overallDepth <= opt::max_overall_depth) {
                 result.overallDepthPassed = true;
@@ -184,7 +213,8 @@ void parseFilterOptions(int argc, char** argv) {
             case '?': die = true; break;
             case OPT_TRIALLELIC: opt::bBiallelicFilter = false; break;
             case OPT_ALLOW_MISSING_GENOTYPES: opt::bAllowMissingGenotpyes = true; break;
-            case OPT_MAX_NUM_HET: arg >> opt::max_het_indiv; break;    
+            case OPT_MAX_NUM_HET: arg >> opt::max_het_indiv; break;
+            case OPT_STATS: opt::bStats = true; break;
             case OPT_HELP:
                 std::cout << FILTER_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

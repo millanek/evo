@@ -66,6 +66,31 @@ bool isFSinfo (std::string infoField) {
         return true;
 }
 
+double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) {
+    int naa = 0; int nAa = 0; int nAA = 0;
+    for (std::vector<int>::size_type i = 0; i != individualsWithVariant.size(); i++) {
+        if (individualsWithVariant[i] == 0) naa++;
+        if (individualsWithVariant[i] == 1) nAa++;
+        if (individualsWithVariant[i] == 2) nAA++;
+    }
+    
+    // Get the proportions of alt-hom and hets
+    double pAA = (double)nAA / individualsWithVariant.size();
+    double pAa = (double)nAa / individualsWithVariant.size();
+    
+    // Allele frequencies
+    double p = pAA + (0.5 * pAa);
+    double q = 1 - p;
+    
+    // Get the Hardy-Weinberg prediction for expected number of heterozygotes:
+    double HWAa = 2*p*q;
+
+    
+    // Get the inbreeding coefficient
+    double F = (HWAa - pAa) / HWAa;
+    return F;
+}
+
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
     bool hasGQ = false; bool hasDP = false;
@@ -137,6 +162,9 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         std::vector<std::string> overallFS = split(info[FSi], '=');
         thisVariantCounts.FSpval = atoi((overallFS.back()).c_str());
     }
+
+    // And the inbreeding coefficient
+    thisVariantCounts.inbreedingCoefficient = calculateInbreedingCoefficient(thisVariantCounts.individualsWithVariant);
     
     return thisVariantCounts;
 }

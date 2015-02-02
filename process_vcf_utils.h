@@ -19,6 +19,7 @@
 #include <getopt.h>
 #include <cstdlib>
 #include <stdexcept>
+#include <math.h>
 using std::string;
 #define PROGRAM_BIN "process-vcf"
 #define PACKAGE_BUGREPORT "mm812@cam.ac.uk"
@@ -29,12 +30,13 @@ static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column 
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), FSpval(0) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), FSpval(0), inbreedingCoefficient(0) {};
     
     int overall;
     int minimumDepthInAnIndividual;
     int overallDepth;
     double FSpval; // Phred-scaled pvalue
+    double inbreedingCoefficient;
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
     std::vector<int> genotypeQualitiesPerIndividual;
@@ -215,6 +217,8 @@ inline double convertToDouble(std::string const& s)
 
 
 std::vector<std::string> split(const std::string &s, char delim);
+
+double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant);
 
 // Does the same as R function table
 std::map<int, int> tabulateVector(std::vector<int>& vec);
