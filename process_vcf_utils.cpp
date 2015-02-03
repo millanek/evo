@@ -163,7 +163,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     FSit = find_if(info.begin(), info.end(), isFSinfo);
     if (FSit == info.end()) {  // Or at least MQSB: Mann-Whitney U test of Mapping Quality vs Strand Bias
         FSit = find_if(info.begin(), info.end(), isMQSBinfo);
-        if (FSit == info.end()) {
+        if (FSit != info.end()) {
             FSi = (int)std::distance( info.begin(), FSit );
             std::vector<std::string> overallFS = split(info[FSi], '=');
             thisVariantCounts.FSpval =  overallFS.back();
