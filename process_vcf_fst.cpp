@@ -177,7 +177,7 @@ void getFstFromVCF() {
     }
     string fileRoot = stripExtension(opt::sampleSets);
     // Open connection to read from the vcf file
-    std::istream* vcfFile = createReader(opt::vcfFile);
+    std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
     std::ifstream* annotFile;
     std::ofstream* snpCategoryFstFile;

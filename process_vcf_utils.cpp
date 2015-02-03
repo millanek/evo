@@ -7,8 +7,6 @@
 //
 
 #include <iostream>
-#include "zreaderDaniel.h"
-#include "gzstream.h"
 #include "process_vcf_utils.h"
 
 
@@ -160,7 +158,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     } else {
         FSi = (int)std::distance( info.begin(), FSit );
         std::vector<std::string> overallFS = split(info[FSi], '=');
-        thisVariantCounts.FSpval = atoi((overallFS.back()).c_str());
+        thisVariantCounts.FSpval =  overallFS.back();
     }
 
     // And the inbreeding coefficient
@@ -434,6 +432,16 @@ void assertFileOpen(std::ifstream& fh, const std::string& fn)
     }
 }
 
+// Ensure a filehandle is open
+void assertFileOpen(std::ofstream& fh, const std::string& fn)
+{
+    if(!fh.is_open())
+    {
+        std::cerr << "Error: could not open " << fn << " for write\n";
+        exit(EXIT_FAILURE);
+    }
+}
+
 //
 void assertGZOpen(gzstreambase& gh, const std::string& fn)
 {
@@ -441,24 +449,6 @@ void assertGZOpen(gzstreambase& gh, const std::string& fn)
     {
         std::cerr << "Error: could not open " << fn << std::endl;
         exit(EXIT_FAILURE);
-    }
-}
-
-// Open a file that may or may not be gzipped for reading
-// The caller is responsible for freeing the handle
-std::istream* createReader(const std::string& filename)
-{
-    if(isGzip(filename))
-    {
-        dpj::zifstream* pGZ = new dpj::zifstream(filename);
-        // assertGZOpen(*pGZ, filename);
-        return pGZ;
-    }
-    else
-    {
-        std::ifstream* pReader = new std::ifstream(filename.c_str());
-        assertFileOpen(*pReader, filename);
-        return pReader;
     }
 }
 
@@ -477,6 +467,25 @@ std::istream* createReader(const std::string& filename, std::ios_base::openmode 
         std::ifstream* pReader = new std::ifstream(filename.c_str(), mode);
         assertFileOpen(*pReader, filename);
         return pReader;
+    }
+}
+
+// Open a file that may or may not be gzipped for writing
+// The caller is responsible for freeing the handle
+std::ostream* createWriter(const std::string& filename,
+                           std::ios_base::openmode mode)
+{
+    if(isGzip(filename))
+    {
+        ogzstream* pGZ = new ogzstream(filename.c_str(), mode);
+        assertGZOpen(*pGZ, filename);
+        return pGZ;
+    }
+    else
+    {
+        std::ofstream* pWriter = new std::ofstream(filename.c_str(), mode);
+        assertFileOpen(*pWriter, filename);
+        return pWriter;
     }
 }
 

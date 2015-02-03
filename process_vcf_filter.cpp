@@ -109,7 +109,7 @@ int filterMain(int argc, char** argv) {
     }
     // Open connection to read from the vcf file
     // std::ifstream* inFile = new std::ifstream(fileName.c_str(), mode);
-    std::istream* inFile = createReader(fileName);
+    std::istream* inFile = createReader(fileName.c_str());
     
     
     bool gotChromosomeNumber = false;
@@ -117,9 +117,9 @@ int filterMain(int argc, char** argv) {
     string line;
     int totalVariantNumber = 0;
     while (getline(*inFile, line)) {
-        if (line[0] == '#') 
-            std::cout << line << std::endl;  
-        else {
+        if (line[0] == '#') {
+            if (!opt::bStats) std::cout << line << std::endl;
+        } else {
             totalVariantNumber++;
             FilterResult result;
             std::vector<std::string> fields = split(line, '\t');

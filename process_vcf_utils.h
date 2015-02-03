@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <math.h>
+#include "gzstream.h"
 using std::string;
 #define PROGRAM_BIN "process-vcf"
 #define PACKAGE_BUGREPORT "mm812@cam.ac.uk"
@@ -30,12 +31,12 @@ static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column 
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), FSpval(0), inbreedingCoefficient(0) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0) {};
     
     int overall;
     int minimumDepthInAnIndividual;
     int overallDepth;
-    double FSpval; // Phred-scaled pvalue
+    std::string FSpval; // Phred-scaled pvalue
     double inbreedingCoefficient;
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
@@ -250,7 +251,10 @@ void massokoMalawiSharing(const FilterResult& result, MassokoMalawiResult& shari
 // Read the sample names file (one sample name per line)
 std::vector<std::string> readSampleNamesFromTextFile(const std::string& sampleNameFile);
 // Open a file that may or may not be gzipped for reading - The caller is responsible for freeing the handle
-std::istream* createReader(const std::string& filename);
+void assertGZOpen(gzstreambase& gh, const std::string& fn);
+void assertFileOpen(std::ifstream& fh, const std::string& fn);
+void assertFileOpen(std::ofstream& fh, const std::string& fn);
+std::istream* createReader(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in);
 void print80bpPerLineStdOut(std::ostream& outFile, std::string toPrint);
 void print80bpPerLineFile(std::ofstream*& outFile, string toPrint);
 
