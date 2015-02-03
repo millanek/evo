@@ -64,6 +64,14 @@ bool isFSinfo (std::string infoField) {
         return true;
 }
 
+// Look for MQSB: Mann-Whitney U test of Mapping Quality vs Strand Bias (bigger is better)
+bool isMQSBinfo (std::string infoField) {
+    if (infoField.find("MQSB=") == string::npos)
+        return false;
+    else
+        return true;
+}
+
 double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) {
     int naa = 0; int nAa = 0; int nAA = 0;
     for (std::vector<int>::size_type i = 0; i != individualsWithVariant.size(); i++) {
@@ -143,7 +151,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     std::vector<std::string>::iterator overallDPit; int overallDPi = std::numeric_limits<int>::min();
     overallDPit = find_if(info.begin(), info.end(), isDPinfo);
     if (overallDPit == info.end()) {
-        std::cerr << "This variant hasn't got associated overall DP info" << std::endl;
+        // std::cerr << "This variant hasn't got associated overall DP info" << std::endl;
         thisVariantCounts.overallDepth = 0;
     } else {
         overallDPi = (int)std::distance( info.begin(), overallDPit );
@@ -153,8 +161,15 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     // And get FS (phred-scaled strand-bias p-val) for this variant
     std::vector<std::string>::iterator FSit; int FSi = std::numeric_limits<int>::min();
     FSit = find_if(info.begin(), info.end(), isFSinfo);
-    if (FSit == info.end()) {
-        std::cerr << "This variant hasn't got associated FS (strand-bias) info" << std::endl;
+    if (FSit == info.end()) {  // Or at least MQSB: Mann-Whitney U test of Mapping Quality vs Strand Bias
+        FSit = find_if(info.begin(), info.end(), isMQSBinfo);
+        if (FSit == info.end()) {
+            FSi = (int)std::distance( info.begin(), FSit );
+            std::vector<std::string> overallFS = split(info[FSi], '=');
+            thisVariantCounts.FSpval =  overallFS.back();
+        } else {
+            // std::cerr << "This variant hasn't got associated FS (strand-bias) info" << std::endl;
+        }
     } else {
         FSi = (int)std::distance( info.begin(), FSit );
         std::vector<std::string> overallFS = split(info[FSi], '=');
