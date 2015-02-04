@@ -102,13 +102,16 @@ public:
 class FilterResult
 {
 public:
-    FilterResult() : overallQuality(0), overallDepthPassed(false), counts(), biallelicPassed(false), degenPassed(false) {}
+    FilterResult() : overallQuality(0), overallQualityPassed(true), overallDepthPassed(true), strandBiasPassed(true), inbreedingCoeffPassed(true), counts(), biallelicPassed(true), siteInvariant(true) {};
     
     int overallQuality;  // -10log_10 p(no variant)
+    bool overallQualityPassed;
     bool overallDepthPassed;
+    bool strandBiasPassed;
+    bool inbreedingCoeffPassed;
     Counts counts;
     bool biallelicPassed;
-    bool degenPassed;
+    bool siteInvariant;
 };
 
 // For checking if variants fixed in Massoko are also fixed in Malawi
@@ -181,14 +184,6 @@ template <class T> double vector_average(T vector) {
     return average;
 }
 
-double stringToDouble(std::string s) {
-    double d;
-    std::stringstream ss(s); //turn the string into a stream
-    ss >> d; //convert
-    return d;
-}
-
-
 template <typename T> std::map<int, int> tabulateVectorTemplate(T& vec) {
     std::vector<int> vecCopy(vec); 
     std::sort(vecCopy.begin(), vecCopy.end());
@@ -224,6 +219,8 @@ inline double convertToDouble(std::string const& s)
 
 
 std::vector<std::string> split(const std::string &s, char delim);
+
+double stringToDouble(std::string s);
 
 double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant);
 

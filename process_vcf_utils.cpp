@@ -64,6 +64,13 @@ bool isFSinfo (std::string infoField) {
         return true;
 }
 
+double stringToDouble(std::string s) {
+    double d;
+    std::stringstream ss(s); //turn the string into a stream
+    ss >> d; //convert
+    return d;
+}
+
 // Look for MQSB: Mann-Whitney U test of Mapping Quality vs Strand Bias (bigger is better)
 bool isMQSBinfo (std::string infoField) {
     if (infoField.find("MQSB=") == string::npos)

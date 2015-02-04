@@ -100,6 +100,13 @@ int filterMain(int argc, char** argv) {
     std::ofstream* statsStrandBiasFile;
     std::ofstream* statsVariantQualityFile;
     
+    // Collect some numbers about why variants were filtered out:
+    int numMultiallelic = 0; int numInvariant = 0;
+    // SB - strand bias; OD - overall depth; OQ - overall quality; F - inbreeding coefficient;
+    int numSB = 0; int numOD = 0; int numOQ = 0; int numF = 0; int numOQ_OD = 0; int numOQ_SB = 0; int numOQ_F = 0; int numSB_F = 0; int numSB_OD = 0; int numF_OD = 0;
+    int numOQ_OD_F = 0; int numOQ_OD_SB = 0; int numOQ_SB_F = 0; int numSB_F_OD = 0; int numOQ_OD_F_SB = 0;
+    
+    
     
     if (opt::bStats) {
         statsFFile = new std::ofstream(fileRoot + ".inbreeding");
@@ -109,6 +116,7 @@ int filterMain(int argc, char** argv) {
         std::cerr << "Getting statistics for variants from: " << fileName << " to help with setting filtering criteria" << std::endl;
     } else {
         std::cerr << "Filtering variants from: " << fileName << std::endl;
+        std::cerr << "Minimum variant quality score (overall) set to: " << opt::min_overall_quality << std::endl;
         std::cerr << "Maximum read depth (overall) set to: " << opt::max_overall_depth << std::endl;
         std::cerr << "Minimum read depth (overall) set to: " << opt::min_overall_depth << std::endl;
         std::cerr << "Minimum copies for a variant (e.g. 1 for allowing singletons): " << opt::min_copies << std::endl;
@@ -142,7 +150,7 @@ int filterMain(int argc, char** argv) {
                 numVariantsPerHetCount.assign(numSamples + 1, 0);
                 gotChromosomeNumber = true;
             }
-            result.overallQuality = atoi(fields[5].c_str());
+            result.overallQuality = stringToDouble(fields[5]);
             
             result.counts = getThisVariantCounts(fields);
             
@@ -166,40 +174,81 @@ int filterMain(int argc, char** argv) {
             // 1) Throw away stuff that is not bi-allelic
             if (opt::bBiallelicFilter) {
                 result.biallelicPassed = testBiallelic(fields[4]);
-                if (!result.biallelicPassed) continue;
+                if (!result.biallelicPassed) { result.biallelicPassed = false; numMultiallelic++; continue; }
             } else
                 result.biallelicPassed = true;
             
             // 2) Filtering on overall quality
             if (result.overallQuality < opt::min_overall_quality)
-                continue;
+                result.overallQualityPassed = false;
             
             // 3) Filtering on overall depth
             if (result.counts.overallDepth >= opt::min_overall_depth && result.counts.overallDepth <= opt::max_overall_depth) {
                 result.overallDepthPassed = true;
             } else
-                continue;
+                result.overallDepthPassed = false;
             
             // 4) Filtering on strand bias
             if (!result.counts.FSpval.empty()) {
                 if (stringToDouble(result.counts.FSpval) > opt::max_FS)
-                    continue;
+                    result.strandBiasPassed = false;
             }
             
             if (!result.counts.MQSBpval.empty()) {
                 if (stringToDouble(result.counts.MQSBpval) < opt::min_MQSB)
-                    continue;
+                    result.strandBiasPassed = false;
             }
             
-            // 5) Filtering on the number of copies/allele frequency
+            // 5) Filter on inbreeding coefficinet
+            if (result.counts.inbreedingCoefficient < opt::min_F) {
+                result.inbreedingCoeffPassed = false;
+            }
+            
+            // 6) Filtering on the number of copies/allele frequency
             if (result.counts.overall <= (numChromosomes - opt::min_copies) && result.counts.overall >= opt::min_copies) {
                 
-            } else
-                continue;
+            } else {
+                numInvariant++; continue;
+            }
             
-            // 6) Filtering on per-individual criteria
-            if (result.counts.minimumDepthInAnIndividual >= opt::min_depth_in_any_individual) {
+            if (result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
                 std::cout << line << std::endl;
+            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
+                numF++;
+            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
+                numOD++;
+            } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                numOQ++;
+            } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                numSB++;
+            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                numOQ_F++;
+            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                numOQ_OD++;
+            } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                numOQ_SB++;
+            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                numSB_F++;
+            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                numSB_OD++;
+            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
+                numF_OD++;
+            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                numOQ_OD_F++;
+            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                numOQ_OD_SB++;
+            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                numOQ_SB_F++;
+            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                numSB_F_OD++;
+            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                numOQ_OD_F_SB++;
+            }
+            
+            // 7) Filtering on per-individual criteria
+            
+            /*if (result.counts.minimumDepthInAnIndividual >= opt::min_depth_in_any_individual) {
+                
             } else if (opt::bAllowMissingGenotpyes) {
                 // Set genotypes to missing for individuals with too low coverage
                 for (int i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
@@ -209,10 +258,30 @@ int filterMain(int argc, char** argv) {
                 }
                 print_vector_stream(fields, std::cout,'\t');
             }
-            
+            */
             
         }
     }
+    std::cerr << "Reasons for filtering:" << std::endl;
+    std::cerr << "Not biallelic: " << numMultiallelic << std::endl;
+    std::cerr << "Invariant (not polymorphic in called samples): " << numInvariant << std::endl;
+    std::cerr << "Other reasons:" << std::endl;
+    std::cerr << "SB - strand bias; OD - overall depth; OQ - overall quality; F - inbreeding coefficient" << std::endl;
+    std::cerr << "OQ+OD+F+SB:\t" << numOQ_OD_F_SB << std::endl;
+    std::cerr << "OQ+OD+F: \t" << numOQ_OD_F << std::endl;
+    std::cerr << "OQ+OD+SB: \t" << numOQ_OD_SB << std::endl;
+    std::cerr << "OQ+SB+F: \t" << numOQ_SB_F << std::endl;
+    std::cerr << "SB+F+OD: \t" << numSB_F_OD << std::endl;
+    std::cerr << "OQ+OD: \t" << numOQ_OD << std::endl;
+    std::cerr << "OQ+F: \t" << numOQ_F << std::endl;
+    std::cerr << "OQ+SB: \t" << numOQ_SB << std::endl;
+    std::cerr << "SB+F: \t" << numSB_F << std::endl;
+    std::cerr << "SB+OD: \t" << numSB_OD << std::endl;
+    std::cerr << "F+OD: \t" << numF_OD << std::endl;
+    std::cerr << "OQ: \t" << numOQ << std::endl;
+    std::cerr << "SB: \t" << numSB << std::endl;
+    std::cerr << "OD: \t" << numOD << std::endl;
+    std::cerr << "F: \t" << numF << std::endl;
     return 0;
 }
 
@@ -252,6 +321,7 @@ void parseFilterOptions(int argc, char** argv) {
             case OPT_FS: arg >> opt::max_FS; break;
             case OPT_STATS: opt::bStats = true; break;
             case OPT_MIN_F: arg >> opt::min_F; break;
+            case OPT_OVERALL_Q: arg >> opt::min_overall_quality; break;
             case OPT_HELP:
                 std::cout << FILTER_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
