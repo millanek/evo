@@ -37,6 +37,7 @@ public:
     int minimumDepthInAnIndividual;
     int overallDepth;
     std::string FSpval; // Phred-scaled pvalue
+    std::string MQSBpval; // Phred-scaled pvalue
     double inbreedingCoefficient;
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
@@ -180,7 +181,12 @@ template <class T> double vector_average(T vector) {
     return average;
 }
 
-
+double stringToDouble(std::string s) {
+    double d;
+    std::stringstream ss(s); //turn the string into a stream
+    ss >> d; //convert
+    return d;
+}
 
 
 template <typename T> std::map<int, int> tabulateVectorTemplate(T& vec) {

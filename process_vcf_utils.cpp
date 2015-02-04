@@ -166,7 +166,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         if (FSit != info.end()) {
             FSi = (int)std::distance( info.begin(), FSit );
             std::vector<std::string> overallFS = split(info[FSi], '=');
-            thisVariantCounts.FSpval =  overallFS.back();
+            thisVariantCounts.MQSBpval = overallFS.back();
         } else {
             // std::cerr << "This variant hasn't got associated FS (strand-bias) info" << std::endl;
         }
