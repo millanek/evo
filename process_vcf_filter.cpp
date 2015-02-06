@@ -101,6 +101,7 @@ int filterMain(int argc, char** argv) {
     std::ofstream* statsVariantQualityFile;
     
     // Collect some numbers about why variants were filtered out:
+    int numTotalFilteredOut = 0;
     int numMultiallelic = 0; int numInvariant = 0;
     // SB - strand bias; OD - overall depth; OQ - overall quality; F - inbreeding coefficient;
     int numSB = 0; int numOD = 0; int numOQ = 0; int numF = 0; int numOQ_OD = 0; int numOQ_SB = 0; int numOQ_F = 0; int numSB_F = 0; int numSB_OD = 0; int numF_OD = 0;
@@ -174,7 +175,7 @@ int filterMain(int argc, char** argv) {
             // 1) Throw away stuff that is not bi-allelic
             if (opt::bBiallelicFilter) {
                 result.biallelicPassed = testBiallelic(fields[4]);
-                if (!result.biallelicPassed) { result.biallelicPassed = false; numMultiallelic++; continue; }
+                if (!result.biallelicPassed) { result.biallelicPassed = false; numTotalFilteredOut++; numMultiallelic++; continue; }
             } else
                 result.biallelicPassed = true;
             
@@ -213,36 +214,39 @@ int filterMain(int argc, char** argv) {
             
             if (result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
                 std::cout << line << std::endl;
-            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
-                numF++;
-            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
-                numOD++;
-            } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
-                numOQ++;
-            } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
-                numSB++;
-            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
-                numOQ_F++;
-            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
-                numOQ_OD++;
-            } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
-                numOQ_SB++;
-            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
-                numSB_F++;
-            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
-                numSB_OD++;
-            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
-                numF_OD++;
-            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
-                numOQ_OD_F++;
-            } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
-                numOQ_OD_SB++;
-            } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
-                numOQ_SB_F++;
-            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
-                numSB_F_OD++;
-            } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
-                numOQ_OD_F_SB++;
+            } else {
+                numTotalFilteredOut++;
+                if (!result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
+                    numF++;
+                } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
+                    numOD++;
+                } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                    numOQ++;
+                } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                    numSB++;
+                } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                    numOQ_F++;
+                } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                    numOQ_OD++;
+                } else if (result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                    numOQ_SB++;
+                } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                    numSB_F++;
+                } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                    numSB_OD++;
+                } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && result.strandBiasPassed) {
+                    numF_OD++;
+                } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && result.strandBiasPassed) {
+                    numOQ_OD_F++;
+                } else if (result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                    numOQ_OD_SB++;
+                } else if (!result.inbreedingCoeffPassed && result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                    numOQ_SB_F++;
+                } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && result.overallQualityPassed && !result.strandBiasPassed) {
+                    numSB_F_OD++;
+                } else if (!result.inbreedingCoeffPassed && !result.overallDepthPassed && !result.overallQualityPassed && !result.strandBiasPassed) {
+                    numOQ_OD_F_SB++;
+                }
             }
             
             // 7) Filtering on per-individual criteria
@@ -262,26 +266,27 @@ int filterMain(int argc, char** argv) {
             
         }
     }
+    std::cerr << "Total variants filtered out: " << numTotalFilteredOut << std::endl;
     std::cerr << "Reasons for filtering:" << std::endl;
     std::cerr << "Not biallelic: " << numMultiallelic << std::endl;
     std::cerr << "Invariant (not polymorphic in called samples): " << numInvariant << std::endl;
     std::cerr << "Other reasons:" << std::endl;
     std::cerr << "SB - strand bias; OD - overall depth; OQ - overall quality; F - inbreeding coefficient" << std::endl;
-    std::cerr << "OQ+OD+F+SB:\t" << numOQ_OD_F_SB << std::endl;
-    std::cerr << "OQ+OD+F: \t" << numOQ_OD_F << std::endl;
-    std::cerr << "OQ+OD+SB: \t" << numOQ_OD_SB << std::endl;
-    std::cerr << "OQ+SB+F: \t" << numOQ_SB_F << std::endl;
-    std::cerr << "SB+F+OD: \t" << numSB_F_OD << std::endl;
-    std::cerr << "OQ+OD: \t" << numOQ_OD << std::endl;
-    std::cerr << "OQ+F: \t" << numOQ_F << std::endl;
-    std::cerr << "OQ+SB: \t" << numOQ_SB << std::endl;
-    std::cerr << "SB+F: \t" << numSB_F << std::endl;
-    std::cerr << "SB+OD: \t" << numSB_OD << std::endl;
-    std::cerr << "F+OD: \t" << numF_OD << std::endl;
-    std::cerr << "OQ: \t" << numOQ << std::endl;
-    std::cerr << "SB: \t" << numSB << std::endl;
-    std::cerr << "OD: \t" << numOD << std::endl;
-    std::cerr << "F: \t" << numF << std::endl;
+    std::cerr << "OQ+OD+F+SB:\t" << numOQ_OD_F_SB << " (" << ((double)numOQ_OD_F_SB/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ+OD+F: \t" << numOQ_OD_F << " (" << ((double)numOQ_OD_F/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ+OD+SB: \t" << numOQ_OD_SB << " (" << ((double)numOQ_OD_SB/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ+SB+F: \t" << numOQ_SB_F << " (" << ((double)numOQ_SB_F/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "SB+F+OD: \t" << numSB_F_OD << " (" << ((double)numSB_F_OD/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ+OD: \t" << numOQ_OD << " (" << ((double)numOQ_OD/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ+F: \t" << numOQ_F << " (" << ((double)numOQ_F/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ+SB: \t" << numOQ_SB << " (" << ((double)numOQ_SB/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "SB+F: \t" << numSB_F << " (" << ((double)numSB_F/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "SB+OD: \t" << numSB_OD << " (" << ((double)numSB_OD/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "F+OD: \t" << numF_OD << " (" << ((double)numF_OD/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OQ: \t" << numOQ << " (" << ((double)numOQ/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "SB: \t" << numSB << " (" << ((double)numSB/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "OD: \t" << numOD << " (" << ((double)numOD/numTotalFilteredOut)*100 << "%)" << std::endl;
+    std::cerr << "F: \t" << numF << " (" << ((double)numF/numTotalFilteredOut)*100 << "%)" << std::endl;
     return 0;
 }
 
