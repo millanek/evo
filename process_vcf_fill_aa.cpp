@@ -43,7 +43,7 @@ int fillAaMain(int argc, char** argv) {
     parseFillAaOptions(argc, argv);
     string line; // for reading the input files
     
-    std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
+    std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* ancSeqFile = new std::ifstream(opt::ancSeqFile.c_str());
     
     string refFastaFileRoot;
