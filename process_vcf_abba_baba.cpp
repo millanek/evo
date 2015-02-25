@@ -144,7 +144,7 @@ inline std::string getAAfromInfo(const std::vector<std::string>& info) {
 void doAbbaBaba() {
     string line; // for reading the input files
     
-    std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
+    std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
     string setsFileRoot = stripExtension(opt::setsFile);
     std::ofstream* outFile = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_abbaBaba.txt");
