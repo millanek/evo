@@ -66,7 +66,9 @@ int getAaSeqMain(int argc, char** argv) {
     
     string outAncestralFN;
     if (!opt::bAncFromMaf) { outAncestralFN = refFastaFileRoot + ".ancestralSequence.fa"; }
-    else { std::cerr << "Using maf" << std::endl; outAncestralFN = refFastaFileRoot + ".PNsequence.NoIndels.fa";
+    else { std::cerr << "Using maf" << std::endl;
+        if (opt::deletionAsN) outAncestralFN = refFastaFileRoot + ".PNsequence.deletionsAsN.fa";
+        else outAncestralFN = refFastaFileRoot + ".PNsequence.NoIndels.fa";
     }
     std::cerr << "Output should be in:" << std::endl;
     std::cerr << outAncestralFN << std::endl;
