@@ -33,6 +33,7 @@
 #include "process_vcf_join_multiFasta.h"
 #include "process_vcf_shortRNA.h"
 #include "process_vcf_linkGeneNames.h"
+#include "remove_lowercase.h"
 
 
 //#define TESTING 1
@@ -105,6 +106,8 @@ int main(int argc, char **argv) {
             filterMain(argc - 1, argv + 1);
         else if(command == "linkGeneNames")
             linkGNMain(argc - 1, argv + 1);
+        else if(command == "remove-lowercase")
+            removeLcMain(argc - 1, argv + 1);
         else if(command == "abba-baba")
             abbaBabaMain(argc - 1, argv + 1);
         else if(command == "aa-seq")
