@@ -36,7 +36,6 @@ namespace opt
 std::string removeLcLetters(std::ifstream& fastaFile, int bytes) {
     std::string filteredSeq; filteredSeq.reserve(bytes); filteredSeq = "";
     string line;
-    string currentScaffold = line.substr(1,string::npos);
     while (getline(fastaFile, line)) {
         for (int i = 0; i != line.length(); i++) {
             if (isupper(line[i])) {
