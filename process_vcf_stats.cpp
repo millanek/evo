@@ -127,9 +127,9 @@ int statsMain(int argc, char** argv) {
             if (opt::bDiffs) {
                 diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,result);
             }
+            if (totalVariantNumber % 100000 == 0)
+                std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
         }
-        if (totalVariantNumber % 100000 == 0)
-            std::cerr << "Processed " << totalVariantNumber << "variants" << std::endl;
     }
     
     // Printing doubletons
