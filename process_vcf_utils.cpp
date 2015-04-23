@@ -114,7 +114,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     std::vector<std::string>::iterator DPit; int DPi = std::numeric_limits<int>::min();
     DPit = find (format.begin(), format.end(), "DP");
     if (DPit == format.end()) {
-        std::cerr << "This variant hasn't got associated per-sample DP info" << std::endl;
+        // std::cerr << "This variant hasn't got associated per-sample DP info" << std::endl;
     } else {
         DPi = (int)std::distance( format.begin(), DPit );
         hasDP = true;
@@ -123,7 +123,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     std::vector<std::string>::iterator GQit; int GQi = std::numeric_limits<int>::min();
     GQit = find (format.begin(), format.end(), "GQ");
     if (GQit == format.end()) {
-        std::cerr << "This variant hasn't got associated per-sample GQ info" << std::endl;
+        // std::cerr << "This variant hasn't got associated per-sample GQ info" << std::endl;
     } else {
         GQi = (int)std::distance( format.begin(), GQit );
         hasGQ = true;

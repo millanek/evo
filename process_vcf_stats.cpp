@@ -111,7 +111,7 @@ int statsMain(int argc, char** argv) {
             std::vector<std::string> fields = split(line, '\t');
             if (!gotChromosomeNumber) {
                 const std::vector<std::string>::size_type numSamples = fields.size() - NUM_NON_GENOTYPE_COLUMNS;
-                numChromosomes = numSamples * 2;
+                numChromosomes = (int)numSamples * 2;
                 std::cerr << "Number of chromosomes: " << numChromosomes << std::endl;
                 gotChromosomeNumber = true;
                 hetCounts.assign(numSamples, 0);
