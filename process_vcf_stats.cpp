@@ -99,7 +99,7 @@ int statsMain(int argc, char** argv) {
     }
     
     // Start reading from the vcf file
-    std::ifstream* inFile = new std::ifstream(fileName.c_str(), mode);
+    std::istream* inFile = createReader(fileName.c_str());
     bool gotChromosomeNumber = false;
     int numChromosomes;
     string line;
