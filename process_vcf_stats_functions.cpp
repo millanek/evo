@@ -42,9 +42,9 @@ std::vector<std::string> initializeDoubletons(std::vector<std::vector<int> >& d,
     for (int i = 0; i < n_pop; i++) { 
         fp_map[pop_unique[i]] = i;
     }
-#ifdef TESTING
+//#ifdef TESTING
     std::cerr << "Doubletons initialised with size: " << n_pop << std::endl;
-#endif
+//#endif
     return pop_unique;
 }
 
@@ -62,9 +62,9 @@ void initializeDoubletonsIndividuals(std::vector<std::vector<int> >& d, const st
 
 // Filling in the doubleton data structure
 void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult& result, int numChromosomes, const std::vector<std::string> p, std::map<std::string,int>& p_int_map) {
-#ifdef TESTING
+//#ifdef TESTING
     std::cerr << "Overall count: " << result.counts.overall << std::endl;
-#endif
+//#endif
     int fields[2];
     
     if (result.counts.overall == 2) {
