@@ -108,8 +108,6 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq
             res.lastVarsF_G_denom += 1-c.set1daAF; res.lastVarsF_G_num += thisDnumerator;
         }
         
-        
-        
         if (thisDdenominator == 0) {
             std::cerr << "P1:" << c.set1daAF << " P2:" << c.set2daAF << " P3:" << c.set3daAF << std::endl;
         }
@@ -248,6 +246,10 @@ void doAbbaBaba() {
                 std::vector<string> s = split(windowStartEnd, '\t');
                 if (s[0] == fields[0]) {
                     windowStartEnd = windowStartEnd + "\t" + fields[1];
+                    if ((double)r.windowDnum/r.window_f_d_denominator > 1) {
+                        std::cerr << "D num" << r.windowDnum << std::endl;
+                        std::cerr << "f_d denom" << r.window_f_d_denominator << std::endl;
+                    }
                     *outFile << windowStartEnd << "\t" << (double)r.windowDnum/r.windowDdenom << "\t" << (double)r.windowDnum/r.window_f_d_denominator << std::endl;
                     windowStartEnd = fields[0] + "\t" + fields[1];
                 } else {
