@@ -17,18 +17,20 @@ static const char *LINKGN_USAGE_MESSAGE =
 "Use homology information from David Brawand to link his gene names with known zebrafish gene names\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
-"       -o, --out=FILE_ROOT                     the outpur file will be 'FILE_ROOT.ancestralSequence.fa'\n"
+"       -o, --out=RUN_NAME                      RUN_NAME will be a part of the output files' names\n"
 "       -s, --species=SPECIES                   the cichlid species (mz,pn,ab,nb, or on)\n"
 "       --v2                                    using v2 annotation (e.g. BROADMZ2,full_orthologs)\n"
+"       --NtoN                                  include genes with 1-to-N and N-to-N relationships (for Gene Ontology analysis)\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 static const char* shortopts = "ho:s:";
-enum { OPT_V2 };
+enum { OPT_V2, OPT_NtoN };
 
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
     { "v2",   no_argument, NULL, OPT_V2 },
+    { "NtoN",   no_argument, NULL, OPT_NtoN },
     { "out",   no_argument, NULL, 'o' },
     { "species",   no_argument, NULL, 's' },
     { NULL, 0, NULL, 0 }
@@ -41,8 +43,9 @@ namespace opt
     static string orthologousClustersFile;
     static string ensGeneFile;
     static string ensEntrezFile;
-    static string out;
+    static string out = "";
     static bool v2 = false;
+    static bool NtoN = false;
     static string species = "mz";
 }
 
@@ -59,9 +62,22 @@ inline int getSpeciesColumn(const string& species) {
 int linkGNMain(int argc, char** argv) {
     linkGNOptions(argc, argv);
     string gpFileRoot = stripExtension(opt::gpFile);
-    std::ofstream* gpOutFile = new std::ofstream(gpFileRoot + "_RefGene.gp");
-    std::ofstream* refLinkFile = new std::ofstream(gpFileRoot + "_RefLink.gp");
+    std::ofstream* gpOutFile;
+    std::ofstream* refLinkFile;
+    std::ofstream* goBedFile;
+    std::ofstream* fullBedFile;
     
+    if (opt::NtoN) {
+        goBedFile = new std::ofstream(gpFileRoot + opt::out + "_NtoN_GOBed.txt");
+        fullBedFile = new std::ofstream(gpFileRoot + opt::out + "_NtoN_FullBed.txt");
+        gpOutFile = new std::ofstream(gpFileRoot + opt::out + "_NtoN_RefGene.gp");
+        refLinkFile = new std::ofstream(gpFileRoot + opt::out + "_NtoN_RefLink.gp");
+    } else {
+        goBedFile = new std::ofstream(gpFileRoot + opt::out + "_GOBed.txt");
+        fullBedFile = new std::ofstream(gpFileRoot + opt::out + "_FullBed.txt");
+        gpOutFile = new std::ofstream(gpFileRoot + opt::out + "_RefGene.gp");
+        refLinkFile = new std::ofstream(gpFileRoot + opt::out + "_RefLink.gp");
+    }
     
     string line;
     int geneNum = 1;
@@ -93,7 +109,7 @@ int linkGNMain(int argc, char** argv) {
                 }
                 if (idAndNum[0].substr(0,6) == "ENSDAR") {
                     if (thisDanRer == "") { thisDanRer = idAndNum[0]; }
-                    else { multi = true;}
+                    else { if (!opt::NtoN) multi = true; else if (rand() < 0.5) thisDanRer = idAndNum[0];}
                 }
                 // std::cerr << atoi(idAndNum[1].c_str()) << "\t" << geneNum << std::endl;
             } else {
@@ -155,11 +171,19 @@ int linkGNMain(int argc, char** argv) {
                     gpVec[11] = ensGeneMap[ensembl[0]];
                     print_vector(gpVec, *gpOutFile);
                     *refLinkFile << ensGeneMap[ensembl[0]] << "\t" << ensGeneDescriptionMap[ensembl[0]] << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << ensEntrezMap[ensembl[0]] << "\t0" << std::endl;
+                    *fullBedFile << gpVec[1] << "\t" << gpVec[3] << "\t" << gpVec[4] << "\t" << ensEntrezMap[ensembl[0]] << "\t0\t" << gpVec[2] << std::endl;
+                    if (ensEntrezMap[ensembl[0]] != "0") {
+                        *goBedFile << gpVec[1] << "\t" << gpVec[3] << "\t" << gpVec[4] << "\t" << ensEntrezMap[ensembl[0]] << "\t0\t" << gpVec[2] << std::endl;
+                    }
                 } else {
                     std::cout << gpVec[0] << "\t" << ensembl[0] << "\t" << ensGeneMap[ensembl[0]] << "/" << ensembl[1] << std::endl;
                     gpVec[11] = ensGeneMap[ensembl[0]]+"/"+ensembl[1];
                     print_vector(gpVec, *gpOutFile);
                     *refLinkFile << ensGeneMap[ensembl[0]] << "/" << ensembl[1] << "\t" << ensGeneDescriptionMap[ensembl[0]] << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << ensEntrezMap[ensembl[0]] << "\t0" << std::endl;
+                    *fullBedFile << gpVec[1] << "\t" << gpVec[3] << "\t" << gpVec[4] << "\t" << ensEntrezMap[ensembl[0]] << "\t0\t" << gpVec[2] << std::endl;
+                    if (ensEntrezMap[ensembl[0]] != "0") {
+                        *goBedFile << gpVec[1] << "\t" << gpVec[3] << "\t" << gpVec[4] << "\t" << ensEntrezMap[ensembl[0]] << "\t0\t" << gpVec[2] << std::endl;
+                    }
                 }
             } else if (ensembl[0] == "novelCichlidGene") {
                 std::cout << gpVec[0] << "\t" << ensembl[0] << "\t" << opt::species + ".novel." + numToString(countNovel) << std::endl;
@@ -186,6 +210,7 @@ void linkGNOptions(int argc, char** argv) {
             case 'o': arg >> opt::out; break;
             case 's': arg >> opt::species; break;
             case OPT_V2: opt::v2 = true; break;
+            case OPT_NtoN: opt::NtoN = true; break;
             case 'h':
                 std::cout << LINKGN_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
@@ -200,6 +225,8 @@ void linkGNOptions(int argc, char** argv) {
         std::cerr << "too many arguments\n";
         die = true;
     }
+    
+    if (opt::out != "") opt::out = "_" + opt::out;
     
     if (die) {
         std::cout << "\n" << LINKGN_USAGE_MESSAGE;

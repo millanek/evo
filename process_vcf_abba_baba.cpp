@@ -18,6 +18,7 @@ static const char *ABBA_USAGE_MESSAGE =
 "Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] INPUT_FILE.vcf SETS.txt\n"
 "Calculate the D-statistic (abba/baba) as definded in Durand et al. 2011"
 "This is a Four-Taxon Statistic to Test for Admixture using data from a VCF file\n"
+"Now also calculates f_d as defined by Martin et al. 2014 MBE paper - for the ABBA pattern"
 "The SETS.txt should have exactly four lines:\n"
 "Line 1: Outgroup individuals\n"
 "Line 2,3,4: P3,P2,P1 individuals respectively (as defined in the Durand et al. 2011 paper\n"
@@ -76,7 +77,7 @@ namespace ABBABABAcounts {
     // int ABBABABA = 0;
 }
 
-inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, double& Dnumerator, double& Ddenominator,double& lastVarsDnum, double& lastVarsDdenom,double& windowDnum, double& windowDdenom) {
+inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq_allResults& res) {
     if (c.set1daAF == -1) {
         ABBABABAcounts::noDafInfo++;
     } else if (c.set3daAF == 0) {
@@ -91,8 +92,24 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, double& Dnumer
         
         double thisDnumerator = ((1-c.set1daAF)*c.set2daAF*c.set3daAF) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
         double thisDdenominator = ((1-c.set1daAF)*c.set2daAF*c.set3daAF) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF);
-        Dnumerator += thisDnumerator; lastVarsDnum += thisDnumerator; windowDnum += thisDnumerator;
-        Ddenominator += thisDdenominator; lastVarsDdenom += thisDdenominator; windowDdenom += thisDdenominator;
+        res.Dnumerator += thisDnumerator; res.lastVarsDnum += thisDnumerator; res.windowDnum += thisDnumerator;
+        res.Ddenominator += thisDdenominator; res.lastVarsDdenom += thisDdenominator; res.windowDdenom += thisDdenominator;
+        
+        double thisF_d_denom;
+        if (c.set2daAF > c.set3daAF) {
+            thisF_d_denom = ((1-c.set1daAF)*c.set2daAF*c.set2daAF) - (c.set1daAF*(1-c.set2daAF)*c.set2daAF);
+        } else {
+            thisF_d_denom = ((1-c.set1daAF)*c.set3daAF*c.set3daAF) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF);
+        }
+        res.f_d_denominator += thisF_d_denom; res.window_f_d_denominator += thisF_d_denom; res.lastVarsF_d_denom += thisF_d_denom;
+        
+        if (c.set3daAF == 1) {
+            res.f_G_denom += 1-c.set1daAF; res.f_G_num += thisDnumerator;
+            res.lastVarsF_G_denom += 1-c.set1daAF; res.lastVarsF_G_num += thisDnumerator;
+        }
+        
+        
+        
         if (thisDdenominator == 0) {
             std::cerr << "P1:" << c.set1daAF << " P2:" << c.set2daAF << " P3:" << c.set3daAF << std::endl;
         }
@@ -105,7 +122,7 @@ inline int sample01(const double& p1) {
     return r > p1;
 }
 
-inline void incrementDnumDdenomSingleSequence(ThreeSetCounts& c, double& Dnumerator, double& Ddenominator,double& lastVarsDnum, double& lastVarsDdenom,double& windowDnum, double& windowDdenom) {
+inline void incrementDnumDdenomSingleSequence(ThreeSetCounts& c, ABBA_BABA_Freq_allResults& res) {
     if (c.set1daAF == -1) {
         ABBABABAcounts::noDafInfo++;
     } else if (c.set3daAF == 0) {
@@ -120,10 +137,10 @@ inline void incrementDnumDdenomSingleSequence(ThreeSetCounts& c, double& Dnumera
             // Green et al. (2010) eq. S15.1
             if (c.set1daAF == 0 && c.set2daAF == 1) {
                 ABBABABAcounts::ABBA++; ABBABABAcounts::usedVariantsCounter++;
-                Ddenominator++; Dnumerator++; lastVarsDdenom++; lastVarsDnum++; windowDdenom++; windowDnum++;
+                res.Ddenominator++; res.Dnumerator++; res.lastVarsDdenom++; res.lastVarsDnum++; res.windowDdenom++; res.windowDnum++;
             } else if (c.set1daAF == 1 && c.set2daAF == 0) {
                 ABBABABAcounts::BABA++; ABBABABAcounts::usedVariantsCounter++;
-                Ddenominator++; Dnumerator--; lastVarsDdenom++; lastVarsDnum--; windowDdenom++; windowDnum--;
+                res.Ddenominator++; res.Dnumerator--; res.lastVarsDdenom++; res.lastVarsDnum--; res.windowDdenom++; res.windowDnum--;
             }
         }
     }
@@ -164,11 +181,9 @@ void doAbbaBaba() {
     
     // Now go through the vcf and calculate D
     int totalVariantNumber = 0;
-    double Dnumerator = 0; double Ddenominator = 0;
-    double lastVarsDnum = 0; double lastVarsDdenom = 0;
-    double windowDnum = 0; double windowDdenom = 0;
+    ABBA_BABA_Freq_allResults r;
     int lastPrint = 0; int lastWindowVariant = 0;
-    std::vector<double> regionDs;
+    std::vector<double> regionDs; std::vector<double> region_f_Gs; std::vector<double> region_f_Ds;
     std::vector<string> sampleNames;
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
@@ -204,8 +219,13 @@ void doAbbaBaba() {
                     } else if (AA == fields[4]) {
                         c = getFourSetVariantCounts(fields,P1pos,P2pos,P3pos,Opos,"alt");
                     }
-                    Dnumerator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
-                    Ddenominator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
+                    r.Dnumerator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
+                    r.Ddenominator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
+                    if (c.set2daAF > c.set3daAF) {
+                        r.f_d_denominator += ((1-c.set1daAF)*c.set2daAF*c.set2daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set2daAF*(1-c.set4daAF));
+                    } else {
+                        r.f_d_denominator += ((1-c.set1daAF)*c.set3daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF*(1-c.set4daAF));
+                    }
                 } else {
                     ThreeSetCounts c;
                     if (AA == fields[3]) {
@@ -214,9 +234,9 @@ void doAbbaBaba() {
                         c = getThreeSetVariantCounts(fields,P1pos,P2pos,P3pos,"alt");
                     }
                     if (opt::bFrequency) {
-                        incrementDnumDdenomFrequency(c, Dnumerator, Ddenominator,lastVarsDnum,lastVarsDdenom,windowDnum,windowDdenom);
+                        incrementDnumDdenomFrequency(c, r);
                     } else {
-                        incrementDnumDdenomSingleSequence(c, Dnumerator, Ddenominator,lastVarsDnum,lastVarsDdenom,windowDnum,windowDdenom);
+                        incrementDnumDdenomSingleSequence(c, r);
                     }
                 }
                 // if (totalVariantNumber % 100000 == 0) { std::cerr << Dnumerator << std::endl; }
@@ -228,12 +248,12 @@ void doAbbaBaba() {
                 std::vector<string> s = split(windowStartEnd, '\t');
                 if (s[0] == fields[0]) {
                     windowStartEnd = windowStartEnd + "\t" + fields[1];
-                    *outFile << windowStartEnd << "\t" << (double)windowDnum/windowDdenom << std::endl;
+                    *outFile << windowStartEnd << "\t" << (double)r.windowDnum/r.windowDdenom << "\t" << (double)r.windowDnum/r.window_f_d_denominator << std::endl;
                     windowStartEnd = fields[0] + "\t" + fields[1];
                 } else {
                     windowStartEnd = fields[0] + "\t0";
                 }
-                windowDnum = 0; windowDdenom = 0; lastWindowVariant = ABBABABAcounts::usedVariantsCounter;
+                r.windowDnum = 0; r.windowDdenom = 0; r.window_f_d_denominator = 0; lastWindowVariant = ABBABABAcounts::usedVariantsCounter;
             }
             
             
@@ -242,24 +262,30 @@ void doAbbaBaba() {
                 if (opt::bFrequency)
                     assert(ABBABABAcounts::XXAA + ABBABABAcounts::AABA + ABBABABAcounts::BBBA + ABBABABAcounts::indels + ABBABABAcounts::noDafInfo + ABBABABAcounts::usedVariantsCounter == totalVariantNumber);
                 if (ABBABABAcounts::usedVariantsCounter > (6 * opt::jackKniveWindowSize)) {
-                    double Dstd_err = jackknive_std_err(regionDs);
-                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tD=" << (double)Dnumerator/Ddenominator << " std_err=" <<Dstd_err << std::endl;
+                    double Dstd_err = jackknive_std_err(regionDs); double f_Gstd_err = jackknive_std_err(region_f_Gs); double f_Dstd_err = jackknive_std_err(region_f_Ds);
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tD=" << (double)r.Dnumerator/r.Ddenominator << " std_err=" << Dstd_err << std::endl;
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tf_G=" << (double)r.f_G_num/r.f_G_denom << " std_err=" << f_Gstd_err << std::endl;
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tf_d=" << (double)r.Dnumerator/r.f_d_denominator << " std_err=" << f_Dstd_err << std::endl;
                 } else {
-                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tD=" << (double)Dnumerator/Ddenominator << std::endl;
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tD=" << (double)r.Dnumerator/r.Ddenominator << std::endl;
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tf_G=" << (double)r.f_G_num/r.f_G_denom << std::endl;
+                    std::cerr << totalVariantNumber << " variants processed. " << ABBABABAcounts::usedVariantsCounter << " variants used. \tf_d=" << (double)r.Dnumerator/r.f_d_denominator << std::endl;
                 }
-                std::cerr << "Last used "<< opt::jackKniveWindowSize << " variants \t\t\t\tD=" << lastVarsDnum/lastVarsDdenom << std::endl;
+                std::cerr << "Last used "<< opt::jackKniveWindowSize << " variants \t\t\t\tD=" << r.lastVarsDnum/r.lastVarsDdenom << std::endl;
                 // std::cerr << "AAAA=" << XXAA << "; AABA=" << AABA << "; BBBA=" << BBBA << std::endl;
-                regionDs.push_back(lastVarsDnum/lastVarsDdenom);
-                lastVarsDnum = 0; lastVarsDdenom = 0;
+                regionDs.push_back(r.lastVarsDnum/r.lastVarsDdenom); region_f_Gs.push_back(r.lastVarsF_G_num/r.lastVarsF_G_denom);
+                region_f_Ds.push_back(r.lastVarsDnum/r.lastVarsF_d_denom);
+                r.lastVarsDnum = 0; r.lastVarsDdenom = 0; r.lastVarsF_G_num = 0; r.lastVarsF_G_denom = 0; r.lastVarsF_d_denom = 0;
                 lastPrint = ABBABABAcounts::usedVariantsCounter;
             }
         }
     }
     
-    double Dstd_err = jackknive_std_err(regionDs);
+    double Dstd_err = jackknive_std_err(regionDs); double f_Gstd_err = jackknive_std_err(region_f_Gs); double f_Dstd_err = jackknive_std_err(region_f_Ds);
     std::cerr << std::endl;
-    std::cerr << totalVariantNumber << " variants processed. D=" << (double)Dnumerator/Ddenominator << " std_err=" << Dstd_err << std::endl;
-    
+    std::cerr << totalVariantNumber << " variants processed. D=" << (double)r.Dnumerator/r.Ddenominator << " std_err=" << Dstd_err << std::endl;
+    std::cerr << totalVariantNumber << " variants processed. f_G=" << (double)r.f_G_num/r.f_G_denom << " std_err=" << f_Gstd_err << std::endl;
+    std::cerr << totalVariantNumber << " variants processed. f_d=" << (double)r.Dnumerator/r.f_d_denominator << " std_err=" << f_Dstd_err << std::endl;
     
 }
 
