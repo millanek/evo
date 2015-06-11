@@ -74,6 +74,7 @@ namespace ABBABABAcounts {
     int indels = 0;
     int noDafInfo = 0;
     int usedVariantsCounter = 0;
+    int used_f_d_Counter = 0;
     // int ABBABABA = 0;
 }
 
@@ -101,17 +102,19 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq
         } else {
             thisF_d_denom = ((1-c.set1daAF)*c.set3daAF*c.set3daAF) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF);
         }
-        
-        if (thisDnumerator/thisF_d_denom > 1 || thisDnumerator/thisF_d_denom < -1) {
-            std::cerr << "f_d:\t" << thisDnumerator/thisF_d_denom << std::endl;
-            std::cerr << "D num:\t" << thisDnumerator << std::endl;
-            std::cerr << "f_d denom:\t" << thisF_d_denom << std::endl;
-            std::cerr << "p1:\t" << c.set1daAF << std::endl;
-            std::cerr << "p2:\t" << c.set2daAF << std::endl;
-            std::cerr << "p3:\t" << c.set3daAF << std::endl;
+        if (thisF_d_denom > 0) {
+            if (thisDnumerator/thisF_d_denom > 1 || thisDnumerator/thisF_d_denom < -1) {
+                std::cerr << "f_d:\t" << thisDnumerator/thisF_d_denom << std::endl;
+                std::cerr << "D num:\t" << thisDnumerator << std::endl;
+                std::cerr << "f_d denom:\t" << thisF_d_denom << std::endl;
+                std::cerr << "p1:\t" << c.set1daAF << std::endl;
+                std::cerr << "p2:\t" << c.set2daAF << std::endl;
+                std::cerr << "p3:\t" << c.set3daAF << std::endl;
+            }
+            res.f_d_denominator += thisF_d_denom; res.window_f_d_denominator += thisF_d_denom; res.lastVarsF_d_denom += thisF_d_denom;
+            res.f_d_num += thisDnumerator; res.window_f_d_denominator += thisDnumerator; res.lastVarsF_d_denom += thisDnumerator;
+            ABBABABAcounts::used_f_d_Counter++;
         }
-        
-        res.f_d_denominator += thisF_d_denom; res.window_f_d_denominator += thisF_d_denom; res.lastVarsF_d_denom += thisF_d_denom;
         
         if (c.set3daAF == 1) {
             res.f_G_denom += 1-c.set1daAF; res.f_G_num += thisDnumerator;
