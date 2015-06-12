@@ -102,7 +102,7 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq
         } else {
             thisF_d_denom = ((1-c.set1daAF)*c.set3daAF*c.set3daAF) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF);
         }
-        if (thisF_d_denom > 0) {
+        if (thisF_d_denom != 0) {
             /* if (thisDnumerator/thisF_d_denom > 1 || thisDnumerator/thisF_d_denom < -1) {
                 std::cerr << "f_d:\t" << thisDnumerator/thisF_d_denom << std::endl;
                 std::cerr << "D num:\t" << thisDnumerator << std::endl;
