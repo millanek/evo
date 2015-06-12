@@ -13,12 +13,12 @@
 
 class ABBA_BABA_Freq_allResults {
 public:
-    ABBA_BABA_Freq_allResults() : Dnumerator(0), Ddenominator(0), lastVarsDnum(0), lastVarsDdenom(0), windowDnum(0), windowDdenom(0), f_d_denominator(0), window_f_d_denominator(0),  lastVarsF_d_denom(0), f_d_num(0), window_f_d_num(0),  lastVarsF_d_num(0),f_G_denom(0), f_G_num(0), lastVarsF_G_num(0), lastVarsF_G_denom(0) {};
-    
+    ABBA_BABA_Freq_allResults() : Dnumerator(0), Ddenominator(0), lastVarsDnum(0), lastVarsDdenom(0), windowDnum(0), windowDdenom(0), f_d_denominator(0), window_f_d_denominator(0),  lastVarsF_d_denom(0), f_d_num(0), window_f_d_num(0),  lastVarsF_d_num(0),f_G_denom(0), f_G_num(0), lastVarsF_G_num(0), lastVarsF_G_denom(0), f_dM_denominator(0), window_f_dM_denominator(0), lastVarsF_dM_denom(0) {};
     double Dnumerator; double Ddenominator;     // simple D statistic
     double lastVarsDnum; double lastVarsDdenom; // D within a long stretch window for jackkinive analysis
     double windowDnum; double windowDdenom; // D within a window
     double f_d_denominator; double window_f_d_denominator; double lastVarsF_d_denom;
+    double f_dM_denominator; double window_f_dM_denominator; double lastVarsF_dM_denom;
     double f_d_num; double window_f_d_num; double lastVarsF_d_num;
     double f_G_denom; double f_G_num; double lastVarsF_G_num; double lastVarsF_G_denom;
 };
