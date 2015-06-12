@@ -87,6 +87,8 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq
         ABBABABAcounts::AABA++;
     } else if (c.set1daAF == 1 && c.set2daAF == 1) {
         ABBABABAcounts::BBBA++;
+    } else if (c.set1daAF == c.set2daAF) {
+        
     } else {
         ABBABABAcounts::usedVariantsCounter++;
         // Green et al. (2010) eq. S15.2
