@@ -71,6 +71,7 @@ namespace ABBABABAcounts {
     int XXBA = 0;
     int ABBA = 0;
     int BABA = 0;
+    int p1p2 = 0;
     int indels = 0;
     int noDafInfo = 0;
     int usedVariantsCounter = 0;
@@ -88,7 +89,7 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq
     } else if (c.set1daAF == 1 && c.set2daAF == 1) {
         ABBABABAcounts::BBBA++;
     } else if (c.set1daAF == c.set2daAF) {
-        
+        ABBABABAcounts::p1p2++;
     } else {
         ABBABABAcounts::usedVariantsCounter++;
         // Green et al. (2010) eq. S15.2
@@ -302,7 +303,7 @@ void doAbbaBaba() {
             if (ABBABABAcounts::usedVariantsCounter % opt::jackKniveWindowSize == 0 && ABBABABAcounts::usedVariantsCounter != lastPrint) {
             //if (totalVariantNumber % 100000 == 0) {
                 if (opt::bFrequency)
-                    assert(ABBABABAcounts::XXAA + ABBABABAcounts::AABA + ABBABABAcounts::BBBA + ABBABABAcounts::indels + ABBABABAcounts::noDafInfo + ABBABABAcounts::usedVariantsCounter == totalVariantNumber);
+                    assert(ABBABABAcounts::XXAA + ABBABABAcounts::AABA + ABBABABAcounts::BBBA + ABBABABAcounts::indels + ABBABABAcounts::noDafInfo + ABBABABAcounts::usedVariantsCounter + ABBABABAcounts::p1p2 == totalVariantNumber);
                 if (ABBABABAcounts::usedVariantsCounter > (6 * opt::jackKniveWindowSize)) {
                     double Dstd_err = jackknive_std_err(regionDs); double f_Gstd_err = jackknive_std_err(region_f_Gs);
                     double f_Dstd_err = jackknive_std_err(region_f_Ds); double f_DMstd_err = jackknive_std_err(region_f_DMs);
