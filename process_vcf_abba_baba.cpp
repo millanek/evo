@@ -309,7 +309,7 @@ void doAbbaBaba() {
                 // std::cerr << "AAAA=" << XXAA << "; AABA=" << AABA << "; BBBA=" << BBBA << std::endl;
                 regionDs.push_back(r.lastVarsDnum/r.lastVarsDdenom); region_f_Gs.push_back(r.lastVarsF_G_num/r.lastVarsF_G_denom);
                 region_f_Ds.push_back(r.lastVarsF_d_num/r.lastVarsF_d_denom); region_f_DMs.push_back(r.lastVarsDnum/r.lastVarsF_dM_denom);
-                r.lastVarsDnum = 0; r.lastVarsDdenom = 0; r.lastVarsF_d_num = 0; r.lastVarsF_d_denom = 0; r.lastVarsF_G_num = 0; r.lastVarsF_G_denom = 0; r.f_dM_denominator = 0;
+                r.lastVarsDnum = 0; r.lastVarsDdenom = 0; r.lastVarsF_d_num = 0; r.lastVarsF_d_denom = 0; r.lastVarsF_G_num = 0; r.lastVarsF_G_denom = 0; r.lastVarsF_dM_denom = 0;
                 lastPrint = ABBABABAcounts::usedVariantsCounter;
             }
         }
