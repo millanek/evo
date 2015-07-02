@@ -97,8 +97,9 @@ SetCounts getVariantCountsForFst(const std::vector<std::string>& fields, const s
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
     thisVariantCounts.set1individualsWithVariant.assign(set1_loci.size(),0);
     thisVariantCounts.set2individualsWithVariant.assign(set2_loci.size(),0);
-    thisVariantCounts.set1HaplotypeVariant.assign(set1_loci.size()*2,0);
-    thisVariantCounts.set2HaplotypeVariant.assign(set2_loci.size()*2,0);
+    int n1 = (int)set1_loci.size()*2; int n2 = (int)set2_loci.size()*2;
+    thisVariantCounts.set1HaplotypeVariant.assign(n1,0);
+    thisVariantCounts.set2HaplotypeVariant.assign(n2,0);
     // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
     int set1i = 0; bool inSet1 = false; int set2i = 0; bool inSet2 = false; int set1hapI = 0; int set2hapI = 0;
     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
