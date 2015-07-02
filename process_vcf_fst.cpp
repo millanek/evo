@@ -166,7 +166,8 @@ double calculateDxy(const SetCounts& thisVarCounts, const int n1, const int n2) 
 
 std::vector<double> calculatePiTwoSets(const SetCounts& thisVarCounts, const int n1, const int n2) {
     double pi1 = 0; double pi2 = 0;
-    for (std::vector<std::string>::size_type i = 0; i != n1; i++) {
+ 
+    for (std::vector<std::string>::size_type i = 0; i != n1 - 1; i++) {
         for (std::vector<std::string>::size_type j = i+1; j != n1; j++) {
             if (thisVarCounts.set1HaplotypeVariant[i] == 1 && thisVarCounts.set1HaplotypeVariant[j] == 0) {
                 pi1++;
@@ -175,7 +176,7 @@ std::vector<double> calculatePiTwoSets(const SetCounts& thisVarCounts, const int
             }
         }
     }
-    for (std::vector<std::string>::size_type i = 0; i != n2; i++) {
+    for (std::vector<std::string>::size_type i = 0; i != n2 - 1; i++) {
         for (std::vector<std::string>::size_type j = i+1; j != n2; j++) {
             if (thisVarCounts.set2HaplotypeVariant[i] == 1 && thisVarCounts.set2HaplotypeVariant[j] == 0) {
                 pi2++;
