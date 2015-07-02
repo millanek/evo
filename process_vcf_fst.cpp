@@ -341,7 +341,8 @@ void getFstFromVCF() {
             if (info[0] != "INDEL") {  // Without indels
                 std::cerr << "Still here: " << std::endl;
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
-                std::cerr << "Still here2: " << std::endl;
+                print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
+                print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
                 if ((counts.set1Count > 0 || counts.set2Count > 0) && (counts.set1Count < n1 || counts.set2Count < n2)) {
                     countedVariantNumber++;
                     double FstNumerator = calculateFstNumerator(counts, n1, n2); fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
@@ -349,6 +350,7 @@ void getFstFromVCF() {
                     assert(FstDenominator != 0);
                     double thisSNPDxy = calculateDxy(counts, n1, n2); DxyVector.push_back(thisSNPDxy); fixedWindowDxyVector.push_back(thisSNPDxy);
                     std::vector<double> thisSNPhet = getSetHeterozygozities(counts, n1, n2); heterozygositiesVector.push_back(thisSNPhet);
+                    std::cerr << "Still here2: " << std::endl;
                     std::vector<double> thisSNPpis = calculatePiTwoSets(counts, n1, n2); fixedWindowPi1Vector.push_back(thisSNPpis[0]); fixedWindowPi2Vector.push_back(thisSNPpis[1]);
                     std::cerr << "Still here: " << thisSNPpis[0] << std::endl;
                     set1heterozygositiesSimple.push_back(thisSNPhet[0]); set2heterozygositiesSimple.push_back(thisSNPhet[1]); fixedWindowHet1Vector.push_back(thisSNPhet[0]);
