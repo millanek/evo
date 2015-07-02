@@ -40,6 +40,7 @@ inline double calculateExpectedHeterozygositySimple(const double p) {
     return heterozygosity;
 }
 
+
 inline double calculateExpectedHeterozygosityNei78(const double p, const int n) {
     double q = 1 - p;
     double simpleHeterozygosity = 1 - (pow(p,2)+pow(q,2));

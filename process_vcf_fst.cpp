@@ -97,22 +97,36 @@ SetCounts getVariantCountsForFst(const std::vector<std::string>& fields, const s
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
     thisVariantCounts.set1individualsWithVariant.assign(set1_loci.size(),0);
     thisVariantCounts.set2individualsWithVariant.assign(set2_loci.size(),0);
+    thisVariantCounts.set1HaplotypeVariant.assign(set1_loci.size()*2,0);
+    thisVariantCounts.set2HaplotypeVariant.assign(set2_loci.size()*2,0);
     // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
-    int set1i = 0; bool inSet1 = false; int set2i = 0; bool inSet2 = false;
+    int set1i = 0; bool inSet1 = false; int set2i = 0; bool inSet2 = false; int set1hapI = 0; int set2hapI = 0;
     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
         if (std::find(set1_loci.begin(), set1_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set1_loci.end()) { inSet1 = true; }
         if (std::find(set2_loci.begin(), set2_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set2_loci.end()) { inSet2 = true; }
         
         if (fields[i][0] == '1') {
             thisVariantCounts.overall++;
-            if (inSet1) { thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++; }
-            if (inSet2) { thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++; }
+            if (inSet1) {
+                thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
+                thisVariantCounts.set1HaplotypeVariant[set1hapI]++; set1hapI++;
+            }
+            if (inSet2) {
+                thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
+                thisVariantCounts.set2HaplotypeVariant[set2hapI]++; set2hapI++;
+            }
             thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
         }
         if (fields[i][2] == '1') {
             thisVariantCounts.overall++;
-            if (inSet1) { thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++; }
-            if (inSet2) { thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++; }
+            if (inSet1) {
+                thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
+                thisVariantCounts.set1HaplotypeVariant[set1hapI]++; set1hapI++;
+            }
+            if (inSet2) {
+                thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
+                thisVariantCounts.set2HaplotypeVariant[set2hapI]++; set2hapI++;
+            }
             thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
         }
         if (inSet1) { set1i++; inSet1 = false; }
@@ -148,6 +162,30 @@ double calculateDxy(const SetCounts& thisVarCounts, const int n1, const int n2) 
     Dxy = (double)sumKij/(n1*n2);
     return Dxy;
 }
+
+std::vector<double> calculatePiTwoSets(const SetCounts& thisVarCounts, const int n1, const int n2) {
+    double pi1 = 0; double pi2 = 0;
+    for (std::vector<std::string>::size_type i = 0; i != n1; i++) {
+        for (std::vector<std::string>::size_type j = i+1; j != n1; j++) {
+            if (thisVarCounts.set1HaplotypeVariant[i] == 1 && thisVarCounts.set1HaplotypeVariant[j] == 0) {
+                pi1++;
+            } else if (thisVarCounts.set1HaplotypeVariant[i] == 0 && thisVarCounts.set1HaplotypeVariant[j] == 1) {
+                pi1++;
+            }
+        }
+    }
+    for (std::vector<std::string>::size_type i = 0; i != n2; i++) {
+        for (std::vector<std::string>::size_type j = i+1; j != n2; j++) {
+            if (thisVarCounts.set2HaplotypeVariant[i] == 1 && thisVarCounts.set2HaplotypeVariant[j] == 0) {
+                pi2++;
+            } else if (thisVarCounts.set2HaplotypeVariant[i] == 0 && thisVarCounts.set2HaplotypeVariant[j] == 1) {
+                pi2++;
+            }
+        }
+    }
+    return std::vector<double>(pi1,pi2);
+}
+
 
 double calculateFst(const std::vector<double>& fstNumerators, const std::vector<double>& fstDenominators) {
     double numeratorAverage = vector_average(fstNumerators);
@@ -232,7 +270,8 @@ void getFstFromVCF() {
     string windowMiddleVariant = "first\tWindow";
     string windowStartEnd = "scaffold_0\t0";
     int windowStart = 0; int windowEnd;
-    int fixedWindowStart = 0; std::vector<double> fixedWindowDxyVector;
+    int fixedWindowStart = 0; std::vector<double> fixedWindowDxyVector; std::vector<double> fixedWindowFstNumVector; std::vector<double> fixedWindowFstDenomVector;
+    std::vector<double> fixedWindowHet1Vector; std::vector<double> fixedWindowHet2Vector; std::vector<double> fixedWindowPi1Vector; std::vector<double> fixedWindowPi2Vector;
     std::vector<string> sampleNames;
     std::vector<string> fields;
     std::vector<size_t> set1Loci; std::vector<size_t> set2Loci;
@@ -300,13 +339,14 @@ void getFstFromVCF() {
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
                 if ((counts.set1Count > 0 || counts.set2Count > 0) && (counts.set1Count < n1 || counts.set2Count < n2)) {
                     countedVariantNumber++;
-                    double FstNumerator = calculateFstNumerator(counts, n1, n2); fstNumerators.push_back(FstNumerator);
-                    double FstDenominator = calculateFstDenominator(counts, n1, n2); fstDenominators.push_back(FstDenominator);
+                    double FstNumerator = calculateFstNumerator(counts, n1, n2); fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
+                    double FstDenominator = calculateFstDenominator(counts, n1, n2); fstDenominators.push_back(FstDenominator); fixedWindowFstDenomVector.push_back(FstDenominator);
                     assert(FstDenominator != 0);
                     double thisSNPDxy = calculateDxy(counts, n1, n2); DxyVector.push_back(thisSNPDxy); fixedWindowDxyVector.push_back(thisSNPDxy);
                     std::vector<double> thisSNPhet = getSetHeterozygozities(counts, n1, n2); heterozygositiesVector.push_back(thisSNPhet);
-                    set1heterozygositiesSimple.push_back(thisSNPhet[0]); set2heterozygositiesSimple.push_back(thisSNPhet[1]);
-                    set1heterozygositiesNei.push_back(thisSNPhet[2]); set2heterozygositiesNei.push_back(thisSNPhet[3]);
+                    std::vector<double> thisSNPpis = calculatePiTwoSets(counts, n1, n2); fixedWindowPi1Vector.push_back(thisSNPpis[0]); fixedWindowPi2Vector.push_back(thisSNPpis[1]);
+                    set1heterozygositiesSimple.push_back(thisSNPhet[0]); set2heterozygositiesSimple.push_back(thisSNPhet[1]); fixedWindowHet1Vector.push_back(thisSNPhet[0]);
+                    set1heterozygositiesNei.push_back(thisSNPhet[2]); set2heterozygositiesNei.push_back(thisSNPhet[3]); fixedWindowHet2Vector.push_back(thisSNPhet[1]);
                     if (!opt::annotFile.empty()) {
                         string scaffold = fields[0]; string loc = fields[1]; // Scaffold
                         string SNPcategory = wgAnnotation.getCategoryOfSNP(scaffold, loc);
@@ -344,8 +384,15 @@ void getFstFromVCF() {
                     if (s[0] == fields[0]) {
                         if (atoi(fields[1].c_str()) > (fixedWindowStart+10000)) {
                             double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, 10000);
-                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+10000 << "\t" << thisFixedWindowDxy << std::endl;
-                            fixedWindowDxyVector.clear(); fixedWindowStart= fixedWindowStart+10000;
+                            double thisFixedWindowFst = calculateFst(fixedWindowFstNumVector, fixedWindowFstDenomVector);
+                            //double thisFixedWindowHet1 = vector_average_withRegion(fixedWindowHet1Vector, 10000);
+                            //double thisFixedWindowHet2 = vector_average_withRegion(fixedWindowHet2Vector, 10000);
+                            double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, 10000);
+                            double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, 10000);
+                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+10000 << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << std::endl;
+                            fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
+                            fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
+                            fixedWindowStart= fixedWindowStart+10000;
                         }
                     } else {
                         fixedWindowStart = 0;

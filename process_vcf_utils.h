@@ -89,6 +89,8 @@ public:
     
     int overall;
     std::vector<int> individualsWithVariant;
+    std::vector<int> set1HaplotypeVariant;
+    std::vector<int> set2HaplotypeVariant;
     std::vector<int> set1individualsWithVariant;
     std::vector<int> set2individualsWithVariant;
     int set1Count;
