@@ -343,6 +343,7 @@ void getFstFromVCF() {
                 std::cerr << "Still here: " << std::endl;
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
                 print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
+                print_vector_stream(counts.set1individualsWithVariant, std::cerr);
                 print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
                 if ((counts.set1Count > 0 || counts.set2Count > 0) && (counts.set1Count < n1 || counts.set2Count < n2)) {
                     countedVariantNumber++;
