@@ -339,7 +339,9 @@ void getFstFromVCF() {
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {  // Without indels
+                std::cerr << "Still here: " << std::endl;
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
+                std::cerr << "Still here2: " << std::endl;
                 if ((counts.set1Count > 0 || counts.set2Count > 0) && (counts.set1Count < n1 || counts.set2Count < n2)) {
                     countedVariantNumber++;
                     double FstNumerator = calculateFstNumerator(counts, n1, n2); fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
