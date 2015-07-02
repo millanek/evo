@@ -182,6 +182,7 @@ void getFstFromVCF() {
     std::ifstream* annotFile;
     std::ofstream* snpCategoryFstFile;
     std::ofstream* regionsAboveFstFile; bool inRegAbove = false;
+    std::ofstream* fstDxyFixedWindowFile;
     std::ifstream* ancSetsFile; std::ofstream* ancSetsOutFile;
     std::vector<string> ancSet1; std::vector<string> ancSet2;
     Annotation wgAnnotation;
@@ -212,6 +213,7 @@ void getFstFromVCF() {
     
     string FstResultsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
+    fstDxyFixedWindowFile = new std::ofstream(fileRoot + "dXY_fixedWindow");
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
     
@@ -229,6 +231,8 @@ void getFstFromVCF() {
     int countedVariantNumber = 0;
     string windowMiddleVariant = "first\tWindow";
     string windowStartEnd = "scaffold_0\t0";
+    int windowStart = 0; int windowEnd;
+    int fixedWindowStart = 0; std::vector<double> fixedWindowDxyVector;
     std::vector<string> sampleNames;
     std::vector<string> fields;
     std::vector<size_t> set1Loci; std::vector<size_t> set2Loci;
@@ -299,7 +303,7 @@ void getFstFromVCF() {
                     double FstNumerator = calculateFstNumerator(counts, n1, n2); fstNumerators.push_back(FstNumerator);
                     double FstDenominator = calculateFstDenominator(counts, n1, n2); fstDenominators.push_back(FstDenominator);
                     assert(FstDenominator != 0);
-                    double thisSNPDxy = calculateDxy(counts, n1, n2); DxyVector.push_back(thisSNPDxy);
+                    double thisSNPDxy = calculateDxy(counts, n1, n2); DxyVector.push_back(thisSNPDxy); fixedWindowDxyVector.push_back(thisSNPDxy);
                     std::vector<double> thisSNPhet = getSetHeterozygozities(counts, n1, n2); heterozygositiesVector.push_back(thisSNPhet);
                     set1heterozygositiesSimple.push_back(thisSNPhet[0]); set2heterozygositiesSimple.push_back(thisSNPhet[1]);
                     set1heterozygositiesNei.push_back(thisSNPhet[2]); set2heterozygositiesNei.push_back(thisSNPhet[3]);
@@ -335,6 +339,20 @@ void getFstFromVCF() {
                         
                         
                     }
+                    
+                    std::vector<string> s = split(windowStartEnd, '\t');
+                    if (s[0] == fields[0]) {
+                        if (atoi(fields[1].c_str()) > (fixedWindowStart+10000)) {
+                            double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, 10000);
+                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+10000 << "\t" << thisFixedWindowDxy << std::endl;
+                            fixedWindowDxyVector.clear(); fixedWindowStart= fixedWindowStart+10000;
+                        }
+                    } else {
+                        fixedWindowStart = 0;
+                    }
+                    
+                    
+                    
                     if (opt::windowSize == 1) {
                         double Fst = FstNumerator/FstDenominator;
                         if (Fst < 0) Fst = 0;
@@ -350,7 +368,9 @@ void getFstFromVCF() {
                             std::vector<string> s = split(windowStartEnd, '\t');
                             if (s[0] == fields[0]) {
                                 windowStartEnd = windowStartEnd + "\t" + fields[1];
-                                *pFst << countedVariantNumber-opt::windowSize+1 << "\t" << windowStartEnd << "\t" << windowFst << "\t" << windowDxy << "\t" << windowFstDenominators.size() << std::endl;
+                                windowEnd = atoi(fields[1].c_str());
+                                double windowDxyIncNonSeg = vector_average_withRegion(windowDxyVec, windowEnd-windowStart);
+                                *pFst << countedVariantNumber-opt::windowSize+1 << "\t" << windowStartEnd << "\t" << windowFst << "\t" << windowDxy << "\t" << windowDxyIncNonSeg << "\t" << windowFstDenominators.size() << std::endl;
                                 if (opt::regAbove > 0) {
                                     if (windowFst >= opt::regAbove && !inRegAbove) {
                                         inRegAbove = true;
@@ -378,8 +398,10 @@ void getFstFromVCF() {
                             if (s[0] == fields[0]) {
                                 *pHetSets << windowStartEnd << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;
                                 windowStartEnd = fields[0] + "\t" + fields[1];
+                                windowStart = atoi(fields[1].c_str());
                             } else {
                                 windowStartEnd = fields[0] + "\t0";
+                                windowStart = 0;
                             }
                         } else {
                             *pHetSets << windowMiddleVariant << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;

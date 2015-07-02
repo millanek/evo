@@ -184,6 +184,16 @@ template <class T> double vector_average(T vector) {
     return average;
 }
 
+template <class T> double vector_average_withRegion(T vector, int regionLength) {
+    double sum = 0;
+    for (int i = 0; i < vector.size(); i++) {
+        sum += vector[i];
+    }
+    double average = (double)sum / (double)regionLength;
+    return average;
+}
+
+
 template <typename T> std::map<int, int> tabulateVectorTemplate(T& vec) {
     std::vector<int> vecCopy(vec); 
     std::sort(vecCopy.begin(), vecCopy.end());
