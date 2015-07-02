@@ -214,6 +214,7 @@ void getFstFromVCF() {
         std::cerr << "also using a sliding window of size: " << opt::windowSize << " variants and sliding in steps of: " << opt::windowStep << std::endl;
     }
     string fileRoot = stripExtension(opt::sampleSets);
+    std::cerr << "Still alive: " << std::endl;
     // Open connection to read from the vcf file
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
