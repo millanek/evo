@@ -184,6 +184,7 @@ std::vector<double> calculatePiTwoSets(const SetCounts& thisVarCounts, const int
             }
         }
     }
+    std::cerr << "Set1 loci: " << std::endl;
     return std::vector<double>(pi1,pi2);
 }
 
@@ -341,10 +342,11 @@ void getFstFromVCF() {
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {  // Without indels
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
-                std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << std::endl;
-                print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
-                print_vector_stream(counts.set1individualsWithVariant, std::cerr);
-                print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
+                std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << "\t" << n1 << std::endl;
+                std::cerr << "Still here: " << counts.set2HaplotypeVariant.size() << "\t" << counts.set2individualsWithVariant.size() << "\t" << n2 << std::endl;
+                //print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
+                //print_vector_stream(counts.set1individualsWithVariant, std::cerr);
+                //print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
                 if ((counts.set1Count > 0 || counts.set2Count > 0) && (counts.set1Count < n1 || counts.set2Count < n2)) {
                     countedVariantNumber++;
                     double FstNumerator = calculateFstNumerator(counts, n1, n2); fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
