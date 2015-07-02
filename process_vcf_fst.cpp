@@ -224,6 +224,7 @@ void getFstFromVCF() {
     std::ifstream* ancSetsFile; std::ofstream* ancSetsOutFile;
     std::vector<string> ancSet1; std::vector<string> ancSet2;
     Annotation wgAnnotation;
+    std::cerr << "Hello: " << std::endl;
     if (!opt::annotFile.empty()) {
         annotFile = new std::ifstream(opt::annotFile.c_str());
         Annotation Annot(annotFile, false); // Does not use transcripts annotated as 5' or 3' partial
@@ -251,10 +252,11 @@ void getFstFromVCF() {
     
     string FstResultsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
-    fstDxyFixedWindowFile = new std::ofstream(fileRoot + "dXY_fixedWindow.txt");
+    string fstDxyFixedWindowFileName = fileRoot + "dXY_fixedWindow.txt";
+    fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
-    
+    std::cerr << "Still alive: " << std::endl;
     
     string set1String; string set2String;
     getline(*setsFile, set1String);
@@ -263,7 +265,6 @@ void getFstFromVCF() {
     std::vector<string> set2 = split(set2String, ',');
     std::sort(set1.begin(),set1.end());
     std::sort(set2.begin(),set2.end());
-    std::cerr << "Here: " << std::endl;
     
     int numChromosomes;
     int totalVariantNumber = 0;
