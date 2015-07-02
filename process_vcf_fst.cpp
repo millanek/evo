@@ -184,8 +184,8 @@ std::vector<double> calculatePiTwoSets(const SetCounts& thisVarCounts, const int
             }
         }
     }
-    std::cerr << "Set1 loci: " << std::endl;
-    return std::vector<double>(pi1,pi2);
+    std::vector<double> pis; pis.push_back(pi1); pis.push_back(pi2);
+    return pis;
 }
 
 
