@@ -251,7 +251,7 @@ void getFstFromVCF() {
     
     string FstResultsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
-    fstDxyFixedWindowFile = new std::ofstream(fileRoot + opt::runName + "dXY_fixedWindow.txt");
+    fstDxyFixedWindowFile = new std::ofstream(fileRoot + "dXY_fixedWindow.txt");
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
     
