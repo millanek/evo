@@ -109,11 +109,11 @@ SetCounts getVariantCountsForFst(const std::vector<std::string>& fields, const s
             thisVariantCounts.overall++;
             if (inSet1) {
                 thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
-                thisVariantCounts.set1HaplotypeVariant[set1hapI]++; set1hapI++;
+                thisVariantCounts.set1HaplotypeVariant[set1hapI]++;
             }
             if (inSet2) {
                 thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
-                thisVariantCounts.set2HaplotypeVariant[set2hapI]++; set2hapI++;
+                thisVariantCounts.set2HaplotypeVariant[set2hapI]++;
             }
             thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
         }
@@ -121,16 +121,16 @@ SetCounts getVariantCountsForFst(const std::vector<std::string>& fields, const s
             thisVariantCounts.overall++;
             if (inSet1) {
                 thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
-                thisVariantCounts.set1HaplotypeVariant[set1hapI]++; set1hapI++;
+                thisVariantCounts.set1HaplotypeVariant[set1hapI+1]++;
             }
             if (inSet2) {
                 thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
-                thisVariantCounts.set2HaplotypeVariant[set2hapI]++; set2hapI++;
+                thisVariantCounts.set2HaplotypeVariant[set2hapI+1]++;
             }
             thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
         }
-        if (inSet1) { set1i++; inSet1 = false; }
-        if (inSet2) { set2i++; inSet2 = false; }
+        if (inSet1) { set1i++; set1hapI = set1hapI+2; inSet1 = false; }
+        if (inSet2) { set2i++; set2hapI = set2hapI+2; inSet2 = false; }
     }
     return thisVariantCounts;
 }
@@ -214,10 +214,10 @@ void getFstFromVCF() {
         std::cerr << "also using a sliding window of size: " << opt::windowSize << " variants and sliding in steps of: " << opt::windowStep << std::endl;
     }
     string fileRoot = stripExtension(opt::sampleSets);
-    std::cerr << "Still alive: " << std::endl;
+    //std::cerr << "Still alive: " << std::endl;
     // Open connection to read from the vcf file
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
-    std::cerr << "Hello: " << std::endl;
+    //std::cerr << "Hello: " << std::endl;
     std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
     std::ifstream* annotFile;
     std::ofstream* snpCategoryFstFile;
@@ -257,7 +257,7 @@ void getFstFromVCF() {
     fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
-    std::cerr << "Still alive: " << std::endl;
+    //std::cerr << "Still alive: " << std::endl;
     
     string set1String; string set2String;
     getline(*setsFile, set1String);
