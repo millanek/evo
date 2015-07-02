@@ -263,6 +263,7 @@ void getFstFromVCF() {
     std::vector<string> set2 = split(set2String, ',');
     std::sort(set1.begin(),set1.end());
     std::sort(set2.begin(),set2.end());
+    std::cerr << "Here: " << std::endl;
     
     int numChromosomes;
     int totalVariantNumber = 0;
