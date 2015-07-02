@@ -217,6 +217,7 @@ void getFstFromVCF() {
     std::cerr << "Still alive: " << std::endl;
     // Open connection to read from the vcf file
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
+    std::cerr << "Hello: " << std::endl;
     std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
     std::ifstream* annotFile;
     std::ofstream* snpCategoryFstFile;
@@ -225,7 +226,6 @@ void getFstFromVCF() {
     std::ifstream* ancSetsFile; std::ofstream* ancSetsOutFile;
     std::vector<string> ancSet1; std::vector<string> ancSet2;
     Annotation wgAnnotation;
-    std::cerr << "Hello: " << std::endl;
     if (!opt::annotFile.empty()) {
         annotFile = new std::ifstream(opt::annotFile.c_str());
         Annotation Annot(annotFile, false); // Does not use transcripts annotated as 5' or 3' partial
