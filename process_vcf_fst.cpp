@@ -340,8 +340,8 @@ void getFstFromVCF() {
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {  // Without indels
-                std::cerr << "Still here: " << std::endl;
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
+                std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << std::endl;
                 print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
                 print_vector_stream(counts.set1individualsWithVariant, std::cerr);
                 print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
