@@ -296,6 +296,8 @@ void getFstFromVCF() {
     std::vector<double> set2heterozygositiesSimple; set2heterozygositiesSimple.reserve(30000000);
     std::vector<double> set1heterozygositiesNei; set1heterozygositiesNei.reserve(30000000);
     std::vector<double> set2heterozygositiesNei; set2heterozygositiesNei.reserve(30000000);
+    std::vector<double> set1heterozygositiesPi; set1heterozygositiesPi.reserve(30000000);
+    std::vector<double> set2heterozygositiesPi; set2heterozygositiesPi.reserve(30000000);
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#') {
             
@@ -359,6 +361,7 @@ void getFstFromVCF() {
                     double thisSNPDxy = calculateDxy(counts, n1, n2); DxyVector.push_back(thisSNPDxy); fixedWindowDxyVector.push_back(thisSNPDxy);
                     std::vector<double> thisSNPhet = getSetHeterozygozities(counts, n1, n2); heterozygositiesVector.push_back(thisSNPhet);
                     std::vector<double> thisSNPpis = calculatePiTwoSets(counts, n1, n2); fixedWindowPi1Vector.push_back(thisSNPpis[0]); fixedWindowPi2Vector.push_back(thisSNPpis[1]);
+                    set1heterozygositiesPi.push_back(thisSNPpis[0]); set2heterozygositiesPi.push_back(thisSNPpis[1]);
                    // std::cerr << "Still here: " << thisSNPpis[0] << std::endl;
                     set1heterozygositiesSimple.push_back(thisSNPhet[0]); set2heterozygositiesSimple.push_back(thisSNPhet[1]); fixedWindowHet1Vector.push_back(thisSNPhet[0]);
                     set1heterozygositiesNei.push_back(thisSNPhet[2]); set2heterozygositiesNei.push_back(thisSNPhet[3]); fixedWindowHet2Vector.push_back(thisSNPhet[1]);
@@ -455,10 +458,14 @@ void getFstFromVCF() {
                         double windowHetNei1 = vector_average(windowHetNei1Vec);
                         std::vector<double> windowHetNei2Vec(set2heterozygositiesNei.end()-opt::windowSize, set2heterozygositiesNei.end());
                         double windowHetNei2 = vector_average(windowHetNei2Vec);
+                        std::vector<double> windowHetPi1Vec(set1heterozygositiesPi.end()-opt::windowSize, set1heterozygositiesNei.end());
+                        double windowHetPi1 = vector_average_withRegion(windowHetPi1Vec, windowEnd-windowStart);
+                        std::vector<double> windowHetPi2Vec(set2heterozygositiesPi.end()-opt::windowSize, set2heterozygositiesNei.end());
+                        double windowHetPi2 = vector_average_withRegion(windowHetPi2Vec, windowEnd-windowStart);
                         if (opt::windowSize == opt::windowStep) {
                             std::vector<string> s = split(windowStartEnd, '\t');
                             if (s[0] == fields[0]) {
-                                *pHetSets << windowStartEnd << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;
+                                *pHetSets << windowStartEnd << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << "\t" << windowHetPi1 << "\t" << windowHetPi2 << std::endl;
                                 windowStartEnd = fields[0] + "\t" + fields[1];
                                 windowStart = atoi(fields[1].c_str());
                             } else {
