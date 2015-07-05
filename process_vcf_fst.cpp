@@ -458,9 +458,9 @@ void getFstFromVCF() {
                         double windowHetNei1 = vector_average(windowHetNei1Vec);
                         std::vector<double> windowHetNei2Vec(set2heterozygositiesNei.end()-opt::windowSize, set2heterozygositiesNei.end());
                         double windowHetNei2 = vector_average(windowHetNei2Vec);
-                        std::vector<double> windowHetPi1Vec(set1heterozygositiesPi.end()-opt::windowSize, set1heterozygositiesNei.end());
+                        std::vector<double> windowHetPi1Vec(set1heterozygositiesPi.end()-opt::windowSize, set1heterozygositiesPi.end());
                         double windowHetPi1 = vector_average_withRegion(windowHetPi1Vec, windowEnd-windowStart);
-                        std::vector<double> windowHetPi2Vec(set2heterozygositiesPi.end()-opt::windowSize, set2heterozygositiesNei.end());
+                        std::vector<double> windowHetPi2Vec(set2heterozygositiesPi.end()-opt::windowSize, set2heterozygositiesPi.end());
                         double windowHetPi2 = vector_average_withRegion(windowHetPi2Vec, windowEnd-windowStart);
                         if (opt::windowSize == opt::windowStep) {
                             std::vector<string> s = split(windowStartEnd, '\t');
