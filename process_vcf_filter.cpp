@@ -102,6 +102,7 @@ int filterMain(int argc, char** argv) {
     std::ofstream* statsVarDepthFile;
     std::ofstream* statsStrandBiasFile;
     std::ofstream* statsVariantQualityFile;
+    std::ofstream* statsSegregationMetricFile;
     
     // Collect some numbers about why variants were filtered out:
     int numTotalFilteredOut = 0;
@@ -117,6 +118,7 @@ int filterMain(int argc, char** argv) {
         statsVarDepthFile = new std::ofstream(fileRoot + ".varDepth");
         statsStrandBiasFile = new std::ofstream(fileRoot + ".strandBias");
         statsVariantQualityFile = new std::ofstream(fileRoot + ".varQual");
+        statsSegregationMetricFile = new std::ofstream(fileRoot + ".SGB");
         std::cerr << "Getting statistics for variants from: " << fileName << " to help with setting filtering criteria" << std::endl;
     } else {
         std::cerr << "Filtering variants from: " << fileName << std::endl;
@@ -170,6 +172,9 @@ int filterMain(int argc, char** argv) {
                     *statsStrandBiasFile << result.counts.FSpval << std::endl;
                 } else if (!result.counts.MQSBpval.empty()) {
                     *statsStrandBiasFile << result.counts.MQSBpval << std::endl;
+                }
+                if (result.counts.SGB < std::numeric_limits<double>::max()) {
+                    *statsSegregationMetricFile << result.counts.SGB << std::endl;
                 }
                 *statsVariantQualityFile << result.overallQuality << std::endl;
                 if (totalVariantNumber >= 1000000)

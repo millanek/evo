@@ -79,6 +79,15 @@ bool isMQSBinfo (std::string infoField) {
         return true;
 }
 
+// Look for SGB: Segregation based metric (bigger is better)
+bool isSGBinfo (std::string infoField) {
+    if (infoField.find("SGB=") == string::npos)
+        return false;
+    else
+        return true;
+}
+
+
 double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) {
     int naa = 0; int nAa = 0; int nAA = 0;
     for (std::vector<int>::size_type i = 0; i != individualsWithVariant.size(); i++) {
@@ -106,7 +115,7 @@ double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) 
 
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
-    bool hasGQ = false; bool hasDP = false;
+    bool hasGQ = false; bool hasDP = false; bool hasSGB = false;
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
     // Find the position of DP (per sample read depth) in the genotypeData vector below
@@ -165,6 +174,18 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         std::vector<std::string> overallDP = split(info[overallDPi], '=');
         thisVariantCounts.overallDepth = atoi((overallDP.back()).c_str());
     }
+    
+    // Find the position of SGB (Segregation based metric) in the genotypeData vector below
+    std::vector<std::string>::iterator SGBit; int SGBi = std::numeric_limits<int>::min();
+    SGBit = find_if(format.begin(), format.end(), isSGBinfo);
+    if (SGBit != format.end()) {
+        // std::cerr << "This variant hasn't got associated per-sample GQ info" << std::endl;
+    } else {
+        SGBi = (int)std::distance( format.begin(), SGBit );
+        std::vector<std::string> overallSGB = split(info[SGBi], '=');
+        thisVariantCounts.SGB = stringToDouble(overallSGB.back());
+    }
+    
     // And get FS (phred-scaled strand-bias p-val) for this variant
     std::vector<std::string>::iterator FSit; int FSi = std::numeric_limits<int>::min();
     FSit = find_if(info.begin(), info.end(), isFSinfo);
