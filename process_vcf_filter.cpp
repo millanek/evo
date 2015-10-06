@@ -41,11 +41,12 @@ static const char *FILTER_USAGE_MESSAGE =
 "\n"
 "       You can also just output statistics on the first 1,000,000 variants:\n"
 "       --stats                                 Get stats to help with selecting parameters for filtering\n"
+"       --subsample=p                           Don't use every variant, but a random subsample, selecting variants with probability p\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 
-enum { OPT_HELP = 1, OPT_TRIALLELIC, OPT_ALLOW_MISSING_GENOTYPES, OPT_MAX_NUM_HET, OPT_STATS, OPT_MQSB, OPT_FS, OPT_OVERALL_Q, OPT_MIN_F };
+enum { OPT_HELP = 1, OPT_TRIALLELIC, OPT_ALLOW_MISSING_GENOTYPES, OPT_MAX_NUM_HET, OPT_STATS, OPT_MQSB, OPT_FS, OPT_OVERALL_Q, OPT_MIN_F, OPT_SUBS };
 
 static const char* shortopts = "d:c:s:m:";
 
@@ -59,6 +60,7 @@ static const struct option longopts[] = {
     { "keep-triallelic",   no_argument, NULL, OPT_TRIALLELIC },
     { "allow-missing",   no_argument, NULL, OPT_ALLOW_MISSING_GENOTYPES },
     { "stats",   no_argument, NULL, OPT_STATS },
+    { "subsample",   required_argument, NULL, OPT_SUBS },
     { "minMQSB",   required_argument, NULL, OPT_MQSB },
     { "maxFS",   required_argument, NULL, OPT_FS },
     { "minF",   required_argument, NULL, OPT_MIN_F },
@@ -80,6 +82,7 @@ namespace opt
     static bool bBiallelicFilter = true;
     static bool bAllowMissingGenotpyes = false;
     static bool bStats = false;
+    static double subsample = 1.0;
     static string vcfFile;
 }
 
@@ -140,6 +143,10 @@ int filterMain(int argc, char** argv) {
         if (line[0] == '#') {
             if (!opt::bStats) std::cout << line << std::endl;
         } else {
+            double r = ((double) rand() / (RAND_MAX));
+            if (r > opt::subsample) {
+                continue;
+            }
             totalVariantNumber++;
             if (totalVariantNumber % 100000 == 0) std::cerr << "Filtered " << totalVariantNumber << " variants" << std::endl;
             FilterResult result;
@@ -156,6 +163,7 @@ int filterMain(int argc, char** argv) {
             result.counts = getThisVariantCounts(fields);
             
             if (opt::bStats) {
+                
                 *statsFFile << result.counts.inbreedingCoefficient << std::endl;
                 *statsVarDepthFile << result.counts.overallDepth << std::endl;
                 if (!result.counts.FSpval.empty()) {
@@ -325,6 +333,7 @@ void parseFilterOptions(int argc, char** argv) {
             case OPT_MQSB: arg >> opt::min_MQSB; break;
             case OPT_FS: arg >> opt::max_FS; break;
             case OPT_STATS: opt::bStats = true; break;
+            case OPT_SUBS: arg >> opt::subsample; break;
             case OPT_MIN_F: arg >> opt::min_F; break;
             case OPT_OVERALL_Q: arg >> opt::min_overall_quality; break;
             case OPT_HELP:

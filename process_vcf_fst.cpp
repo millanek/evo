@@ -650,6 +650,7 @@ void summariseEigensoft() {
     } else {
         type = 2;
     }
+    // std::cerr << "It is type: " << type << std::endl;
     if (type == 1) {
         getline(*eigenFile, line);
         std::vector<std::string> fields = split(line, '\t');
@@ -659,6 +660,7 @@ void summariseEigensoft() {
         this_indiv_fst.push_back(fields[2]);
         while (getline(*eigenFile, line)) {
             fields = split(line, '\t');
+            std::cerr << "Indiv: " << fields[0] << std::endl;
             if (this_indiv == fields[0]) {
                 this_indiv_fst.push_back(fields[2]);
             } else {
