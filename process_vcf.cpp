@@ -27,7 +27,7 @@
 #include "process_vcf_fst.h"
 #include "process_vcf_merge.h"
 #include "process_vcf_cbs.h"
-#include "process_vcf_abba_baba.h"
+#include "evo_abba_baba.h"
 #include "process_vcf_get_aa_seq.h"
 #include "process_vcf_fill_aa.h"
 #include "process_vcf_join_multiFasta.h"
@@ -44,7 +44,7 @@
 
 
 static const char *VERSION_MESSAGE =
-"VCF-Process software Version " PACKAGE_VERSION "\n"
+"evo software Version " PACKAGE_VERSION "\n"
 "Written by Milan Malinsky.\n"
 "\n"
 "Copyright 2013 Wellcome Trust Sanger Institute\n";

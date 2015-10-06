@@ -22,7 +22,7 @@
 #include <math.h>
 #include "gzstream.h"
 using std::string;
-#define PROGRAM_BIN "process-vcf"
+#define PROGRAM_BIN "evo"
 #define PACKAGE_BUGREPORT "mm812@cam.ac.uk"
 #define GZIP_EXT ".gz"
 
