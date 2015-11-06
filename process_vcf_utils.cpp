@@ -113,6 +113,7 @@ double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) 
     return F;
 }
 
+
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
     bool hasGQ = false; bool hasDP = false; bool hasSGB = false;
