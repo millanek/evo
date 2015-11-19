@@ -645,12 +645,12 @@ void summariseEigensoft() {
     string line;
     getline(*eigenFile, line); // Get the first description line
     short type;
-    if (line == "## Fst statistics between populations:         fst       std error") {
+    if (line == "##") {
         type = 1;
     } else {
         type = 2;
     }
-    // std::cerr << "It is type: " << type << std::endl;
+    std::cerr << "It is type: " << type << std::endl;
     if (type == 1) {
         getline(*eigenFile, line);
         std::vector<std::string> fields = split(line, '\t');
