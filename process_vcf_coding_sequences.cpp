@@ -129,7 +129,7 @@ int getCodingSeqMain(int argc, char** argv) {
     string statsFileName = geneFileRoot + "_stats.txt";
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
     string stopsFileName = geneFileRoot + "_prematureStops.txt";
-    *statsFile << "transcript" << "\t" << "length_in_nucleotides" << "\t" << "segregating_sites(ss)" << "\t" << "ss_proportion" << "\t" << "length_in_AA" << "\t" << "num_of_AA_with_synonymous_changes(synAAs)" << "\t" << "synAAs_proportion" << "\t" << "non_synonymous_AA_substitutions(nsAAs)" << "\t" << "nsAAs_proportion" << std::endl;
+    *statsFile << "transcript" << "\t" << "length_in_nucleotides" << "\t" << "segregating_sites(ss)" << "\t" << "ss_proportion" << "\t" << "length_in_AA" << "\t" << "num_of_AA_with_synonymous_changes(synAAs)" << "\t" << "synAAs_proportion" << "\t" << "non_synonymous_AA_substitutions(nsAAs)" << "\t" << "nsAAs_proportion" << "\t" << "synonymousMAFaverage" << "\t" << "nonsynonymousMAFaverage" << std::endl;
     std::ofstream* stopsFile = new std::ofstream(stopsFileName.c_str());
     *stopsFile << "transcript" << "\t" << "stopAA_position" << "\t" << "transcript_length" << "\t" << "stop_allele_frequency" << "\t" << "individuals_with_stop" << std::endl;
     string stopsPerGeneFileName = geneFileRoot + "_prematureStops_perGene.txt";
@@ -305,6 +305,8 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
     int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
     int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
     std::vector<double> derivedAlleleFequencies;
+    std::vector<double> synonymousMinorAlleleFequencies;
+    std::vector<double> nonsynonymousMinorAlleleFequencies;
     int numCopies = (int)allSeqs.size()*2;
     // int numSynonymous = 0;
     // int numNonSynonymous = 0;
@@ -374,10 +376,22 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                     }
                 } else if (altAA != refAA) {
                     nonSyn++;
+                    double NRaf = (double)countDerived/numCopies;
+                    if (NRaf > 0.5) {
+                        nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
+                    } else {
+                        nonsynonymousMinorAlleleFequencies.push_back(NRaf);
+                    }
                     // std::cerr << "altCodons[i]: " << altCodons[j] << "refSeq.substr(i-2,3) " << refSeq.substr(i-2,3) << std::endl;
                     // std::cerr << "allSeqs[0].substr(i-2,3): " << allSeqs[j].substr(i-2,3) << std::endl;
                 } else if (altAA == refAA && (allSeqs[j].substr(i-2,3) != refSeq.substr(i-2,3))) {
                     syn++;
+                    double NRaf = (double)countDerived/numCopies;
+                    if (NRaf > 0.5) {
+                        synonymousMinorAlleleFequencies.push_back(1-NRaf);
+                    } else {
+                        synonymousMinorAlleleFequencies.push_back(NRaf);
+                    }
                 }
                 altCodons[j] = ""; IUPACcounts[j] = 0;
             }
@@ -407,8 +421,8 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
        // if (i%10==0) {
            // std::cerr << "Processed " << i << "bp" << std::endl;
        // }
-        
     }
+    
     statsThisGene.push_back(numToString(refSeq.length()));
     statsThisGene.push_back(numToString(numSegSites));
     statsThisGene.push_back(numToString((double)numSegSites/refSeq.length()));
@@ -417,6 +431,9 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
     statsThisGene.push_back(numToString((double)numSynAAchanges/(refSeq.length()/3)));
     statsThisGene.push_back(numToString(numNonSynAAchanges));
     statsThisGene.push_back(numToString((double)numNonSynAAchanges/(refSeq.length()/3)));
+    statsThisGene.push_back(numToString(vector_average(synonymousMinorAlleleFequencies)));
+    statsThisGene.push_back(numToString(vector_average(nonsynonymousMinorAlleleFequencies)));
+    
     // std::map<int,int> dafTable = tabulateVectorTemplate(derivedAlleleFequencies);
     // std::cerr << "Stats Done" << std::endl;
 }

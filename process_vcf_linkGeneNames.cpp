@@ -163,11 +163,12 @@ int linkGNMain(int argc, char** argv) {
         if ( cichlidDanRer.find(gpVec[0]) != cichlidDanRer.end() ) {
             std::vector<string> ensembl = split(cichlidDanRer[gpVec[0]], '/');
             std::vector<string> myNameVec = split(gpVec[0], '.');
+            std::string nameWdots = gpVec[0] + ".1";
             gpVec[0] = myNameVec[0] + "_" + myNameVec[1] + "_" + myNameVec[2] + "_" + myNameVec[3];
             
             if ( ensGeneMap.find(ensembl[0]) != ensGeneMap.end() ) {
                 if (ensembl.size() == 1) {
-                    std::cout << gpVec[0] << "\t" << ensembl[0] << "\t" << ensGeneMap[ensembl[0]] << std::endl;
+                    std::cout << nameWdots << "\t" << ensembl[0] << "\t" << ensEntrezMap[ensembl[0]] << "\t" << ensGeneMap[ensembl[0]] << std::endl;
                     gpVec[11] = ensGeneMap[ensembl[0]];
                     print_vector(gpVec, *gpOutFile);
                     *refLinkFile << ensGeneMap[ensembl[0]] << "\t" << ensGeneDescriptionMap[ensembl[0]] << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << ensEntrezMap[ensembl[0]] << "\t0" << std::endl;
@@ -176,7 +177,7 @@ int linkGNMain(int argc, char** argv) {
                         *goBedFile << gpVec[1] << "\t" << gpVec[3] << "\t" << gpVec[4] << "\t" << ensEntrezMap[ensembl[0]] << "\t0\t" << gpVec[2] << std::endl;
                     }
                 } else {
-                    std::cout << gpVec[0] << "\t" << ensembl[0] << "\t" << ensGeneMap[ensembl[0]] << "/" << ensembl[1] << std::endl;
+                    std::cout << nameWdots << "\t" << ensembl[0] << "\t" << ensEntrezMap[ensembl[0]] << "\t" << ensGeneMap[ensembl[0]] << "/" << ensembl[1] << std::endl;
                     gpVec[11] = ensGeneMap[ensembl[0]]+"/"+ensembl[1];
                     print_vector(gpVec, *gpOutFile);
                     *refLinkFile << ensGeneMap[ensembl[0]] << "/" << ensembl[1] << "\t" << ensGeneDescriptionMap[ensembl[0]] << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << ensEntrezMap[ensembl[0]] << "\t0" << std::endl;
