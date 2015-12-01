@@ -399,17 +399,18 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                 stopsTranscriptRecord.push_back(stopTranscriptDetails);
             }
             double NRaf;
-            if (nonSyn > 0)
+            if (nonSyn > 0) {
                 numNonSynAAchanges++;
-                std::cerr << "nonSyn: " << nonSyn << std::endl;
+               // std::cerr << "nonSyn: " << nonSyn << std::endl;
                 NRaf = (double)nonSyn/numCopies;
-                std::cerr << "NRaf: " << NRaf << std::endl;
+               // std::cerr << "NRaf: " << NRaf << std::endl;
                 if (NRaf > 0.5) {
                     nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
                 } else {
                     nonsynonymousMinorAlleleFequencies.push_back(NRaf);
                 }
-            if (syn > 0)
+            }
+            if (syn > 0) {
                 numSynAAchanges++;
                 NRaf = (double)syn/numCopies;
                 if (NRaf > 0.5) {
@@ -417,6 +418,7 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                 } else {
                     synonymousMinorAlleleFequencies.push_back(NRaf);
                 }
+            }
         }
         
         if (countDerived > 0) {
