@@ -226,6 +226,7 @@ int getCodingSeqMain(int argc, char** argv) {
                 }
                 
                 print_matrix(statsAllGenes, *statsFile);
+                statsFile->flush();
                 statsAllGenes.clear();
                 printPerGeneSummaries(stopsPerGeneSummaryFile, wgAnnotation);
                 stopsTranscriptRecord.clear();
