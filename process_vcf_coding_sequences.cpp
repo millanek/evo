@@ -375,23 +375,13 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                         numStops++;
                     }
                 } else if (altAA != refAA) {
-                    nonSyn++;
-                    double NRaf = (double)countDerived/numCopies;
-                    if (NRaf > 0.5) {
-                        nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
-                    } else {
-                        nonsynonymousMinorAlleleFequencies.push_back(NRaf);
-                    }
+                    if (isDNAonlySeq(allSeqs[j].substr(i-2,3))) { nonSyn = nonSyn + 2; }
+                    else { nonSyn++; }
                     // std::cerr << "altCodons[i]: " << altCodons[j] << "refSeq.substr(i-2,3) " << refSeq.substr(i-2,3) << std::endl;
                     // std::cerr << "allSeqs[0].substr(i-2,3): " << allSeqs[j].substr(i-2,3) << std::endl;
                 } else if (altAA == refAA && (allSeqs[j].substr(i-2,3) != refSeq.substr(i-2,3))) {
-                    syn++;
-                    double NRaf = (double)countDerived/numCopies;
-                    if (NRaf > 0.5) {
-                        synonymousMinorAlleleFequencies.push_back(1-NRaf);
-                    } else {
-                        synonymousMinorAlleleFequencies.push_back(NRaf);
-                    }
+                    if (isDNAonlySeq(allSeqs[j].substr(i-2,3))) { syn = syn + 2; }
+                    else { syn++; }
                 }
                 altCodons[j] = ""; IUPACcounts[j] = 0;
             }
@@ -407,10 +397,23 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                 //print_vector(haveStop, *prematureStopCodonFile, ',');
                 stopsTranscriptRecord.push_back(stopTranscriptDetails);
             }
+            double NRaf;
             if (nonSyn > 0)
                 numNonSynAAchanges++;
+                NRaf = (double)nonSyn/numCopies;
+                if (NRaf > 0.5) {
+                    nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
+                } else {
+                    nonsynonymousMinorAlleleFequencies.push_back(NRaf);
+                }
             if (syn > 0)
                 numSynAAchanges++;
+                NRaf = (double)syn/numCopies;
+                if (NRaf > 0.5) {
+                    synonymousMinorAlleleFequencies.push_back(1-NRaf);
+                } else {
+                    synonymousMinorAlleleFequencies.push_back(NRaf);
+                }
         }
         
         if (countDerived > 0) {
