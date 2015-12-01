@@ -401,7 +401,9 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
             double NRaf;
             if (nonSyn > 0)
                 numNonSynAAchanges++;
+                std::cerr << "nonSyn: " << nonSyn << std::endl;
                 NRaf = (double)nonSyn/numCopies;
+                std::cerr << "NRaf: " << NRaf << std::endl;
                 if (NRaf > 0.5) {
                     nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
                 } else {
