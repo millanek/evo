@@ -9,11 +9,11 @@
 #include <iostream>
 #include "process_vcf_stats_functions.h"
 
-static const double DIFF_WEIGHT_BOTH_HETS_ME = 0;
+static const double DIFF_WEIGHT_BOTH_HETS_ME = 1;
 static const double DIFF_WEIGHT_BOTH_HETS_RICHARD = (2.0/3.0);
-static const double DIFF_WEIGHT_HOM_DIFFERENCE_ME = 1;
+static const double DIFF_WEIGHT_HOM_DIFFERENCE_ME = 2;
 static const double DIFF_WEIGHT_HOM_DIFFERENCE_RICHARD = (2.0/3.0);
-static const double DIFF_WEIGHT_ONE_HOM_ONE_HET = 0.5;
+static const double DIFF_WEIGHT_ONE_HOM_ONE_HET = 1;
 
 // Increment a counter for each individual who is het at this site
 void het_analysis(std::vector<int>& hetCounts, FilterResult& result) {
