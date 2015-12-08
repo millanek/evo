@@ -43,6 +43,7 @@ public:
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
     std::vector<int> genotypeQualitiesPerIndividual;
+    std::vector<int> haplotypesWithVariant;
 };
 
 class SingleSetCounts {

@@ -89,3 +89,51 @@ void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::st
     
 }
 
+// Printing haplotype pairwise difference statistics
+void print_H1_pairwise_diff_stats(const string& fileRoot, std::vector<std::string>& header, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrixH1) {
+    std::ios_base::openmode mode_out = std::ios_base::out;
+    string diffFileNameH1 = fileRoot + ".diff_matrix_H1.txt";
+    std::ofstream* pDiffH1OutFile = new std::ofstream(diffFileNameH1.c_str(), mode_out);
+    *pDiffH1OutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
+    *pDiffH1OutFile << "# Total number of segragating variant sites in this sample:" << totalVariantNumber << std::endl;
+    *pDiffH1OutFile << "# Differences between H1 haplotypes:" << std::endl;
+
+    for (std::vector<std::string>::size_type i = 0; i < header.size(); i++) {
+        header[i] = header[i] + "_H1";
+    }
+    
+    // print headers
+    print_header(header,*pDiffH1OutFile);
+
+    
+    // print statistics
+    print_matrix<const std::vector<std::vector<double> >&>(diffMatrixH1, *pDiffH1OutFile);
+    
+}
+
+// Printing haplotype pairwise difference statistics
+void print_AllH_pairwise_diff_stats(const string& fileRoot, const std::vector<std::string>& samples, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrixAllH) {
+    std::ios_base::openmode mode_out = std::ios_base::out;
+    string diffFileNameAllH = fileRoot + ".diff_matrix_AllH.txt";
+    std::ofstream* pDiffAllHOutFile = new std::ofstream(diffFileNameAllH.c_str(), mode_out);
+    *pDiffAllHOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
+    *pDiffAllHOutFile << "# Total number of segragating variant sites in this sample:" << totalVariantNumber << std::endl;
+    *pDiffAllHOutFile << "# Differences between all haplotypes:" << std::endl;
+    
+    std::vector<std::string> header;
+    for (std::vector<std::string>::size_type i = 0; i < samples.size(); i++) {
+        header.push_back(samples[i] + "_H1");
+        header.push_back(samples[i] + "_H2");
+    }
+    
+    // print headers
+    print_header(header,*pDiffAllHOutFile);
+    
+    
+    // print statistics
+    print_matrix<const std::vector<std::vector<double> >&>(diffMatrixAllH, *pDiffAllHOutFile);
+    
+}
+
+
+

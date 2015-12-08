@@ -118,6 +118,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
     bool hasGQ = false; bool hasDP = false; bool hasSGB = false;
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
+    thisVariantCounts.haplotypesWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS)*2,0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
     // Find the position of DP (per sample read depth) in the genotypeData vector below
     std::vector<std::string> format = split(fields[8], ':');
@@ -143,13 +144,14 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         if (fields[i][0] == '1') { 
             thisVariantCounts.overall++;
             thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
+            thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)]++;
         }
         if (fields[i][2] == '1') { 
             thisVariantCounts.overall++;
             thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
+            thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)+1]++;
         }
         std::vector<std::string> genotypeData = split(fields[i], ':');
-        
         
         // read depth at the variant site per individual
         if (hasDP && fields[i][0] != '.') {

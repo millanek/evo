@@ -163,3 +163,42 @@ void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vec
         }
     }
 }
+
+void diffs_between_H1(std::vector<std::vector<double> >& H1diffs, FilterResult& result) {
+    for (std::vector<std::vector<int> >::size_type i = 0; i < H1diffs.size(); i++) {
+        for (int j = 0; j < i; j++) {
+            const int ind_i = result.counts.haplotypesWithVariant[2*i];
+            const int ind_j = result.counts.haplotypesWithVariant[2*j];
+            
+            if ((ind_i == 1 && ind_j == 0) || (ind_i == 0 && ind_j == 1)) {
+                H1diffs[i][j]++;
+            } else if ((ind_i == 0 && ind_j == 0) || (ind_i == 1 && ind_j == 1)) { // one is hom for reference allele the other is hom for alternative allele
+                
+            } else {
+                std::cerr << "result.counts.haplotypesWithVariant[" << 2*i << "]=" << result.counts.haplotypesWithVariant[2*i] << std::endl;
+                std::cerr << "result.counts.haplotypesWithVariant[" << 2*j << "]=" << result.counts.haplotypesWithVariant[2*j] << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+}
+
+void diffs_between_AllH(std::vector<std::vector<double> >& AllHdiffs, FilterResult& result) {
+    for (std::vector<std::vector<int> >::size_type i = 0; i < AllHdiffs.size(); i++) {
+        for (int j = 0; j < i; j++) {
+            const int ind_i = result.counts.haplotypesWithVariant[i];
+            const int ind_j = result.counts.haplotypesWithVariant[j];
+            
+            if ((ind_i == 1 && ind_j == 0) || (ind_i == 0 && ind_j == 1)) {
+                AllHdiffs[i][j]++;
+            } else if ((ind_i == 0 && ind_j == 0) || (ind_i == 1 && ind_j == 1)) { // one is hom for reference allele the other is hom for alternative allele
+                
+            } else {
+                std::cerr << "result.counts.haplotypesWithVariant[" << i << "]=" << result.counts.haplotypesWithVariant[i] << std::endl;
+                std::cerr << "result.counts.haplotypesWithVariant[" << j << "]=" << result.counts.haplotypesWithVariant[j] << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+}
+

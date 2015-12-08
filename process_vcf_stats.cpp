@@ -30,9 +30,11 @@ static const char *STATS_USAGE_MESSAGE =
 "                                                   filters\n"
 "       --diff-matrix                               Generate half-matrices measuring pairwise differences between individuals\n"
 "                                                   Useful when you want to calculate statistics on an already filtered file\n"
+"       --diff-matrix-h1                            Generate a half-matrix measuring pairwise differences between haplotypes1\n"
+"       --diff-matrix-allH                          Generate a half-matrix measuring pairwise differences between all haplotypes\n"
 "\nReport bugs to mm812@cam.ac.uk\n\n";
 
-enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX };
+enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH };
 
 static const char* shortopts = "h";
 
@@ -43,6 +45,8 @@ static const struct option longopts[] = {
     { "hets-per-individual",   no_argument, NULL, OPT_HETS },
     { "diff-matrix", no_argument, NULL, OPT_DIFF_MATRIX },
     { "doubleton-distribution", no_argument,    NULL, OPT_DOUBLETON },
+    { "diff-matrix-h1", no_argument,    NULL, OPT_DIFF_MATRIX_H1 },
+    { "diff-matrix-allH", no_argument,    NULL, OPT_DIFF_MATRIX_ALLH },
     { NULL, 0, NULL, 0 }
 };
 
@@ -57,9 +61,9 @@ namespace opt
     static bool countHets = false;
     static bool bDiffs = false;
     static bool bDoubleton = false;
+    static bool bDiffH1 = false;
+    static bool bDiffAllH = false;
 }
-
-
 
 int statsMain(int argc, char** argv) {
     parseStatsOptions(argc, argv);
@@ -85,10 +89,13 @@ int statsMain(int argc, char** argv) {
     std::vector<std::vector<double> > diffMatrix;
     std::vector<std::vector<double> > diffMatrixMe;
     std::vector<std::vector<double> > diffMatrixHetsVsHomDiff;
+    std::vector<std::vector<double> > diffMatrixH1;
+    std::vector<std::vector<double> > diffMatrixAllH;
     initialize_matrix_double(diffMatrix, (int)indPopVector.size());
     initialize_matrix_double(diffMatrixMe, (int)indPopVector.size());
     initialize_matrix_double(diffMatrixHetsVsHomDiff, (int)indPopVector.size());
-    
+    initialize_matrix_double(diffMatrixH1, (int)indPopVector.size());
+    initialize_matrix_double(diffMatrixAllH, (int)indPopVector.size()*2);
     
     std::cerr << "Calculating statistics from: " << fileName << std::endl;
     if (opt::countHets) 
@@ -105,7 +112,7 @@ int statsMain(int argc, char** argv) {
     string line;
     int totalVariantNumber = 0;
     while (getline(*inFile, line)) {
-        if (line[0] != '#') {  
+        if (line[0] != '#') {
             totalVariantNumber++;
             FilterResult result;
             std::vector<std::string> fields = split(line, '\t');
@@ -127,6 +134,12 @@ int statsMain(int argc, char** argv) {
             if (opt::bDiffs) {
                 diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,result);
             }
+            if (opt::bDiffH1) {
+                diffs_between_H1(diffMatrixH1, result);
+            }
+            if (opt::bDiffAllH) {
+                diffs_between_AllH(diffMatrixAllH, result);
+            }
             if (totalVariantNumber % 100000 == 0)
                 std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
         }
@@ -145,6 +158,12 @@ int statsMain(int argc, char** argv) {
         finalize_diffs_Hets_vs_Homs_proportions(diffMatrixHetsVsHomDiff);
         print_pairwise_diff_stats(fileRoot, indPopVector, totalVariantNumber, diffMatrix, diffMatrixMe, diffMatrixHetsVsHomDiff);
     }
+    if (opt::bDiffH1) {
+        print_H1_pairwise_diff_stats(fileRoot, indPopVector, totalVariantNumber, diffMatrixH1);
+    }
+    if (opt::bDiffAllH) {
+        print_AllH_pairwise_diff_stats(fileRoot, indPopVector, totalVariantNumber, diffMatrixAllH);
+    }
     
     return 0;
 }
@@ -161,7 +180,9 @@ void parseStatsOptions(int argc, char** argv) {
             case OPT_INDIV: arg >> opt::individualsFile; break;    
             case OPT_DIFF_MATRIX: opt::bDiffs = true; break;    
             case OPT_DOUBLETON: opt::bDoubleton = true; break;
-            case OPT_HETS: opt::countHets = true; break; 
+            case OPT_HETS: opt::countHets = true; break;
+            case OPT_DIFF_MATRIX_H1: opt::bDiffH1 = true; break;
+            case OPT_DIFF_MATRIX_ALLH: opt::bDiffAllH = true; break;
             case 'h':
                 std::cout << STATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
