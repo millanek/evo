@@ -31,7 +31,7 @@ static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column 
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), SGB(std::numeric_limits<double>::max()) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), bPhased(false), SGB(std::numeric_limits<double>::max()) {};
     
     int overall;
     int minimumDepthInAnIndividual;
@@ -40,6 +40,7 @@ public:
     std::string MQSBpval; // Phred-scaled pvalue
     double SGB; // 
     double inbreedingCoefficient;
+    bool bPhased;
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
     std::vector<int> genotypeQualitiesPerIndividual;

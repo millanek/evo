@@ -140,17 +140,31 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         hasGQ = true;
     }
     
+    if (fields[NUM_NON_GENOTYPE_COLUMNS][1] == '|') { thisVariantCounts.bPhased = true; }
+    
     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-        if (fields[i][0] == '1') { 
+        char v1 = fields[i][0]; char v2 = fields[i][2];
+        if (thisVariantCounts.bPhased == false) {
+            if ((v1 == '0' && v2 == '1') || (v1 == '1' && v2 == '0')) {
+            double r = ((double) rand() / (RAND_MAX));
+            if (r > 0.5) {
+                v1 = '0'; v2 = '1';
+            } else {
+                v1 = '1'; v2 = '0';
+            }
+        }
+        
+        if (v1 == '1') {
             thisVariantCounts.overall++;
             thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
             thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)]++;
         }
-        if (fields[i][2] == '1') { 
+        if (v2 == '1') {
             thisVariantCounts.overall++;
             thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
             thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)+1]++;
         }
+            
         std::vector<std::string> genotypeData = split(fields[i], ':');
         
         // read depth at the variant site per individual
