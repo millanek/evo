@@ -152,6 +152,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
             } else {
                 v1 = '1'; v2 = '0';
             }
+            }
         }
         
         if (v1 == '1') {
