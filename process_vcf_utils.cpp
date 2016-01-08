@@ -327,6 +327,61 @@ FourSetCounts getFourSetVariantCounts(const std::vector<std::string>& fields, co
     return thisVariantCounts;
 }
 
+ThreeSetCounts getThreeSetVariantCountsAA4(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& AA_loci) {
+    ThreeSetCounts thisVariantCounts;
+    int AAaltCount = 0;
+    thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
+    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
+    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
+        if (fields[i][0] == '1') {
+            thisVariantCounts.overall++;
+            if (std::find(set1_loci.begin(), set1_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set1_loci.end()) { thisVariantCounts.set1AltCount++; }
+            if (std::find(set2_loci.begin(), set2_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set2_loci.end()) { thisVariantCounts.set2AltCount++; }
+            if (std::find(set3_loci.begin(), set3_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set3_loci.end()) { thisVariantCounts.set3AltCount++; }
+            if (std::find(AA_loci.begin(), AA_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != AA_loci.end()) { AAaltCount++; }
+            thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
+        }
+        if (fields[i][2] == '1') {
+            thisVariantCounts.overall++;
+            if (std::find(set1_loci.begin(), set1_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set1_loci.end()) { thisVariantCounts.set1AltCount++; }
+            if (std::find(set2_loci.begin(), set2_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set2_loci.end()) { thisVariantCounts.set2AltCount++; }
+            if (std::find(set3_loci.begin(), set3_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set3_loci.end()) { thisVariantCounts.set3AltCount++; }
+            if (std::find(AA_loci.begin(), AA_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != AA_loci.end()) { AAaltCount++; }
+            thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
+        }
+    }
+    thisVariantCounts.set1RefCount = (int)(set1_loci.size() * 2) - thisVariantCounts.set1AltCount;
+    thisVariantCounts.set2RefCount = (int)(set2_loci.size() * 2) - thisVariantCounts.set2AltCount;
+    thisVariantCounts.set3RefCount = (int)(set3_loci.size() * 2) - thisVariantCounts.set3AltCount;
+    //thisVariantCounts.set4RefCount = (int)(set4_loci.size() * 2) - thisVariantCounts.set4AltCount;
+    
+    thisVariantCounts.set1AltAF = (double)thisVariantCounts.set1AltCount/(set1_loci.size() * 2);
+    thisVariantCounts.set2AltAF = (double)thisVariantCounts.set2AltCount/(set2_loci.size() * 2);
+    thisVariantCounts.set3AltAF = (double)thisVariantCounts.set3AltCount/(set3_loci.size() * 2);
+    //thisVariantCounts.set4AltAF = (double)thisVariantCounts.set4AltCount/(set4_loci.size() * 2);
+    
+    // Fill in derived allele frequencies if possible
+    if (AAaltCount == 0) {
+        thisVariantCounts.set1daAF = (double)thisVariantCounts.set1AltCount/(set1_loci.size() * 2);
+        thisVariantCounts.set2daAF = (double)thisVariantCounts.set2AltCount/(set2_loci.size() * 2);
+        thisVariantCounts.set3daAF = (double)thisVariantCounts.set3AltCount/(set3_loci.size() * 2);
+       // thisVariantCounts.set4daAF = (double)thisVariantCounts.set4AltCount/(set4_loci.size() * 2);
+    } else if (AAaltCount == 2) {
+        thisVariantCounts.set1daAF = (double)thisVariantCounts.set1RefCount/(set1_loci.size() * 2);
+        thisVariantCounts.set2daAF = (double)thisVariantCounts.set2RefCount/(set2_loci.size() * 2);
+        thisVariantCounts.set3daAF = (double)thisVariantCounts.set3RefCount/(set3_loci.size() * 2);
+        //thisVariantCounts.set4daAF = (double)thisVariantCounts.set4RefCount/(set4_loci.size() * 2);
+    } else if (AAaltCount == 1) {
+    } else {
+        std::cerr << "Error: Outgroup can only be one individual here" << std::endl;
+        exit(1);
+    }
+    
+    return thisVariantCounts;
+}
+
+
+
 
 
 bool testBiallelic(const std::string& altField) {

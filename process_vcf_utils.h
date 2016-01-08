@@ -61,6 +61,7 @@ class ThreeSetCounts {
 public:
     ThreeSetCounts() : overall(0), set1AltCount(0), set2AltCount(0), set3AltCount(0), set1RefCount(0), set2RefCount(0), set3RefCount(0), set1AltAF(-1), set2AltAF(-1), set3AltAF(-1), set1daAF(-1), set2daAF(-1), set3daAF(-1) {};
     
+    
     int overall;
     int set1AltCount; int set2AltCount; int set3AltCount;
     int set1RefCount; int set2RefCount; int set3RefCount;
@@ -251,6 +252,8 @@ std::string stripExtension(const std::string& filename);
 Counts getThisVariantCounts(const std::vector<std::string>& fields);
 ThreeSetCounts getThreeSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::string& AA);
 FourSetCounts getFourSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& set4_loci, const std::string& AA = "N");
+ThreeSetCounts getThreeSetVariantCountsAA4(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& AA_loci);
+
 
 bool testBiallelic(const std::string& altField);
 

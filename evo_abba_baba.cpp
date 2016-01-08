@@ -26,6 +26,7 @@ static const char *ABBA_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       -f, --frequency                         use allele frequency data instead of single sequences for each of (P1,P2,P3,O)\n"
 "       --AAeqO                                 ancestral allele infor in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
+"       --NoAaO                                 there is no ancestral allele info in the VCF AA field\n"
 "       -w SIZE, --window=SIZE                  (optional) output D statistics for nonoverlapping windows containing SIZE SNPs with nonzero D (default: 50)\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   (optional) supply a file of sample identifiers\n"
 "                                               (default: sample ids from the vcf file are used)\n"
@@ -34,7 +35,7 @@ static const char *ABBA_USAGE_MESSAGE =
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 
-enum { OPT_AA_EQ_O };
+enum { OPT_AA_EQ_O, OPT_NO_AA_O };
 
 static const char* shortopts = "hs:fw:n:";
 
@@ -46,6 +47,7 @@ static const struct option longopts[] = {
     { "run-name",   required_argument, NULL, 'n' },
     { "window",   required_argument, NULL, 'w' },
     { "AAeqO",   no_argument, NULL, OPT_AA_EQ_O },
+    { "NoAaO",   no_argument, NULL, OPT_NO_AA_O },
     { "frequency",   no_argument, NULL, 'f' },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -59,6 +61,7 @@ namespace opt
     static string runName = "";
     static bool bFrequency = false;
     static bool bAaEqO = false;
+    static bool bNoAaO = false;
     static int minScLength = 0;
     static int windowSize = 50;
     int jackKniveWindowSize = JACKKNIVE_WINDOW_SIZE_SEQUENCE;
@@ -250,22 +253,33 @@ void doAbbaBaba() {
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {
-                string AA = getAAfromInfo(info);
                 if (!opt::bAaEqO) {
-                    FourSetCounts c;
-                    if (AA == fields[3]) {
-                        c = getFourSetVariantCounts(fields,P1pos,P2pos,P3pos,Opos,"ref");
-                    } else if (AA == fields[4]) {
-                        c = getFourSetVariantCounts(fields,P1pos,P2pos,P3pos,Opos,"alt");
-                    }
-                    r.Dnumerator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
-                    r.Ddenominator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
-                    if (c.set2daAF > c.set3daAF) {
-                        r.f_d_denominator += ((1-c.set1daAF)*c.set2daAF*c.set2daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set2daAF*(1-c.set4daAF));
+                    ThreeSetCounts c;
+                    if (opt::bNoAaO) {
+                        c = getThreeSetVariantCountsAA4(fields,P1pos,P2pos,P3pos,Opos);
+                        if (opt::bFrequency) {
+                            incrementDnumDdenomFrequency(c, r);
+                        } else {
+                            incrementDnumDdenomSingleSequence(c, r);
+                        }
                     } else {
-                        r.f_d_denominator += ((1-c.set1daAF)*c.set3daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF*(1-c.set4daAF));
+                        FourSetCounts c;
+                        string AA = getAAfromInfo(info);
+                        if (AA == fields[3]) {
+                            c = getFourSetVariantCounts(fields,P1pos,P2pos,P3pos,Opos,"ref");
+                        } else if (AA == fields[4]) {
+                            c = getFourSetVariantCounts(fields,P1pos,P2pos,P3pos,Opos,"alt");
+                        }
+                        r.Dnumerator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
+                        r.Ddenominator += ((1-c.set1daAF)*c.set2daAF*c.set3daAF*(1-c.set4daAF)) + (c.set1daAF*(1-c.set2daAF)*c.set3daAF*(1-c.set4daAF));
+                        if (c.set2daAF > c.set3daAF) {
+                            r.f_d_denominator += ((1-c.set1daAF)*c.set2daAF*c.set2daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set2daAF)*c.set2daAF*(1-c.set4daAF));
+                        } else {
+                            r.f_d_denominator += ((1-c.set1daAF)*c.set3daAF*c.set3daAF*(1-c.set4daAF)) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF*(1-c.set4daAF));
+                        }
                     }
                 } else {
+                    string AA = getAAfromInfo(info);
                     ThreeSetCounts c;
                     if (AA == fields[3]) {
                         c = getThreeSetVariantCounts(fields,P1pos,P2pos,P3pos,"ref");
@@ -358,6 +372,7 @@ void parseAbbaBabaOptions(int argc, char** argv) {
             case 'w': arg >> opt::windowSize; break;
             case 'n': arg >> opt::runName; break;
             case OPT_AA_EQ_O: opt::bAaEqO = true; break;
+            case OPT_NO_AA_O: opt::bNoAaO = true; break;
             case 'h':
                 std::cout << ABBA_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
