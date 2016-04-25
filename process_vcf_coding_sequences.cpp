@@ -25,13 +25,13 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 "                                               (NOT COMPATIBLE WITH THE -n OPTION)\n"
 "       --only-stats                            only calculate statistics for coding sequences\n"
 "                                               do not output the sequences themselves\n"
-"       -u, --unphased                          set if the VCF file is unphased (normally this tool assumes a phased VCF)\n"
+"       -r, --het-random                        assign het bases randomly (instead of using an ambiguity code)\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hpws:c";
+static const char* shortopts = "hpws:cr";
 static std::vector<string> stopsTranscriptRecord;
 
 enum { OPT_ONLY_STATS };
@@ -41,7 +41,7 @@ static const struct option longopts[] = {
     { "non-coding",   required_argument, NULL, 'n' },
     { "samples",   required_argument, NULL, 's' },
     { "partial",   no_argument, NULL, 'p' },
-    { "unphased",   no_argument, NULL, 'u' },
+    { "het-random",   no_argument, NULL, 'r' },
     { "only-stats",   no_argument, NULL, OPT_ONLY_STATS },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -55,7 +55,7 @@ namespace opt
     static bool bIsCoding = true;
     static bool bUsePartial = false;
     static bool bOnlyStats = false;
-    static bool bUnphased = false;
+    static bool bHetRandom = false;
     static string sampleNameFile;
     
 }
@@ -245,13 +245,9 @@ int getCodingSeqMain(int argc, char** argv) {
                     //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
                     scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
                     std::vector<string> genotypeFields = split(fields[i], ':');
-                    std::vector<string> genotype;
-                    if (opt::bUnphased) {
-                        genotype = split(genotypeFields[0], '/');   // Unphased vcf
-                    } else {
-                        genotype = split(genotypeFields[0], '|');   // Phased vcf
-                    }
-                    appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype);
+                    std::vector<char> genotype;
+                    genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
+                    appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
                 }
                 inStrPos = atoi(fields[1].c_str());
                 
@@ -457,7 +453,7 @@ void parseGetCodingSeqOptions(int argc, char** argv) {
             case '?': die = true; break;
             case 'n': opt::bIsCoding = false; break;
             case 'p': opt::bUsePartial = true; break;
-            case 'u': opt::bUnphased = true; break;
+            case 'r': opt::bHetRandom = true; break;
             case 's': arg >> opt::sampleNameFile; break;
             case OPT_ONLY_STATS: opt::bOnlyStats = true; break;
             case 'h':

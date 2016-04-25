@@ -71,8 +71,8 @@ void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::st
     *pDiffOutFile << "# Total number of segragating variant sites in this sample:" << totalVariantNumber << std::endl;
     *pDiffOutFile << "# Richard's scoring scheme" << std::endl;
     *pDiffMeOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
-    *pDiffMeOutFile << "# Total number of segragating variant sites in this sample:" << totalVariantNumber << std::endl;
-    *pDiffMeOutFile << "# Homozygous difference = 1, one homozygous, another heterozygous = 0.5:" << totalVariantNumber << std::endl;
+    *pDiffMeOutFile << "# Total number of segragating variant sites in this sample: " << totalVariantNumber << std::endl;
+    *pDiffMeOutFile << "# Homozygous difference = 2, one homozygous, another heterozygous = 1:" << totalVariantNumber << std::endl;
     *pHetHomOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
     *pHetHomOutFile << "# number of sites both individuals hets/number of sites individuals have a homozygous difference; i.e. num(1/0::1/0)/num(1/1::0/0)" << std::endl;
     *pHetHomOutFile << "# For a free mixing population, we expect this number ~2; for fully separated species ~0" << std::endl;

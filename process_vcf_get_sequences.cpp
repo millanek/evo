@@ -32,6 +32,7 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       --by-scaffold                               output by scaffold/LG (each scaffold/LG) has its own file with sequences\n"
 "                                                   for all samples\n"
 "       --whole-genome                              output is one file with the whole genome concatenated for all samples\n"
+"       -r, --het-random                        assign het bases randomly (instead of using an ambiguity code)\n"
 "       --split NUM                                 split output into sequences containing approx. NUM segregating sites\n"
 "                                                   each file contains sequences for all samples; this is intended for phylogenetic analyses\n"
 "                                                   incompatible with --by-scaffold\n"
@@ -46,11 +47,12 @@ static const char *GETSEQ_USAGE_MESSAGE =
 
 enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN };
 
-static const char* shortopts = "hpws:c";
+static const char* shortopts = "hpws:cr";
 
 static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
     { "by-scaffold",   no_argument, NULL, OPT_BY_SCAFFOLD },
+    { "het-random",   no_argument, NULL, 'r' },
     { "whole-genome",   no_argument, NULL, OPT_WG },
     { "LDhat",   no_argument, NULL, OPT_LDHAT },
     { "split",   required_argument, NULL, OPT_SPLIT },
@@ -69,6 +71,7 @@ namespace opt
     static bool bWholeGenome = false; // Print the whole genome into one file
     static string sampleNameFile;
     static int splitNum = 0;
+    static bool bHetRandom = false;
 
 }
 
@@ -213,14 +216,14 @@ int getSeqMain(int argc, char** argv) {
                     //std::cerr << "Going through genotypes1:" << i << std::endl;
                     //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
                     std::vector<string> genotypeFields = split(fields[i], ':');
-                    std::vector<string> genotype; genotype.push_back(numToString(genotypeFields[0][0])); genotype.push_back(numToString(genotypeFields[0][2]));
+                    std::vector<char> genotype; genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
                     if (opt::bLDhat) {
                         for (int j = 0; j != ((atoi(fields[1].c_str()) - 1)-inStrPos); j++) {
                             scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");
                         }
-                        if (genotype[0] == "0" && genotype[1] == "0")
+                        if (genotype[0] == '0' && genotype[1] == '0')
                             scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");
-                        else if (genotype[0] == "1" && genotype[1] == "1")
+                        else if (genotype[0] == '1' && genotype[1] == '1')
                             scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("1");
                         else {
                             string ambiguityBase = getAmbiguityCode(fields[3], fields[4]);
@@ -228,7 +231,7 @@ int getSeqMain(int argc, char** argv) {
                         }
                     } else {
                         scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
-                        appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype);
+                        appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
                     }
                 }
                 inStrPos = atoi(fields[1].c_str());
@@ -477,6 +480,7 @@ void parseGetSeqOptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 's': arg >> opt::sampleNameFile; break;
+            case 'r': opt::bHetRandom = true; break;
             case OPT_LDHAT: opt::bLDhat = true; break;
             case OPT_BY_SCAFFOLD: opt::bByScaffold = true; break;
             case OPT_SPLIT: arg >> opt::splitNum; break;
