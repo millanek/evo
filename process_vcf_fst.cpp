@@ -262,6 +262,7 @@ void getFstFromVCF() {
     string fstDxyFixedWindowFileName = fileRoot + "dXY_fixedWindow.txt";
     fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
+    *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
     //std::cerr << "Still alive: " << std::endl;
     
