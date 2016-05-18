@@ -101,6 +101,14 @@ public:
     int set2Count;
     double fisher_pval;
     double chi_sq_pval;
+    
+    void reset() {
+        overall = 0;
+        set1Count = 0;
+        set2Count = 0;
+        fisher_pval = 0;
+        chi_sq_pval = 0;
+    }
 };
 
 

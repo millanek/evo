@@ -335,11 +335,11 @@ void getFstFromVCF() {
             
             if (opt::windowSize > 0) {
                 if (opt::windowSize == opt::windowStep) {
-                    *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << std::endl;
+                    *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
                     *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy_onlyVaiants" << "\t" << "Dxy_AllSites" << "\t" << "windowSize" << std::endl;
                     if (opt::regAbove > 0) *regionsAboveFstFile << "scaffold" << "\t" << "Start" << "\t" << "End" << std::endl;
                 } else {
-                    *pHetSets << "Middle_SNP_position" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
+                    *pHetSets << "Middle_SNP_position" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
                 }
             }
         } else {
@@ -564,8 +564,9 @@ void getFstFromMs() {
     std::vector<int> lessSet1;
     std::vector<int> moreSet2;
     std::vector<int> lessSet2;
+    SetCounts counts;
     while (getline(*msFile, line)) {
-        SetCounts counts;
+        counts.reset();
         double thisFst = -1;
         for (std::vector<int>::iterator it = set1_loci.begin(); it != set1_loci.end(); it++) {
             // std::cerr << line[*it] << std::endl;
@@ -578,6 +579,8 @@ void getFstFromMs() {
                 counts.set2Count++;
             }
         }
+        
+        //std::cerr << "counts.set1Count" << counts.set1Count << "\t" << "counts.set2Count" << counts.set2Count << std::endl;
         
         if (counts.set1Count > 0 || counts.set2Count > 0) {
             double FstNum = calculateFstNumerator(counts, opt::msSet1FstSample, opt::msSet2FstSample);
@@ -613,6 +616,7 @@ void getFstFromMs() {
             lessSet2.push_back(counts.set2Count);
         }
         
+       // std::cerr << counts.set1Count << "\t" << set1WithoutVariant << "\t" << counts.set2Count << "\t" << set2WithoutVariant << std::endl;
         if ((counts.set1Count != 0 || counts.set2Count != 0) && (set1WithoutVariant != 0 || set2WithoutVariant != 0)) {
             if (opt::msSet1FstSample + opt::msSet2FstSample <= 60) {
                 counts.fisher_pval = fisher_exact(counts.set1Count,set1WithoutVariant , counts.set2Count, set2WithoutVariant);
