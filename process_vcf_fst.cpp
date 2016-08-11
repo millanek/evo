@@ -33,6 +33,8 @@ static const char *FST_USAGE_MESSAGE =
 "                                               outputs the location of SNPs with particular Fst levels with respect to exons, introns, UTRs, non-coding regions\n\n"
 "       --regions-above=minFst                  (optional, requires -w) outputs the boundaries of regions whose Fst in windows of size set in -w is at least minFst\n"
 "                                               the output file has the suffix '_fst_above_minFst.txt'\n"
+"       --accessibleGenomeBED=BEDfile.bed       (optional) a bed file specifying the regions of the genome where we could call SNPs\n:"
+"                                               this is used when calculating nucleotide diversity (pi) and absolute sequence divergence (d_XY) in fixed windows\n"
 "       To calculate Fst statistics from ms simulation output:\n"
 "       --ms=MS_OUTPUT.txt                      (required)\n"
 "       --set1msSimSize=NUM                     (required) set 1 (population 1) was simulated with size NUM in ms\n"
@@ -47,7 +49,7 @@ static const char *FST_USAGE_MESSAGE =
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_HELP = 1, OPT_VCF, OPT_SETS, OPT_ANNOT, OPT_MS, OPT_EIGEN, OPT_MS_SET1_SIZE, OPT_MS_SET1_SAMPLE, OPT_MS_SET2_SIZE, OPT_MS_SET2_SAMPLE, OPT_MS_PVALS, OPT_ANC_SETS, OPT_REG_ABOVE  };
+enum { OPT_HELP = 1, OPT_VCF, OPT_SETS, OPT_ANNOT, OPT_MS, OPT_EIGEN, OPT_MS_SET1_SIZE, OPT_MS_SET1_SAMPLE, OPT_MS_SET2_SIZE, OPT_MS_SET2_SAMPLE, OPT_MS_PVALS, OPT_ANC_SETS, OPT_REG_ABOVE, OPT_ACC_GEN_BED  };
 
 static const char* shortopts = "hn:s:w:";
 
@@ -65,6 +67,7 @@ static const struct option longopts[] = {
     { "set2FstSample",   required_argument, NULL, OPT_MS_SET2_SAMPLE },
     { "msPvals", required_argument, NULL, OPT_MS_PVALS },
     { "eigen",   required_argument, NULL, OPT_EIGEN },
+    { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
     { "samples",   required_argument, NULL, 's' },
     { "run-name",   required_argument, NULL, 'n' },
     { "help",   no_argument, NULL, 'h' },
@@ -77,6 +80,7 @@ namespace opt
     static string sampleSets;
     static string ancSets;
     static string sampleNameFile;
+    static string accesibleGenBedFile;
     static int windowSize = 0;
     static int windowStep = 0;
     static double regAbove = 0;
@@ -226,6 +230,7 @@ void getFstFromVCF() {
     //std::cerr << "Hello: " << std::endl;
     std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
     std::ifstream* annotFile;
+    std::ifstream* accessibleGenomeBed;
     std::ofstream* snpCategoryFstFile;
     std::ofstream* regionsAboveFstFile; bool inRegAbove = false;
     std::ofstream* fstDxyFixedWindowFile;
@@ -250,6 +255,13 @@ void getFstFromVCF() {
         getline(*ancSetsFile, ancSet2String);
         ancSet1 = split(ancSet1String, ','); ancSet2 = split(ancSet2String, ',');
         std::sort(ancSet1.begin(),ancSet1.end()); std::sort(ancSet2.begin(),ancSet2.end());
+    }
+    AccessibleGenome* ag;
+    if (!opt::accesibleGenBedFile.empty()) {
+        accessibleGenomeBed = new std::ifstream(opt::accesibleGenBedFile);
+        std::cerr << "Loading the accessible genome annotation" << std::endl;
+        ag = new AccessibleGenome(accessibleGenomeBed);
+        std::cerr << "Done" << std::endl;
     }
     
     if (opt::regAbove > 0) {
@@ -402,13 +414,17 @@ void getFstFromVCF() {
                     std::vector<string> s = split(windowStartEnd, '\t');
                     if (s[0] == fields[0]) {
                         if (atoi(fields[1].c_str()) > (fixedWindowStart+10000)) {
-                            double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, 10000);
+                            int accessibleInThisWindow = 10000;
+                            if (!opt::accesibleGenBedFile.empty()) {
+                                accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+10000);
+                            }
+                            double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, accessibleInThisWindow);
                             double thisFixedWindowFst = calculateFst(fixedWindowFstNumVector, fixedWindowFstDenomVector);
                             //double thisFixedWindowHet1 = vector_average_withRegion(fixedWindowHet1Vector, 10000);
                             //double thisFixedWindowHet2 = vector_average_withRegion(fixedWindowHet2Vector, 10000);
-                            double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, 10000);
-                            double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, 10000);
-                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+10000 << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << std::endl;
+                            double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, accessibleInThisWindow);
+                            double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, accessibleInThisWindow);
+                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+10000 << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << std::endl;
                             fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
                             fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
                             fixedWindowStart= fixedWindowStart+10000;
@@ -752,6 +768,7 @@ void parseFstOptions(int argc, char** argv) {
             case OPT_MS_SET2_SIZE: arg >> opt::msSet2Size; break;
             case OPT_MS_SET2_SAMPLE: arg >> opt::msSet2FstSample; break;
             case OPT_MS_PVALS: arg >> opt::msPvalCutoff; break;
+            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
             case 's': arg >> opt::sampleNameFile; break;
             case 'n': arg >> opt::runName; break;
             case '?': die = true; break;

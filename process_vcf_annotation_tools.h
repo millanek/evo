@@ -195,4 +195,72 @@ std::string getIndividualSequenceForThisRegion(const std::vector<std::string>& t
 // Get the reference sequence for a given region of the scaffold defined by the annotation vector
 std::string getReferenceForThisRegion(const std::vector<std::string>& thisRegionAnnotation, const std::string& strand, const std::string& currentScaffoldReference);
 
+
+class AccessibleGenome {
+public:
+    AccessibleGenome() {};
+    
+    AccessibleGenome(std::ifstream*& bedFile) {
+        accessibleGenomeMap = loadAccessibleGenomeMap(bedFile);
+    }
+    std::map<std::string, std::vector<std::vector<int> > > accessibleGenomeMap;
+    
+    int getAccessibleBPinRegion(const string& scaffold, const int start, const int end) {
+        string SNPcategory = "other non-coding";
+        std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
+        int numBP = 0;
+        
+        // Binary search to find the first element in the accessible genome annotation that is greater
+        // or equal to the start of the region in question
+        std::vector<int>::iterator itStart = lower_bound(aGThisSc[0].begin(),aGThisSc[0].end(),start);
+        std::vector<int>::size_type index = std::distance(aGThisSc[0].begin(), itStart);
+        
+        // Sum the lengths
+        while (aGThisSc[0][index] <= end) {
+            if (aGThisSc[1][index] < end)
+                numBP = numBP + (aGThisSc[1][index] - aGThisSc[0][index]);
+            else
+                numBP = numBP + (end - aGThisSc[0][index]);
+            index++;
+        }
+        return numBP;
+    }
+    
+private:
+    // Load up the file specifying the accessible genome (needs to be sorted by chromosome)
+    std::map<string, std::vector<std::vector<int> > > loadAccessibleGenomeMap(std::ifstream*& bedFile) {
+        std::map<string, std::vector<std::vector<int> > > accessibleGenomeMap;
+        std::map<string, std::vector<std::vector<string> > > accessibleGenomeStartsMap;
+        std::vector<std::vector<int> > accessibleGenomeThisScaffold;
+        std::vector<int> featureStarts;
+        std::vector<int> featureEnds;
+        string line;
+        getline(*bedFile, line);
+        std::vector<string> currentFeature = split(line, '\t');
+        string currentScaffold = currentFeature[0];
+        int featureEnd = atoi(currentFeature[2].c_str());
+        while (getline(*bedFile, line)) {
+            featureStarts.push_back(atoi(currentFeature[1].c_str()));
+            featureEnds.push_back(atoi(currentFeature[2].c_str()));
+            if (currentFeature[0] != currentScaffold) {
+                accessibleGenomeThisScaffold.push_back(featureStarts);
+                accessibleGenomeThisScaffold.push_back(featureEnds);
+                accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
+                accessibleGenomeThisScaffold.clear(); featureStarts.clear(); featureEnds.clear();
+                currentScaffold = currentFeature[0];
+            }
+            std::vector<string> currentFeature = split(line, '\t');
+        }
+        // Final line / final scaffold
+        accessibleGenomeThisScaffold.push_back(featureStarts);
+        accessibleGenomeThisScaffold.push_back(featureEnds);
+        accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
+        accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
+        return accessibleGenomeMap;
+    }
+
+};
+
+
+
 #endif /* defined(__vcf_process__process_vcf_annotation_tools__) */
