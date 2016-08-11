@@ -241,13 +241,13 @@ void getFstFromVCF() {
         annotFile = new std::ifstream(opt::annotFile.c_str());
         Annotation Annot(annotFile, false); // Does not use transcripts annotated as 5' or 3' partial
         wgAnnotation = Annot;
-        string snpCategoryFstFileName = fileRoot + "_" + opt::runName + "SNPcategory_fst.txt";
+        string snpCategoryFstFileName = opt::runName + "SNPcategory_fst.txt";
         snpCategoryFstFile = new std::ofstream(snpCategoryFstFileName.c_str());
         *snpCategoryFstFile << "SNPcategory" << "\t" << "thisSNPFst" << "\t" << "thisSNPDxy" << "\t" << "scaffold" << "\t" << "position" << std::endl;
     }
     if (!opt::ancSets.empty()) {
         ancSetsFile = new std::ifstream(opt::ancSets);
-        string ancOutFileName = fileRoot + "_" + opt::runName + "ancestralSNPs_fst.txt";
+        string ancOutFileName = fileRoot + opt::runName + "ancestralSNPs_fst.txt";
         ancSetsOutFile = new std::ofstream(ancOutFileName);
         *ancSetsOutFile << "scaffold" << "\t" << "position" << "\t" << "AncAllelePopulation" << "\t" << "Fst" << "\t" << "ancSet1_segregating" << "\t" << "ancSet2_segregating" << std::endl;
         string ancSet1String; string ancSet2String;
@@ -265,15 +265,15 @@ void getFstFromVCF() {
     }
     
     if (opt::regAbove > 0) {
-        string regionsAboveFstFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst_above" + numToString(opt::regAbove) + ".txt";
+        string regionsAboveFstFileName = fileRoot + opt::runName + "_w_" + numToString(opt::windowSize) + "_fst_above" + numToString(opt::regAbove) + ".txt";
         regionsAboveFstFile = new std::ofstream(regionsAboveFstFileName.c_str());
     }
     
-    string FstResultsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst.txt";
+    string FstResultsFileName = fileRoot + opt::runName + "_w_" + numToString(opt::windowSize) + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
     string fstDxyFixedWindowFileName = fileRoot + opt::runName + "dXY_fixedWindow.txt";
     fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
-    string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
+    string heterozygositySetsFileName = fileRoot + opt::runName + "_w_" + numToString(opt::windowSize) + "_heterozygosity.txt";
     if (opt::accesibleGenBedFile.empty()) {
         *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
     } else {
@@ -516,6 +516,7 @@ void getFstFromVCF() {
     std::cerr << "Fst: " << Fst << std::endl;
     std::cerr << "Heterozygosities: " << "\tS1:" << overallHetS1 << "\tS2:" << overallHetS2 << "\tNei1:" << overallHetNei1 << "\tNei2" << overallHetNei2 << std::endl;
     *pHetSets << "#Heterozygosities: " << "\tS1:" << overallHetS1 << "\tS2:" << overallHetS2 << "\tNei1:" << overallHetNei1 << "\tNei2" << overallHetNei2 << std::endl;
+    fstDxyFixedWindowFile->close();
 }
 
 void getFstFromMs() {
