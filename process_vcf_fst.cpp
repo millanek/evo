@@ -223,7 +223,7 @@ void getFstFromVCF() {
     if (opt::windowSize > 0) {
         std::cerr << "also using a sliding window of size: " << opt::windowSize << " variants and sliding in steps of: " << opt::windowStep << std::endl;
     }
-    string fileRoot = stripExtension(opt::sampleSets);
+    string fileRoot = "";
     //std::cerr << "Still alive: " << std::endl;
     // Open connection to read from the vcf file
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
@@ -271,10 +271,14 @@ void getFstFromVCF() {
     
     string FstResultsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
-    string fstDxyFixedWindowFileName = fileRoot + "dXY_fixedWindow.txt";
+    string fstDxyFixedWindowFileName = fileRoot + opt::runName + "dXY_fixedWindow.txt";
     fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
     string heterozygositySetsFileName = fileRoot + "_w_" + numToString(opt::windowSize) + opt::runName + "_heterozygosity.txt";
-    *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
+    if (opt::accesibleGenBedFile.empty()) {
+        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
+    } else {
+        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << std::endl;
+    }
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
     //std::cerr << "Still alive: " << std::endl;
     
