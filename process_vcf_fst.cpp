@@ -416,13 +416,12 @@ void getFstFromVCF() {
                         
                     }
                     std::vector<string> s = split(windowStartEnd, '\t');
+                    int fixedwindowSize = 10000;
                     if (s[0] == fields[0]) {
-                        if (atoi(fields[1].c_str()) > (fixedWindowStart+10000)) {
-                            int accessibleInThisWindow = 10000;
+                        if (atoi(fields[1].c_str()) > (fixedWindowStart+fixedwindowSize)) {
+                            int accessibleInThisWindow = fixedwindowSize;
                             if (!opt::accesibleGenBedFile.empty()) {
-                                //std::cerr << "Getting accessible genome for scaffold: " << fields[0] << std::endl;
-                                accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+10000);
-                                //std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
+                                accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+fixedwindowSize);
                             }
                             double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, accessibleInThisWindow);
                             double thisFixedWindowFst = calculateFst(fixedWindowFstNumVector, fixedWindowFstDenomVector);
@@ -430,10 +429,22 @@ void getFstFromVCF() {
                             //double thisFixedWindowHet2 = vector_average_withRegion(fixedWindowHet2Vector, 10000);
                             double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, accessibleInThisWindow);
                             double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, accessibleInThisWindow);
-                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+10000 << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << std::endl;
+                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << std::endl;
                             fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
                             fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
-                            fixedWindowStart= fixedWindowStart+10000;
+                            // Handle fixed windows that do not contain any variants
+                            int fixedWindowsWithoutAnyVariants = 0;
+                            while (atoi(fields[1].c_str()) > (fixedWindowStart+fixedwindowSize)) {
+                                if (fixedWindowsWithoutAnyVariants > 0) {
+                                    int accessibleInThisWindow = fixedwindowSize;
+                                    if (!opt::accesibleGenBedFile.empty()) {
+                                        accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+fixedwindowSize);
+                                    }
+                                    *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << std::endl;
+                                }
+                                fixedWindowStart= fixedWindowStart+fixedwindowSize;
+                                fixedWindowsWithoutAnyVariants++;
+                            }
                         }
                     } else {
                         fixedWindowStart = 0;
