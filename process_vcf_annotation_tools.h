@@ -214,11 +214,12 @@ public:
         } */
         int numBP = 0;
         
-        // Binary search to find the first element in the accessible genome annotation that is greater
+        // Binary search to find the first element in the accessible genome annotation whose end coordinate is greater
         // or equal to the start of the region in question
-        std::vector<int>::iterator itStart = lower_bound(aGThisSc[0].begin(),aGThisSc[0].end(),start);
-        std::vector<int>::size_type index = std::distance(aGThisSc[0].begin(), itStart);
-        
+        std::vector<int>::iterator itStart = lower_bound(aGThisSc[1].begin(),aGThisSc[1].end(),start);
+        std::vector<int>::size_type index = std::distance(aGThisSc[1].begin(), itStart);
+        // Add the first element:
+        numBP = numBP + (aGThisSc[1][index] - start) + 1; index++;
         // Sum the lengths
         while (aGThisSc[0][index] <= end) {
             if (aGThisSc[1][index] < end)
