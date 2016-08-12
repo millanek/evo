@@ -206,8 +206,12 @@ public:
     std::map<std::string, std::vector<std::vector<int> > > accessibleGenomeMap;
     
     int getAccessibleBPinRegion(const string& scaffold, const int start, const int end) {
-        string SNPcategory = "other non-coding";
+        
         std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
+        //std::cerr << "There are " << aGThisSc[0].size() << " accessible intervals" << std::endl;
+        /*for (std::map<std::string, std::vector<std::vector<int> > >::iterator i = accessibleGenomeMap.begin(); i != accessibleGenomeMap.end(); i++) {
+            std::cerr << "There is scaffold: " << i->first << " in the map" << std::endl;
+        } */
         int numBP = 0;
         
         // Binary search to find the first element in the accessible genome annotation that is greater
@@ -230,7 +234,6 @@ private:
     // Load up the file specifying the accessible genome (needs to be sorted by chromosome)
     std::map<string, std::vector<std::vector<int> > > loadAccessibleGenomeMap(std::ifstream*& bedFile) {
         std::map<string, std::vector<std::vector<int> > > accessibleGenomeMap;
-        std::map<string, std::vector<std::vector<string> > > accessibleGenomeStartsMap;
         std::vector<std::vector<int> > accessibleGenomeThisScaffold;
         std::vector<int> featureStarts;
         std::vector<int> featureEnds;
@@ -238,23 +241,25 @@ private:
         getline(*bedFile, line);
         std::vector<string> currentFeature = split(line, '\t');
         string currentScaffold = currentFeature[0];
-        int featureEnd = atoi(currentFeature[2].c_str());
+        //std::cerr << "Loading scaffold: " << currentScaffold << std::endl;
         while (getline(*bedFile, line)) {
             featureStarts.push_back(atoi(currentFeature[1].c_str()));
             featureEnds.push_back(atoi(currentFeature[2].c_str()));
+           // std::cerr << "Loading scaffold: " << currentFeature[0] << "\t" << currentScaffold << std::endl;
             if (currentFeature[0] != currentScaffold) {
                 accessibleGenomeThisScaffold.push_back(featureStarts);
                 accessibleGenomeThisScaffold.push_back(featureEnds);
                 accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
                 accessibleGenomeThisScaffold.clear(); featureStarts.clear(); featureEnds.clear();
                 currentScaffold = currentFeature[0];
+          //      std::cerr << "Loading scaffold: " << currentScaffold << std::endl;
             }
-            std::vector<string> currentFeature = split(line, '\t');
+            currentFeature = split(line, '\t');
+            //std::cerr << "Loading scaffold: " << currentFeature[0] << "\t" << currentScaffold << std::endl;
         }
         // Final line / final scaffold
         accessibleGenomeThisScaffold.push_back(featureStarts);
         accessibleGenomeThisScaffold.push_back(featureEnds);
-        accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
         accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
         return accessibleGenomeMap;
     }

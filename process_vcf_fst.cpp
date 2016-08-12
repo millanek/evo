@@ -360,11 +360,12 @@ void getFstFromVCF() {
             }
         } else {
             totalVariantNumber++;
-            
+            //std::cerr << "Variant N:" << totalVariantNumber << std::endl;
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {  // Without indels
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
+                //std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
                 //std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << "\t" << n1 << std::endl;
                 //std::cerr << "Still here: " << counts.set2HaplotypeVariant.size() << "\t" << counts.set2individualsWithVariant.size() << "\t" << n2 << std::endl;
                 //print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
@@ -414,13 +415,14 @@ void getFstFromVCF() {
                         
                         
                     }
-                    
                     std::vector<string> s = split(windowStartEnd, '\t');
                     if (s[0] == fields[0]) {
                         if (atoi(fields[1].c_str()) > (fixedWindowStart+10000)) {
                             int accessibleInThisWindow = 10000;
                             if (!opt::accesibleGenBedFile.empty()) {
+                                //std::cerr << "Getting accessible genome for scaffold: " << fields[0] << std::endl;
                                 accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+10000);
+                                //std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
                             }
                             double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, accessibleInThisWindow);
                             double thisFixedWindowFst = calculateFst(fixedWindowFstNumVector, fixedWindowFstDenomVector);
