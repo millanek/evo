@@ -277,7 +277,7 @@ void getFstFromVCF() {
     if (opt::accesibleGenBedFile.empty()) {
         *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
     } else {
-        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << std::endl;
+        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << "\t" << "Variant_density" << std::endl;
     }
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
     //std::cerr << "Still alive: " << std::endl;
@@ -429,7 +429,8 @@ void getFstFromVCF() {
                             //double thisFixedWindowHet2 = vector_average_withRegion(fixedWindowHet2Vector, 10000);
                             double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, accessibleInThisWindow);
                             double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, accessibleInThisWindow);
-                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << std::endl;
+                            int numVariantsInThisFixedWindow = (int)fixedWindowFstNumVector.size();
+                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow/accessibleInThisWindow << std::endl;
                             fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
                             fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
                             // Handle fixed windows that do not contain any variants
@@ -440,7 +441,7 @@ void getFstFromVCF() {
                                     if (!opt::accesibleGenBedFile.empty()) {
                                         accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+fixedwindowSize);
                                     }
-                                    *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << std::endl;
+                                    *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << std::endl;
                                 }
                                 fixedWindowStart= fixedWindowStart+fixedwindowSize;
                                 fixedWindowsWithoutAnyVariants++;
