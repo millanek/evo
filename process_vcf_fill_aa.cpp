@@ -19,15 +19,19 @@ static const char *FILL_AA_USAGE_MESSAGE =
 "ANCESTRAL_SEQ_IN_REF_COORDS.fa can be produced by " PROGRAM_BIN " aa-seq\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
-"       -o, --out=FILE_ROOT                     the outpur file will be 'FILE_ROOT.ancestralSequence.fa'\n"
+"       -o, --out=FILE_ROOT                     the output file will be 'FILE_ROOT_AAfilled.vcf.gz'\n"
+"       -i, --addAsAnIndividual=IndividualName  Instead of filling the ancestral allele, this adds the sequence as"
+"                                               an individual to the VCF file\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "ho:";
+
+static const char* shortopts = "ho:i:";
 
 static const struct option longopts[] = {
+    { "addAsAnIndividual",   required_argument, NULL, 'i' },
     { "help",   no_argument, NULL, 'h' },
-    { "out",   no_argument, NULL, 'o' },
+    { "out",   required_argument, NULL, 'o' },
     { NULL, 0, NULL, 0 }
 };
 
@@ -36,6 +40,7 @@ namespace opt
     static string vcfFile;
     static string ancSeqFile;
     static string out;
+    static string IndividualName = "";
 }
 
 
@@ -52,8 +57,8 @@ int fillAaMain(int argc, char** argv) {
     } else {
         refFastaFileRoot = opt::out;
     }
-    string outFN = refFastaFileRoot + "_AAfilled.vcf";
-    std::ofstream* outFile = new std::ofstream(outFN.c_str());
+    string outFN = refFastaFileRoot + "_AAfilled.vcf.gz";
+    std::ostream* outFile = createWriter(outFN.c_str());
     
     // Read in the whole ancestral sequence
     std::map<string, string> ancSeqs;
@@ -77,8 +82,12 @@ int fillAaMain(int argc, char** argv) {
         if (line[0] == '#' && line[1] == '#')
             *outFile << line << std::endl;
         else if (line[0] == '#' && line[1] == 'C') {
-            *outFile << "##INFO=<ID=AA,Number=1,Type=String,Description=\"Ancestral allele\">" << std::endl;
-            *outFile << line << std::endl;
+            if (opt::IndividualName == "") {
+                *outFile << "##INFO=<ID=AA,Number=1,Type=String,Description=\"Ancestral allele\">" << std::endl;
+                *outFile << line << std::endl;
+            } else {
+                *outFile << line << "\t" << opt::IndividualName << std::endl;
+            }
         } else {
             totalVariantNumber++;
             std::vector<std::string> fields = split(line, '\t');
@@ -100,10 +109,25 @@ int fillAaMain(int argc, char** argv) {
                     }
                     // assert((AA == fields[3][0]) || (AA == fields[4][0]));
                 }
-                fields[7] += ";AA="; fields[7] += AA;
-                print_vector(fields, *outFile, '\t');
+                if (opt::IndividualName == "") {
+                    fields[7] += ";AA="; fields[7] += AA;
+                    print_vector(fields, *outFile, '\t');
+                } else {
+                    string genotypeToAdd;
+                    if (AA == fields[3][0])
+                        genotypeToAdd = "0/0";
+                    else if (AA == fields[4][0])
+                        genotypeToAdd = "1/1";
+                    else
+                        genotypeToAdd = "./.";
+                    fields.push_back(genotypeToAdd);
+                }
             } else {
-                *outFile << line << std::endl;
+                if (opt::IndividualName == "") {
+                    *outFile << line << std::endl;
+                } else {
+                    fields.push_back("./.");
+                }
             }
             if (totalVariantNumber % 100000 == 0) {
                 double totalAAfilled = aaRefCount + aaAltCount + aaDashCount + aaDiffCount + aaNcount;
@@ -128,6 +152,7 @@ void parseFillAaOptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 'o': arg >> opt::out; break;
+            case 'i': arg >> opt::IndividualName; break;
             case 'h':
                 std::cout << FILL_AA_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

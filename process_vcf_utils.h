@@ -158,7 +158,7 @@ template <typename T> std::string numToString(T i) {
 }
 
 // Print an arbitrary matrix (vector of vectors)
-template <class T> void print_matrix(T matrix, std::ofstream& outFile) {
+template <class T> void print_matrix(T matrix, std::ostream& outFile) {
     for (int i = 0; i < matrix.size(); i++) {
         for (int j = 0; j < matrix[i].size(); j++) {
             if (j == (matrix[i].size()-1))
@@ -170,7 +170,7 @@ template <class T> void print_matrix(T matrix, std::ofstream& outFile) {
 }
 
 // Print an arbitrary vector to a file
-template <class T> void print_vector(T vector, std::ofstream& outFile, char delim = '\t') {
+template <class T> void print_vector(T vector, std::ostream& outFile, char delim = '\t') {
     for (int i = 0; i < vector.size(); i++) {
         if (i == (vector.size()-1))
             outFile << vector[i] << std::endl;
@@ -284,6 +284,7 @@ void assertGZOpen(gzstreambase& gh, const std::string& fn);
 void assertFileOpen(std::ifstream& fh, const std::string& fn);
 void assertFileOpen(std::ofstream& fh, const std::string& fn);
 std::istream* createReader(const std::string& filename, std::ios_base::openmode mode = std::ios_base::in);
+std::ostream* createWriter(const std::string& filename, std::ios_base::openmode mode = std::ios_base::out);
 void print80bpPerLineStdOut(std::ostream& outFile, std::string toPrint);
 void print80bpPerLineFile(std::ofstream*& outFile, string toPrint);
 
