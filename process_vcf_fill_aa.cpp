@@ -19,7 +19,7 @@ static const char *FILL_AA_USAGE_MESSAGE =
 "ANCESTRAL_SEQ_IN_REF_COORDS.fa can be produced by " PROGRAM_BIN " aa-seq\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
-"       -o, --out=FILE_ROOT                     the output file will be 'FILE_ROOT_AAfilled.vcf.gz'\n"
+"       -o, --out=FILE_ROOT                     the output file will be 'FILE_ROOT_AAfilled.vcf'\n"
 "       -i, --addAsAnIndividual=IndividualName  Instead of filling the ancestral allele, this adds the sequence as"
 "                                               an individual to the VCF file\n"
 "\n"
@@ -39,7 +39,7 @@ namespace opt
 {
     static string vcfFile;
     static string ancSeqFile;
-    static string out;
+    static string out = "";
     static string IndividualName = "";
 }
 
@@ -57,8 +57,14 @@ int fillAaMain(int argc, char** argv) {
     } else {
         refFastaFileRoot = opt::out;
     }
-    string outFN = refFastaFileRoot + "_AAfilled.vcf.gz";
-    std::ostream* outFile = createWriter(outFN.c_str());
+    // the output file
+    std::ostream* outFile;
+    if (opt::out == "") {
+        outFile = &std::cout;
+    } else {
+        string outFN = refFastaFileRoot + "_AAfilled.vcf";
+        outFile = createWriter(outFN.c_str());
+    }
     
     // Read in the whole ancestral sequence
     std::map<string, string> ancSeqs;
@@ -121,12 +127,14 @@ int fillAaMain(int argc, char** argv) {
                     else
                         genotypeToAdd = "./.";
                     fields.push_back(genotypeToAdd);
+                    print_vector(fields, *outFile, '\t');
                 }
             } else {
                 if (opt::IndividualName == "") {
                     *outFile << line << std::endl;
                 } else {
                     fields.push_back("./.");
+                    print_vector(fields, *outFile, '\t');
                 }
             }
             if (totalVariantNumber % 100000 == 0) {
