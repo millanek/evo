@@ -277,7 +277,7 @@ void getFstFromVCF() {
     if (opt::accesibleGenBedFile.empty()) {
         *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
     } else {
-        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << "\t" << "Variant_density" << std::endl;
+        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << "\t" << "Set1_VariantDensity" << "\t" << "Set2_VariantDensity" << std::endl;
     }
     std::ofstream* pHetSets = new std::ofstream(heterozygositySetsFileName.c_str());
     //std::cerr << "Still alive: " << std::endl;
@@ -429,8 +429,11 @@ void getFstFromVCF() {
                             //double thisFixedWindowHet2 = vector_average_withRegion(fixedWindowHet2Vector, 10000);
                             double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, accessibleInThisWindow);
                             double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, accessibleInThisWindow);
-                            int numVariantsInThisFixedWindow = (int)fixedWindowFstNumVector.size();
-                            *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow/accessibleInThisWindow << std::endl;
+                            int Pi1NumZeros = (int)std::count(fixedWindowPi1Vector.begin(), fixedWindowPi1Vector.end(), 0);
+                            int numVariantsInThisFixedWindow1 = (int)fixedWindowPi1Vector.size() - Pi1NumZeros;
+                            int Pi2NumZeros = (int)std::count(fixedWindowPi2Vector.begin(), fixedWindowPi2Vector.end(), 0);
+                            int numVariantsInThisFixedWindow2 = (int)fixedWindowPi2Vector.size() - Pi2NumZeros;
+                            *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow1/accessibleInThisWindow << "\t" << (double)numVariantsInThisFixedWindow2/accessibleInThisWindow << std::endl;
                             fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
                             fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
                             // Handle fixed windows that do not contain any variants
