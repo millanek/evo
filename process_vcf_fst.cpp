@@ -362,6 +362,7 @@ void getFstFromVCF() {
             totalVariantNumber++;
             //std::cerr << "Variant N:" << totalVariantNumber << std::endl;
             std::vector<std::string> fields = split(line, '\t');
+            string scaffold = fields[0]; string loc = fields[1]; // Scaffold
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {  // Without indels
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
@@ -384,7 +385,6 @@ void getFstFromVCF() {
                     set1heterozygositiesSimple.push_back(thisSNPhet[0]); set2heterozygositiesSimple.push_back(thisSNPhet[1]); fixedWindowHet1Vector.push_back(thisSNPhet[0]);
                     set1heterozygositiesNei.push_back(thisSNPhet[2]); set2heterozygositiesNei.push_back(thisSNPhet[3]); fixedWindowHet2Vector.push_back(thisSNPhet[1]);
                     if (!opt::annotFile.empty()) {
-                        string scaffold = fields[0]; string loc = fields[1]; // Scaffold
                         string SNPcategory = wgAnnotation.getCategoryOfSNP(scaffold, loc);
                         double thisSNPFst = FstNumerator/FstDenominator;
                         *snpCategoryFstFile << SNPcategory << "\t" << thisSNPFst << "\t" << thisSNPDxy << "\t" << scaffold << "\t" << loc << std::endl;
@@ -397,18 +397,18 @@ void getFstFromVCF() {
                         FourSetCounts c;
                         if (AA == fields[3]) {
                             c = getFourSetVariantCounts(fields,set1Loci,set2Loci,ancSet1Loci,ancSet2Loci,"ref");
-                            *ancSetsOutFile << fields[0] << "\t" << fields[1] << "\t" << c.set1daAF-c.set2daAF << "\t" << thisSNPFst << "\t";
+                            *ancSetsOutFile << scaffold << "\t" << fields[1] << "\t" << c.set1daAF-c.set2daAF << "\t" << thisSNPFst << "\t";
                             if (c.set3daAF > 0 & c.set3daAF < 1) { *ancSetsOutFile << "1" << "\t"; } else { *ancSetsOutFile << "0" << "\t"; }
                             if (c.set4daAF > 0 & c.set4daAF < 1) { *ancSetsOutFile << "1" << std::endl; } else { *ancSetsOutFile << "0" << std::endl; }
                         } else if (AA == fields[4]) {
                             c = getFourSetVariantCounts(fields,set1Loci,set2Loci,ancSet1Loci,ancSet2Loci,"alt");
-                            *ancSetsOutFile << fields[0] << "\t" << fields[1] << "\t" << c.set1daAF-c.set2daAF << "\t" << thisSNPFst << "\t";
+                            *ancSetsOutFile << scaffold << "\t" << fields[1] << "\t" << c.set1daAF-c.set2daAF << "\t" << thisSNPFst << "\t";
                             if (c.set3daAF > 0 & c.set3daAF < 1) { *ancSetsOutFile << "1" << "\t"; } else { *ancSetsOutFile << "0" << "\t"; }
                             if (c.set4daAF > 0 & c.set4daAF < 1) { *ancSetsOutFile << "1" << std::endl; } else { *ancSetsOutFile << "0" << std::endl; }
                             // std::cerr << "AA=alt" << " " << c.set1daAF << " " << c.set2daAF << std::endl;
                         } else {
                             c = getFourSetVariantCounts(fields,set1Loci,set2Loci,ancSet1Loci,ancSet2Loci,"N");
-                            *ancSetsOutFile << fields[0] << "\t" << fields[1] << "\t" << "-888" << "\t" << thisSNPFst << "\t";
+                            *ancSetsOutFile << scaffold << "\t" << fields[1] << "\t" << "-888" << "\t" << thisSNPFst << "\t";
                             if (c.set3AltAF > 0 & c.set3AltAF < 1) { *ancSetsOutFile << "1" << "\t"; } else { *ancSetsOutFile << "0" << "\t"; }
                             if (c.set4AltAF > 0 & c.set4AltAF < 1) { *ancSetsOutFile << "1" << std::endl; } else { *ancSetsOutFile << "0" << std::endl; }
                         }
@@ -417,11 +417,11 @@ void getFstFromVCF() {
                     }
                     std::vector<string> s = split(windowStartEnd, '\t');
                     int fixedwindowSize = 10000;
-                    if (s[0] == fields[0]) {
+                    if (s[0] == scaffold) {
                         if (atoi(fields[1].c_str()) > (fixedWindowStart+fixedwindowSize)) {
                             int accessibleInThisWindow = fixedwindowSize;
                             if (!opt::accesibleGenBedFile.empty()) {
-                                accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+fixedwindowSize);
+                                accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+fixedwindowSize);
                             }
                             double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, accessibleInThisWindow);
                             double thisFixedWindowFst = calculateFst(fixedWindowFstNumVector, fixedWindowFstDenomVector);
@@ -430,7 +430,7 @@ void getFstFromVCF() {
                             double thisFixedWindowPi1 = vector_average_withRegion(fixedWindowPi1Vector, accessibleInThisWindow);
                             double thisFixedWindowPi2 = vector_average_withRegion(fixedWindowPi2Vector, accessibleInThisWindow);
                             int numVariantsInThisFixedWindow = (int)fixedWindowFstNumVector.size();
-                            *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow/accessibleInThisWindow << std::endl;
+                            *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow/accessibleInThisWindow << std::endl;
                             fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
                             fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
                             // Handle fixed windows that do not contain any variants
@@ -439,16 +439,20 @@ void getFstFromVCF() {
                                 if (fixedWindowsWithoutAnyVariants > 0) {
                                     int accessibleInThisWindow = fixedwindowSize;
                                     if (!opt::accesibleGenBedFile.empty()) {
-                                        accessibleInThisWindow = ag->getAccessibleBPinRegion(fields[0], fixedWindowStart, fixedWindowStart+fixedwindowSize);
+                                        accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+fixedwindowSize);
                                     }
-                                    *fstDxyFixedWindowFile << fields[0] << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << std::endl;
+                                    *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << std::endl;
                                 }
                                 fixedWindowStart= fixedWindowStart+fixedwindowSize;
                                 fixedWindowsWithoutAnyVariants++;
                             }
                         }
-                    } else {
+                    } else { // Beginning of a new chromosomes
                         fixedWindowStart = 0;
+                        fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
+                        fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear();
+                        fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
+                        
                     }
                     
                     
@@ -456,7 +460,7 @@ void getFstFromVCF() {
                     if (opt::windowSize == 1) {
                         double Fst = FstNumerator/FstDenominator;
                         if (Fst < 0) Fst = 0;
-                        *pFst << countedVariantNumber << "\t" << fields[0] + "\t" + fields[1] << "\t" << Fst << "\t" << thisSNPDxy << std::endl;
+                        *pFst << countedVariantNumber << "\t" << scaffold + "\t" + fields[1] << "\t" << Fst << "\t" << thisSNPDxy << std::endl;
                         
                     } else if ((opt::windowSize > 0) && (countedVariantNumber % opt::windowStep == 0) && countedVariantNumber >= opt::windowSize) {
                         std::vector<double> windowFstNumerators(fstNumerators.end()-opt::windowSize, fstNumerators.end());
@@ -466,7 +470,7 @@ void getFstFromVCF() {
                         double windowDxy = vector_average(windowDxyVec);
                         if (opt::windowSize == opt::windowStep) {
                             std::vector<string> s = split(windowStartEnd, '\t');
-                            if (s[0] == fields[0]) {
+                            if (s[0] == scaffold) {
                                 windowStartEnd = windowStartEnd + "\t" + fields[1];
                                 windowEnd = atoi(fields[1].c_str());
                                 double windowDxyIncNonSeg = vector_average_withRegion(windowDxyVec, windowEnd-windowStart);
@@ -499,17 +503,17 @@ void getFstFromVCF() {
                         double windowHetPi2 = vector_average_withRegion(windowHetPi2Vec, windowEnd-windowStart);
                         if (opt::windowSize == opt::windowStep) {
                             std::vector<string> s = split(windowStartEnd, '\t');
-                            if (s[0] == fields[0]) {
+                            if (s[0] == scaffold) {
                                 *pHetSets << windowStartEnd << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << "\t" << windowHetPi1 << "\t" << windowHetPi2 << std::endl;
-                                windowStartEnd = fields[0] + "\t" + fields[1];
+                                windowStartEnd = scaffold + "\t" + fields[1];
                                 windowStart = atoi(fields[1].c_str());
                             } else {
-                                windowStartEnd = fields[0] + "\t0";
+                                windowStartEnd = scaffold + "\t0";
                                 windowStart = 0;
                             }
                         } else {
                             *pHetSets << windowMiddleVariant << "\t" << windowHetS1 << "\t" << windowHetS2 << "\t" << windowHetNei1 << "\t" << windowHetNei2 << std::endl;
-                            windowMiddleVariant = fields[0] + "\t" + fields[1];     // works only if STEP is half SIZE for the window
+                            windowMiddleVariant = scaffold + "\t" + fields[1];     // works only if STEP is half SIZE for the window
                         }
                     }
                 }
