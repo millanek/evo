@@ -444,7 +444,7 @@ void getFstFromVCF() {
                                     if (!opt::accesibleGenBedFile.empty()) {
                                         accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+fixedwindowSize);
                                     }
-                                    *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << std::endl;
+                                    *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << "\t" << 0 << std::endl;
                                 }
                                 fixedWindowStart= fixedWindowStart+fixedwindowSize;
                                 fixedWindowsWithoutAnyVariants++;
