@@ -125,23 +125,27 @@ int statsMain(int argc, char** argv) {
             }
             
             result.counts = getThisVariantCounts(fields);
-            if (opt::countHets) {
-                het_analysis(hetCounts,result);
-            }
-            if (opt::bDoubleton) {
-                doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);  
-            }
-            if (opt::bDiffs) {
-                diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,result);
-            }
-            if (opt::bDiffH1) {
-                diffs_between_H1(diffMatrixH1, result);
-            }
-            if (opt::bDiffAllH) {
-                diffs_between_AllH(diffMatrixAllH, result);
+            // Only do these calculations if none of the genotypes are missing:
+            if (result.counts.bAnyMissingGenotypes == false) {
+                if (opt::countHets) {
+                    het_analysis(hetCounts,result);
+                }
+                if (opt::bDoubleton) {
+                    doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);  
+                }
+                if (opt::bDiffs) {
+                    diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,result);
+                }
+                if (opt::bDiffH1) {
+                    diffs_between_H1(diffMatrixH1, result);
+                }
+                if (opt::bDiffAllH) {
+                    diffs_between_AllH(diffMatrixAllH, result);
+                }
             }
             if (totalVariantNumber % 100000 == 0)
                 std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
+            
         }
     }
     

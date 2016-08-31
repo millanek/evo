@@ -116,7 +116,7 @@ double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) 
 
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
-    bool hasGQ = false; bool hasDP = false; bool hasSGB = false;
+    bool hasGQ = false; bool hasDP = false;
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
     thisVariantCounts.haplotypesWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS)*2,0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
@@ -144,6 +144,9 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     
     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
         char v1 = fields[i][0]; char v2 = fields[i][2];
+        if (v1 == '.' || v2 == '.') {
+            thisVariantCounts.bAnyMissingGenotypes = true;
+        }
         if (thisVariantCounts.bPhased == false) {
             if ((v1 == '0' && v2 == '1') || (v1 == '1' && v2 == '0')) {
             double r = ((double) rand() / (RAND_MAX));

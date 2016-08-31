@@ -31,7 +31,7 @@ static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column 
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), bPhased(false), SGB(std::numeric_limits<double>::max()) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), bPhased(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};
     
     int overall;
     int minimumDepthInAnIndividual;
@@ -45,6 +45,7 @@ public:
     std::vector<int> depthPerIndividual;
     std::vector<int> genotypeQualitiesPerIndividual;
     std::vector<int> haplotypesWithVariant;
+    bool bAnyMissingGenotypes;
 };
 
 class SingleSetCounts {

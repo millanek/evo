@@ -73,14 +73,14 @@ void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult
         // Check if the doubleton is in a single homozygous individual
         it_hom = std::find(result.counts.individualsWithVariant.begin(), result.counts.individualsWithVariant.end(), 2);
         if (it_hom != result.counts.individualsWithVariant.end()) {
-            int doubleton_hom = std::distance(result.counts.individualsWithVariant.begin(), it_hom);
+            int doubleton_hom = (int)std::distance(result.counts.individualsWithVariant.begin(), it_hom);
             fields[0] = doubleton_hom; fields[1] = doubleton_hom;
         } else {
             // Otherwise look at which two individuals have the two heterozygous variants
             it_het = std::find(result.counts.individualsWithVariant.begin(), result.counts.individualsWithVariant.end(), 1);
             int i = 0;
             while (it_het != result.counts.individualsWithVariant.end()) {
-                int doubleton_het = std::distance(result.counts.individualsWithVariant.begin(), it_het);
+                int doubleton_het = (int)std::distance(result.counts.individualsWithVariant.begin(), it_het);
                 fields[i] = doubleton_het;
                 ++it_het;
                 it_het = std::find(it_het, result.counts.individualsWithVariant.end(), 1);
@@ -100,14 +100,14 @@ void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult
         // Check if the doubleton is in a single homozygous individual
         it_hom = std::find(result.counts.individualsWithVariant.begin(), result.counts.individualsWithVariant.end(), 0);
         if (it_hom != result.counts.individualsWithVariant.end()) {
-            int doubleton_hom = std::distance(result.counts.individualsWithVariant.begin(), it_hom);
+            int doubleton_hom = (int)std::distance(result.counts.individualsWithVariant.begin(), it_hom);
             fields[0] = doubleton_hom; fields[1] = doubleton_hom;
         } else {
             // Otherwise look at which two individuals have the two heterozygous variants
             it_het = std::find(result.counts.individualsWithVariant.begin(), result.counts.individualsWithVariant.end(), 1);
             int i = 0;
             while (it_het != result.counts.individualsWithVariant.end()) {
-                int doubleton_het = std::distance(result.counts.individualsWithVariant.begin(), it_het);
+                int doubleton_het = (int)std::distance(result.counts.individualsWithVariant.begin(), it_het);
                 fields[i] = doubleton_het;
                 ++it_het;
                 it_het = std::find(it_het, result.counts.individualsWithVariant.end(), 1);
