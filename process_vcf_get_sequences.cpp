@@ -88,7 +88,7 @@ int getSeqMain(int argc, char** argv) {
         std::cerr << "with splits at every " << opt::splitNum << " variants" << std::endl;
     
     // Open connections to read from the vcf and reference genome files
-    std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
+    std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* genomeFile = new std::ifstream(opt::genomeFile.c_str());
     
     std::map<string, string> outgroupSeqs;
