@@ -32,9 +32,11 @@ static const char *STATS_USAGE_MESSAGE =
 "                                                   Useful when you want to calculate statistics on an already filtered file\n"
 "       --diff-matrix-h1                            Generate a half-matrix measuring pairwise differences between haplotypes1\n"
 "       --diff-matrix-allH                          Generate a half-matrix measuring pairwise differences between all haplotypes\n"
+"       The program can also output 100 bootstrap replicates of the distance matrices unsing a block 'case resampling' scheme:\n"
+"       --block-bootstrap=BLOCKSIZE (default 100)  Generate 100 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
 "\nReport bugs to mm812@cam.ac.uk\n\n";
 
-enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH };
+enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP };
 
 static const char* shortopts = "h";
 
@@ -47,6 +49,7 @@ static const struct option longopts[] = {
     { "doubleton-distribution", no_argument,    NULL, OPT_DOUBLETON },
     { "diff-matrix-h1", no_argument,    NULL, OPT_DIFF_MATRIX_H1 },
     { "diff-matrix-allH", no_argument,    NULL, OPT_DIFF_MATRIX_ALLH },
+    { "block-bootstrap", required_argument,    NULL, OPT_BLOCK_BOOTSTRAP },
     { NULL, 0, NULL, 0 }
 };
 
@@ -63,6 +66,8 @@ namespace opt
     static bool bDoubleton = false;
     static bool bDiffH1 = false;
     static bool bDiffAllH = false;
+    
+    static int bootstrapBlockSize = 0;
 }
 
 int statsMain(int argc, char** argv) {
@@ -187,6 +192,7 @@ void parseStatsOptions(int argc, char** argv) {
             case OPT_HETS: opt::countHets = true; break;
             case OPT_DIFF_MATRIX_H1: opt::bDiffH1 = true; break;
             case OPT_DIFF_MATRIX_ALLH: opt::bDiffAllH = true; break;
+            case OPT_BLOCK_BOOTSTRAP: arg >> opt::bootstrapBlockSize; break;
             case 'h':
                 std::cout << STATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
