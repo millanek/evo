@@ -296,10 +296,16 @@ int getSeqMain(int argc, char** argv) {
     std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << " Writing output files..." << std::endl;
     
     if (opt::splitNum > 0) {
+        std::vector<string::size_type> scaledSplits = splits;
+        if (!opt::accesibleGenBedFile.empty()) { // Need to rescale the splits
+            for (int i = 0; i < splits.size(); i++) {
+                scaledSplits[i] = ag->getAccessibleBPinRegion(thisScaffoldName, 0, (int)splits[i]);
+            }
+        }
         if (!opt::outgroupFile.empty()) {
-            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Pnyererei");
+            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Pnyererei",scaledSplits);
         } else {
-            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter);
+            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits);
         }
     } else {
         if (opt::bLDhat || opt::bByScaffold) {
