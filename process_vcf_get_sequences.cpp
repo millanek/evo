@@ -11,6 +11,7 @@
 #include "process_vcf_IUPAC.h"
 #include "process_vcf_get_sequences.h"
 #include "process_vcf_print_routines.h"
+#include "process_vcf_annotation_tools.h"
 
 /* 
  TO DO:
@@ -41,11 +42,13 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       --mtDNA                                     get only scaffold_747 and scaffold_2036 (corresponding to M.zebra mtDNA\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt       supply a file of sample identifiers to be used for the output\n"
 "                                                   (default: sample ids from the vcf file are used)\n"
-"       --incl-Pn=Mz_coords.PNsequence.NoIndels.fa  Also include a P.nyererei (outgroup) sequence (for now works only with --split)\n"
+"       --incl-Pn=Mz_coords.PNsequence.NoIndels.fa  Also include an outgroup sequence (for now works only with --split)\n"
+
+"       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n:"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN };
+enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED };
 
 static const char* shortopts = "hpws:cr";
 
@@ -57,6 +60,7 @@ static const struct option longopts[] = {
     { "LDhat",   no_argument, NULL, OPT_LDHAT },
     { "split",   required_argument, NULL, OPT_SPLIT },
     { "incl-Pn",   required_argument, NULL, OPT_PN },
+    { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -72,6 +76,7 @@ namespace opt
     static string sampleNameFile;
     static int splitNum = 0;
     static bool bHetRandom = false;
+    static string accesibleGenBedFile;
 
 }
 
@@ -90,6 +95,7 @@ int getSeqMain(int argc, char** argv) {
     // Open connections to read from the vcf and reference genome files
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* genomeFile = new std::ifstream(opt::genomeFile.c_str());
+    std::ifstream* accessibleGenomeBed;
     
     std::map<string, string> outgroupSeqs;
     if (!opt::outgroupFile.empty()) { outgroupSeqs = readMultiFastaToMap(opt::outgroupFile); }
@@ -106,6 +112,15 @@ int getSeqMain(int argc, char** argv) {
     std::vector<string> scaffoldStrings;
     unsigned int processedVariantCounter = 0;
     std::vector<string::size_type> splits;
+    
+    AccessibleGenome* ag;
+    if (!opt::accesibleGenBedFile.empty()) {
+        accessibleGenomeBed = new std::ifstream(opt::accesibleGenBedFile);
+        std::cerr << "Loading the accessible genome annotation" << std::endl;
+        ag = new AccessibleGenome(accessibleGenomeBed);
+        std::cerr << "Done" << std::endl;
+    }
+    
     
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#') 
@@ -143,11 +158,19 @@ int getSeqMain(int argc, char** argv) {
                         scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
                     }
                     
-                    #ifdef DEBUG
+                    
+#ifdef DEBUG
                     if (scaffoldStrings[0].length() != currentScaffoldReference.length()) {
                         std::cerr << "Error!!! Reference scaffold/LG length: " << currentScaffoldReference.length() << " vcf scaffold length: " << scaffoldStrings[0].length() << std::endl;
                     }
-                    #endif
+#endif
+                    
+                    // if requested, reduce the strings to accessible sequence only - this should still include the "right" number of variants because variants can appear only in the accessible sequence
+                    if (!opt::accesibleGenBedFile.empty()) {
+                        for (int i = 0; i < scaffoldStrings.size(); i++) {
+                            scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(thisScaffoldName,scaffoldStrings[i]);
+                        }
+                    }
                     
                     std::ofstream* scaffoldFile;
                     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
@@ -156,10 +179,17 @@ int getSeqMain(int argc, char** argv) {
                     std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << " Writing output files..." << std::endl;
                     
                     if (opt::splitNum > 0) {
+                        std::vector<string::size_type> scaledSplits = splits;
+                        if (!opt::accesibleGenBedFile.empty()) { // Need to rescale the splits
+                            for (int i = 0; i < splits.size(); i++) {
+                                scaledSplits[i] = ag->getAccessibleBPinRegion(thisScaffoldName, 0, (int)splits[i]);
+                            }
+                        }
+                        
                         if (!opt::outgroupFile.empty()) {
-                            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Pnyererei");
+                            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Outgroup",scaledSplits);
                         } else {
-                            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter);
+                            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits);
                         }
                     } else {
                         if (opt::bLDhat || opt::bByScaffold) {
@@ -308,7 +338,7 @@ int getSeqMain(int argc, char** argv) {
     return 0;
 }
 
-void print_split(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants) {
+void print_split(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants,const std::vector<string::size_type>& scaledSplits) {
     //for (std::vector<int>::size_type j = 0; j != splits.size(); j++) {
     
     std::cerr << "There are: " << splits.size() << " splits of size " << opt::splitNum << std::endl;
@@ -339,7 +369,7 @@ void print_split(const std::string& currentScaffoldNum, const std::vector<string
             *scaffoldFile << numSamples << "\t" << splits[0] << "\t" << "2" << std::endl;
         for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
             *scaffoldFile << ">" << sampleNames[i] << std::endl;
-            print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(0,splits[0]));
+            print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(0,scaledSplits[0]));
         }
         scaffoldFile->close();
         
@@ -350,7 +380,7 @@ void print_split(const std::string& currentScaffoldNum, const std::vector<string
                 *scaffoldFile << numSamples << "\t" << (splits[j] - splits[j-1]) << "\t" << "2" << std::endl;
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 *scaffoldFile << ">" << sampleNames[i] << std::endl;
-                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(splits[j-1], splits[j] - splits[j-1]));
+                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(scaledSplits[j-1], scaledSplits[j] - scaledSplits[j-1]));
             }
             scaffoldFile->close();
         }
@@ -364,7 +394,7 @@ void print_split(const std::string& currentScaffoldNum, const std::vector<string
                 *scaffoldFile << numSamples << "\t" << (scaffoldStrings[0].length() - splits[splits.size()-1]) << "\t" << "2" << std::endl;
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 *scaffoldFile << ">" << sampleNames[i] << std::endl;
-                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(splits[splits.size()-1],std::string::npos));
+                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(scaledSplits[scaledSplits.size()-1],std::string::npos));
                 scaffoldStrings[i] = "";
             }
             scaffoldFile->close();
@@ -377,7 +407,7 @@ void print_split(const std::string& currentScaffoldNum, const std::vector<string
     
 }
 
-void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants, std::map<string, string>& outgroupSeqs, const std::string& outgroupName) {
+void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants, std::map<string, string>& outgroupSeqs, const std::string& outgroupName,const std::vector<string::size_type>& scaledSplits) {
     //for (std::vector<int>::size_type j = 0; j != splits.size(); j++) {
     
     std::cerr << "There are: " << splits.size() << " splits of size " << opt::splitNum << std::endl;
@@ -410,10 +440,10 @@ void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std:
             *scaffoldFile << numSamples << "\t" << splits[0] << "\t" << "2" << std::endl;
         for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
             *scaffoldFile << ">" << sampleNames[i] << std::endl;
-            print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(0,splits[0]));
+            print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(0,scaledSplits[0]));
         }
         *scaffoldFile << ">" << outgroupName << std::endl;
-        print80bpPerLineFile(scaffoldFile, outgroupSeqs[currentScaffoldNum].substr(0,splits[0]));
+        print80bpPerLineFile(scaffoldFile, outgroupSeqs[currentScaffoldNum].substr(0,scaledSplits[0]));
         scaffoldFile->close();
         
         for (std::vector<int>::size_type j = 1; j != splits.size(); j++) {
@@ -423,10 +453,10 @@ void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std:
                 *scaffoldFile << numSamples << "\t" << (splits[j] - splits[j-1]) << "\t" << "2" << std::endl;
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 *scaffoldFile << ">" << sampleNames[i] << std::endl;
-                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(splits[j-1], splits[j] - splits[j-1]));
+                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(scaledSplits[j-1], scaledSplits[j] - scaledSplits[j-1]));
             }
             *scaffoldFile << ">" << outgroupName << std::endl;
-            print80bpPerLineFile(scaffoldFile, outgroupSeqs[currentScaffoldNum].substr(splits[j-1], splits[j] - splits[j-1]));
+            print80bpPerLineFile(scaffoldFile, outgroupSeqs[currentScaffoldNum].substr(scaledSplits[j-1], scaledSplits[j] - scaledSplits[j-1]));
             scaffoldFile->close();
         }
         
@@ -439,11 +469,11 @@ void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std:
                 *scaffoldFile << numSamples << "\t" << (scaffoldStrings[0].length() - splits[splits.size()-1]) << "\t" << "2" << std::endl;
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 *scaffoldFile << ">" << sampleNames[i] << std::endl;
-                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(splits[splits.size()-1],std::string::npos));
+                print80bpPerLineFile(scaffoldFile, scaffoldStrings[i].substr(scaledSplits[splits.size()-1],std::string::npos));
                 scaffoldStrings[i] = "";
             }
             *scaffoldFile << ">" << outgroupName << std::endl;
-            print80bpPerLineFile(scaffoldFile, outgroupSeqs[currentScaffoldNum].substr(splits[splits.size()-1],std::string::npos));
+            print80bpPerLineFile(scaffoldFile, outgroupSeqs[currentScaffoldNum].substr(scaledSplits[scaledSplits.size()-1],std::string::npos));
             scaffoldFile->close();
         } else {
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
@@ -486,6 +516,7 @@ void parseGetSeqOptions(int argc, char** argv) {
             case OPT_SPLIT: arg >> opt::splitNum; break;
             case OPT_WG: opt::bWholeGenome = true; break;
             case OPT_PN: arg >> opt::outgroupFile; break;
+            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;    
             case 'h':
                 std::cout << GETSEQ_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

@@ -231,6 +231,32 @@ public:
         return numBP;
     }
     
+    bool findIfBPaccessible(const string& scaffold, const int bp) {
+        std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
+        
+        // Binary search to find the first element in the accessible genome annotation whose end coordinate is greater
+        // or equal to the basepair in question
+        std::vector<int>::iterator itStart = lower_bound(aGThisSc[1].begin(),aGThisSc[1].end(),bp);
+        std::vector<int>::size_type index = std::distance(aGThisSc[1].begin(), itStart);
+        
+        
+        if (aGThisSc[0][index] <= bp) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    string getAccessibleSeqForScaffold(const string& scaffold, const string& fullString) {
+        std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
+        
+        string accessibleString; accessibleString.reserve(fullString.length()); accessibleString = "";
+        for (std::vector<int>::size_type i = 0; i < aGThisSc[0].size(); i++) {
+            accessibleString.append(fullString.substr(aGThisSc[0][i],aGThisSc[1][i]- aGThisSc[0][i]));
+        }
+        return accessibleString;
+    }
+    
 private:
     // Load up the file specifying the accessible genome (needs to be sorted by chromosome)
     std::map<string, std::vector<std::vector<int> > > loadAccessibleGenomeMap(std::ifstream*& bedFile) {

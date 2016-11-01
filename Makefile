@@ -1,5 +1,5 @@
 
-CXXFLAGS=-std=c++11
+CXXFLAGS=-std=c++11 -stdlib=libc++
 CXX=g++
 BIN := Build
 LDFLAGS=-lz
