@@ -128,7 +128,7 @@ int getSeqMain(int argc, char** argv) {
         else if (line[0] == '#' && line[1] == 'C') {
             std::vector<std::string> fields = split(line, '\t');
             numSamples = fields.size()-NUM_NON_GENOTYPE_COLUMNS;
-            //std::cerr << "numSamples: " << numSamples << std::endl;
+            std::cerr << "numSamples: " << numSamples << std::endl;
             // Initialize vectors
             scaffoldStrings.resize(numSamples);
             for (std::vector<string>::size_type i = 0; i != scaffoldStrings.size(); i++) {
@@ -260,17 +260,21 @@ int getSeqMain(int argc, char** argv) {
                             scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("2");
                         }
                     } else {
-                        scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
+                        int lengthToAppend = (atoi(fields[1].c_str()) - 1) - (int)inStrPos;
+                        // make sure the length is non-negative (can happen
+                        // if two consecutive variants have the same coordinate)
+                        if (lengthToAppend < 0) lengthToAppend = 0;
+                        scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                         appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
                     }
                 }
                 inStrPos = atoi(fields[1].c_str());
 
-                #ifdef DEBUG
+        #ifdef DEBUG
                 if (currentScaffoldReference[inStrPos-1] != fields[3][0]) {
                     std::cerr << "Error!!! Sequence: " << currentScaffoldReference[inStrPos-1] << " vcf-ref: " << fields[3][0] << std::endl;
                 }
-                #endif
+        #endif
             }
             if (opt::splitNum > 0) {
                 if (processedVariantCounter % opt::splitNum == 0) {
