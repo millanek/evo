@@ -165,18 +165,21 @@ int getSeqMain(int argc, char** argv) {
                     }
 #endif
                     
-                    // if requested, reduce the strings to accessible sequence only - this should still include the "right" number of variants because variants can appear only in the accessible sequence
-                    if (!opt::accesibleGenBedFile.empty()) {
-                        for (int i = 0; i < scaffoldStrings.size(); i++) {
-                            scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(thisScaffoldName,scaffoldStrings[i]);
-                        }
-                    }
                     
                     std::ofstream* scaffoldFile;
                     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
                     
                     
                     std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << " Writing output files..." << std::endl;
+                    
+                    // if requested, reduce the strings to accessible sequence only - this should still include the "right" number of variants because variants can appear only in the accessible sequence
+                    if (!opt::accesibleGenBedFile.empty()) {
+                        std::cerr << "Reducing scaffoldStrings to accesible genome only.." << scaffoldStrings[0].length() << std::endl;
+                        for (int i = 0; i < scaffoldStrings.size(); i++) {
+                            scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(thisScaffoldName,scaffoldStrings[i]);
+                        }
+                        std::cerr << "after reduction -> scaffoldStrings[0] length: " << scaffoldStrings[0].length() << std::endl;
+                    }
                     
                     if (opt::splitNum > 0) {
                         std::vector<string::size_type> scaledSplits = splits;
