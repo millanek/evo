@@ -182,9 +182,14 @@ int getSeqMain(int argc, char** argv) {
                         std::vector<string::size_type> scaledSplits = splits;
                         if (!opt::accesibleGenBedFile.empty()) { // Need to rescale the splits
                             for (int i = 0; i < splits.size(); i++) {
-                                scaledSplits[i] = ag->getAccessibleBPinRegion(thisScaffoldName, 0, (int)splits[i]);
+                                scaledSplits[i] = ag->getAccessibleBPinRegion(currentScaffoldNum, 0, (int)splits[i]);
                             }
                         }
+                        std::cerr << "Splits" << std::endl;
+                        print_vector_stream(splits, std::cerr);
+                        std::cerr << "Scaled splits:" << std::endl;
+                        print_vector_stream(scaledSplits, std::cerr);
+                        
                         
                         if (!opt::outgroupFile.empty()) {
                             print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Outgroup",scaledSplits);
@@ -263,16 +268,18 @@ int getSeqMain(int argc, char** argv) {
                         int lengthToAppend = (atoi(fields[1].c_str()) - 1) - (int)inStrPos;
                         // make sure the length is non-negative (can happen
                         // if two consecutive variants have the same coordinate)
-                        if (lengthToAppend < 0) lengthToAppend = 0;
-                        scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
-                        appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
+                        // for now we just ignore the additional variant
+                        if (lengthToAppend >= 0) {
+                            scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
+                            appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
+                        }
                     }
                 }
                 inStrPos = atoi(fields[1].c_str());
 
         #ifdef DEBUG
                 if (currentScaffoldReference[inStrPos-1] != fields[3][0]) {
-                    std::cerr << "Error!!! Sequence: " << currentScaffoldReference[inStrPos-1] << " vcf-ref: " << fields[3][0] << std::endl;
+                //    std::cerr << "Error!!! Sequence: " << currentScaffoldReference[inStrPos-1] << " vcf-ref: " << fields[3][0] << std::endl;
                 }
         #endif
             }
