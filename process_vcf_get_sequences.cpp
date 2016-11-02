@@ -176,7 +176,7 @@ int getSeqMain(int argc, char** argv) {
                     if (!opt::accesibleGenBedFile.empty()) {
                         std::cerr << "Reducing scaffoldStrings to accesible genome only.." << scaffoldStrings[0].length() << std::endl;
                         for (int i = 0; i < scaffoldStrings.size(); i++) {
-                            scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(thisScaffoldName,scaffoldStrings[i]);
+                            scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(currentScaffoldNum,scaffoldStrings[i]);
                         }
                         std::cerr << "after reduction -> scaffoldStrings[0] length: " << scaffoldStrings[0].length() << std::endl;
                     }
@@ -313,7 +313,7 @@ int getSeqMain(int argc, char** argv) {
         std::vector<string::size_type> scaledSplits = splits;
         if (!opt::accesibleGenBedFile.empty()) { // Need to rescale the splits
             for (int i = 0; i < splits.size(); i++) {
-                scaledSplits[i] = ag->getAccessibleBPinRegion(thisScaffoldName, 0, (int)splits[i]);
+                scaledSplits[i] = ag->getAccessibleBPinRegion(currentScaffoldNum, 0, (int)splits[i]);
             }
         }
         if (!opt::outgroupFile.empty()) {
