@@ -15,7 +15,7 @@ int getSeqMain(int argc, char** argv);
 void parseGetSeqOptions(int argc, char** argv);
 void printInAllOutputs(std::ofstream*& outFiles, size_t numSamples, std::string toPrint);
 void print80bpPerLine(std::ofstream*& outFiles, std::vector<std::string>::size_type i, std::string toPrint);
-void print_split(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants,const std::vector<string::size_type>& scaledSplits);
-void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants, std::map<std::string, std::string>& outgroupSeqs, const std::string& outgroupName,const std::vector<string::size_type>& scaledSplits);
+void print_split(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants,const std::vector<string::size_type>& scaledSplits,const int fullScLength);
+void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants, std::map<std::string, std::string>& outgroupSeqs, const std::string& outgroupName,const std::vector<string::size_type>& scaledSplits,const int fullScLength);
 
 #endif

@@ -98,6 +98,7 @@ int getSeqMain(int argc, char** argv) {
     std::ifstream* accessibleGenomeBed;
     
     std::map<string, string> outgroupSeqs;
+    std::map<string, int> fullScaffoldLengths;
     if (!opt::outgroupFile.empty()) { outgroupSeqs = readMultiFastaToMap(opt::outgroupFile); }
     
     // Prepare an object for output files
@@ -171,6 +172,7 @@ int getSeqMain(int argc, char** argv) {
                     
                     
                     std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << " Writing output files..." << std::endl;
+                    fullScaffoldLengths[currentScaffoldNum] = (int)scaffoldStrings[0].length();
                     
                     // if requested, reduce the strings to accessible sequence only - this should still include the "right" number of variants because variants can appear only in the accessible sequence
                     if (!opt::accesibleGenBedFile.empty()) {
@@ -179,6 +181,10 @@ int getSeqMain(int argc, char** argv) {
                             scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(currentScaffoldNum,scaffoldStrings[i]);
                         }
                         std::cerr << "after reduction -> scaffoldStrings[0] length: " << scaffoldStrings[0].length() << std::endl;
+                        // also needs to be done for the outgroup, if present
+                        if (!opt::outgroupFile.empty()) {
+                            outgroupSeqs[currentScaffoldNum] = ag->getAccessibleSeqForScaffold(currentScaffoldNum,outgroupSeqs[currentScaffoldNum]);
+                        }
                     }
                     
                     if (opt::splitNum > 0) {
@@ -195,9 +201,9 @@ int getSeqMain(int argc, char** argv) {
                         
                         
                         if (!opt::outgroupFile.empty()) {
-                            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Outgroup",scaledSplits);
+                            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Outgroup",scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
                         } else {
-                            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits);
+                            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
                         }
                     } else {
                         if (opt::bLDhat || opt::bByScaffold) {
@@ -308,6 +314,21 @@ int getSeqMain(int argc, char** argv) {
     
     
     std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << " Writing output files..." << std::endl;
+    fullScaffoldLengths[currentScaffoldNum] = (int)scaffoldStrings[0].length();
+    
+    // if requested, reduce the strings to accessible sequence only - this should still include the "right" number of variants because variants can appear only in the accessible sequence
+    if (!opt::accesibleGenBedFile.empty()) {
+        std::cerr << "Reducing scaffoldStrings to accesible genome only.." << scaffoldStrings[0].length() << std::endl;
+        for (int i = 0; i < scaffoldStrings.size(); i++) {
+            scaffoldStrings[i] = ag->getAccessibleSeqForScaffold(currentScaffoldNum,scaffoldStrings[i]);
+        }
+        std::cerr << "after reduction -> scaffoldStrings[0] length: " << scaffoldStrings[0].length() << std::endl;
+        // also needs to be done for the outgroup, if present
+        if (!opt::outgroupFile.empty()) {
+            outgroupSeqs[currentScaffoldNum] = ag->getAccessibleSeqForScaffold(currentScaffoldNum,outgroupSeqs[currentScaffoldNum]);
+        }
+    }
+    
     
     if (opt::splitNum > 0) {
         std::vector<string::size_type> scaledSplits = splits;
@@ -317,9 +338,9 @@ int getSeqMain(int argc, char** argv) {
             }
         }
         if (!opt::outgroupFile.empty()) {
-            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Pnyererei",scaledSplits);
+            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Pnyererei",scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
         } else {
-            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits);
+            print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
         }
     } else {
         if (opt::bLDhat || opt::bByScaffold) {
@@ -358,7 +379,7 @@ int getSeqMain(int argc, char** argv) {
     return 0;
 }
 
-void print_split(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants,const std::vector<string::size_type>& scaledSplits) {
+void print_split(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants,const std::vector<string::size_type>& scaledSplits, const int fullScLength) {
     //for (std::vector<int>::size_type j = 0; j != splits.size(); j++) {
     
     std::cerr << "There are: " << splits.size() << " splits of size " << opt::splitNum << std::endl;
@@ -407,7 +428,7 @@ void print_split(const std::string& currentScaffoldNum, const std::vector<string
         
         // Print the last part of the scaffold only if there are a reasonble number of variants
         if (totalProcessedVariants % opt::splitNum > (opt::splitNum * 0.8)) {
-            string lastSplitFileName = currentScaffoldNum + "_" + numToString(splits[splits.size()-1]+1) + "_" + numToString(scaffoldStrings[0].length());
+            string lastSplitFileName = currentScaffoldNum + "_" + numToString(splits[splits.size()-1]+1) + "_" + numToString(fullScLength);
             
             scaffoldFile = new std::ofstream(lastSplitFileName.c_str());
             if (opt::bLDhat)
@@ -427,7 +448,7 @@ void print_split(const std::string& currentScaffoldNum, const std::vector<string
     
 }
 
-void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants, std::map<string, string>& outgroupSeqs, const std::string& outgroupName,const std::vector<string::size_type>& scaledSplits) {
+void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std::vector<string::size_type>& splits, const std::vector<std::string>& sampleNames, const size_t numSamples, std::vector<std::string>& scaffoldStrings, const unsigned int totalProcessedVariants, std::map<string, string>& outgroupSeqs, const std::string& outgroupName,const std::vector<string::size_type>& scaledSplits, const int fullScLength) {
     //for (std::vector<int>::size_type j = 0; j != splits.size(); j++) {
     
     std::cerr << "There are: " << splits.size() << " splits of size " << opt::splitNum << std::endl;
@@ -482,7 +503,7 @@ void print_split_incl_outgroup(const std::string& currentScaffoldNum, const std:
         
         // Print the last part of the scaffold only if there are a reasonble number of variants
         if (totalProcessedVariants % opt::splitNum > (opt::splitNum * 0.8)) {
-            string lastSplitFileName = currentScaffoldNum + "_" + numToString(splits[splits.size()-1]+1) + "_" + numToString(scaffoldStrings[0].length());
+            string lastSplitFileName = currentScaffoldNum + "_" + numToString(splits[splits.size()-1]+1) + "_" + numToString(fullScLength);
             
             scaffoldFile = new std::ofstream(lastSplitFileName.c_str());
             if (opt::bLDhat)
