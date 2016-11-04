@@ -338,7 +338,7 @@ int getSeqMain(int argc, char** argv) {
             }
         }
         if (!opt::outgroupFile.empty()) {
-            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Pnyererei",scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
+            print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Outgroup",scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
         } else {
             print_split(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter,scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
         }
