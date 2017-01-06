@@ -25,23 +25,23 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 "                                               (NOT COMPATIBLE WITH THE -n OPTION)\n"
 "       --only-stats                            only calculate statistics for coding sequences\n"
 "                                               do not output the sequences themselves\n"
-"       -r, --het-random                        assign het bases randomly (instead of using an ambiguity code)\n"
+"       -H,   --het-treatment <r|p|i>           r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; i: use IUPAC codes\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hpws:cr";
+static const char* shortopts = "hpws:cH:";
 static std::vector<string> stopsTranscriptRecord;
 
-enum { OPT_ONLY_STATS };
+enum { OPT_ONLY_STATS, OPT_USE_PHASE };
 
 
 static const struct option longopts[] = {
     { "non-coding",   required_argument, NULL, 'n' },
     { "samples",   required_argument, NULL, 's' },
     { "partial",   no_argument, NULL, 'p' },
-    { "het-random",   no_argument, NULL, 'r' },
+    { "het-treatment",   required_argument, NULL, 'H' },
     { "only-stats",   no_argument, NULL, OPT_ONLY_STATS },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -55,7 +55,7 @@ namespace opt
     static bool bIsCoding = true;
     static bool bUsePartial = false;
     static bool bOnlyStats = false;
-    static bool bHetRandom = false;
+    static char hetTreatment = 'r';
     static string sampleNameFile;
     
 }
@@ -247,7 +247,7 @@ int getCodingSeqMain(int argc, char** argv) {
                     std::vector<string> genotypeFields = split(fields[i], ':');
                     std::vector<char> genotype;
                     genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
-                    appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
+                    appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
                 }
                 inStrPos = atoi(fields[1].c_str());
                 
@@ -301,6 +301,8 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
     int numSegSites = 0;
     int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
     int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
+    double expectedNumNonSynAAchanges = 0;
+    double expectedNumSynAAchanges = 0;
     std::vector<double> derivedAlleleFequencies;
     std::vector<double> synonymousMinorAlleleFequencies;
     std::vector<double> nonsynonymousMinorAlleleFequencies;
@@ -329,7 +331,7 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
             if (allSeqs[j][i] != refBase) {
                 //if (i == 2)
                 //    std::cerr << sampleNames[j] << " " << allSeqs[j][i] << std::endl;
-                if (allSeqs[j][i] == 'A' || allSeqs[j][i] == 'C' || allSeqs[j][i] == 'G' || allSeqs[j][i] == 'T') {
+                if (isDNAonly(allSeqs[j][i])) {
                     countDerived = countDerived + 2;
                     altBase = allSeqs[j][i];
                 } else {
@@ -349,17 +351,20 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
             //if (i == 2)
               //  std::cerr << "Got here; refseq length: " << refSeq.length() << " i-2:" << i-2 << std::endl;
             refAA = getAminoAcid(refSeq.substr(i-2,3));
+            expectedNumNonSynAAchanges = expectedNumNonSynAAchanges + getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3));
+            expectedNumSynAAchanges = expectedNumSynAAchanges + (3 - getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3)));
             //if (i == 2)
               //  std::cerr << "And here" << std::endl;
             string altAA = "";
             //if (i == 2)
             //    std::cerr << "Now going to loop through codons" << std::endl;
             int nonSyn = 0;
+            int nonSynV2 = 0;
             int syn = 0;
             int numStops = 0;
             std::vector<string> haveStop;
             for (std::vector<string>::size_type j = 0; j != altCodons.size(); j++) {
-                if (IUPACcounts[j] > 1) // Multiple hets in a codon
+                if (IUPACcounts[j] > 1) // Multiple hets in a codon under IUPAC sequence encoding
                     continue;
                 altAA = getAminoAcid(altCodons[j]);
                 if (altAA != refAA && altAA == "Stop") {
@@ -371,14 +376,24 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                         haveStop.push_back(sampleNames[j]+"(het)");
                         numStops++;
                     }
-                } else if (altAA != refAA) {
-                    if (isDNAonlySeq(allSeqs[j].substr(i-2,3))) { nonSyn = nonSyn + 2; }
-                    else { nonSyn++; }
-                    // std::cerr << "altCodons[i]: " << altCodons[j] << "refSeq.substr(i-2,3) " << refSeq.substr(i-2,3) << std::endl;
-                    // std::cerr << "allSeqs[0].substr(i-2,3): " << allSeqs[j].substr(i-2,3) << std::endl;
-                } else if (altAA == refAA && (allSeqs[j].substr(i-2,3) != refSeq.substr(i-2,3))) {
-                    if (isDNAonlySeq(allSeqs[j].substr(i-2,3))) { syn = syn + 2; }
-                    else { syn++; }
+                } else {
+                    int thisIndDistance = getCodonDistance(refSeq.substr(i-2,3),altCodons[j]);
+                    if (thisIndDistance == 1) {
+                        if (altAA != refAA) {
+                            nonSyn++;
+                            // std::cerr << "altCodons[i]: " << altCodons[j] << "refSeq.substr(i-2,3) " << refSeq.substr(i-2,3) << std::endl;
+                            // std::cerr << "allSeqs[0].substr(i-2,3): " << allSeqs[j].substr(i-2,3) << std::endl;
+                        }
+                        if (!isSingleChangeSynonymous(refSeq.substr(i-2,3),altCodons[j])) {
+                            nonSynV2++;
+                        }
+                        assert(nonSyn == nonSynV2);
+                        if (altAA == refAA) {
+                            syn++;
+                        }
+                    } else {
+                        // findCodonPaths(refSeq.substr(i-2,3),altCodons[j]);
+                    }
                 }
                 altCodons[j] = ""; IUPACcounts[j] = 0;
             }
@@ -453,7 +468,7 @@ void parseGetCodingSeqOptions(int argc, char** argv) {
             case '?': die = true; break;
             case 'n': opt::bIsCoding = false; break;
             case 'p': opt::bUsePartial = true; break;
-            case 'r': opt::bHetRandom = true; break;
+            case 'H': arg >> opt::hetTreatment; break;
             case 's': arg >> opt::sampleNameFile; break;
             case OPT_ONLY_STATS: opt::bOnlyStats = true; break;
             case 'h':
@@ -464,6 +479,11 @@ void parseGetCodingSeqOptions(int argc, char** argv) {
     
     if (!opt::bIsCoding && opt::bUsePartial) {
         std::cerr << "The -n and -p options are not compatible\n";
+        die = true;
+    }
+    
+    if (opt::hetTreatment != 'r' && opt::hetTreatment != 'p' && opt::hetTreatment != 'i') {
+        std::cerr << "The -H (--het-treatment) option can only have the values 'r', 'p', or 'i'\n";
         die = true;
     }
     

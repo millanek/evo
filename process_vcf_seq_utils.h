@@ -16,20 +16,25 @@
 #include "process_vcf_IUPAC.h"
 
 
-inline void appendGenotypeBaseToString(std::string& toExtend, const std::string& ref, const std::string& alt, const std::vector<char>& genotype, bool hetRandom) {
+inline void appendGenotypeBaseToString(std::string& toExtend, const std::string& ref, const std::string& alt, const std::vector<char>& genotype, char hetTreatment) {
     if (genotype[0] == '0' && genotype[1] == '0')
         toExtend.append(ref);
     else if (genotype[0] == '1' && genotype[1] == '1')
         toExtend.append(alt);
     else {
-        if (hetRandom) {
+        if (hetTreatment == 'r') {
             double rn = ((double) rand() / RAND_MAX);
             if (rn <= 0.5) {
                 toExtend.append(ref);
             } else {
                 toExtend.append(alt);
             }
-        } else {
+        } else if(hetTreatment == 'p') {
+            if (genotype[0] == '0')
+                toExtend.append(ref);
+            if (genotype[0] == '1')
+                toExtend.append(alt);
+        } else if (hetTreatment == 'i') {
             std::string ambiguityBase = getAmbiguityCode(ref, alt);
             toExtend.append(ambiguityBase);
         }
