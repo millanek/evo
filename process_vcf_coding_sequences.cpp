@@ -207,9 +207,12 @@ int getCodingSeqMain(int argc, char** argv) {
                         
                         // Get statistics for the sequences
                         if (opt::bIsCoding && geneLengthDivisibleByThree) {
-                            getCodingSequenceStats(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
+                            if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r')
+                                getCodingSequenceStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
+                            else
+                                getCodingSequenceStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
                             statsAllGenes.push_back(statsThisGene);
-                           // std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
+                            // std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
                         }
                         if (!opt::bOnlyStats) geneOutFiles->close();
                     }
@@ -296,8 +299,8 @@ bool codingSequenceErrorChecks(const string& geneSeq, const string& transcriptNa
 }
 
 
-
-void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
+// Would also be good to distinguish derived vs. ancestral alleles
+void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
     int numSegSites = 0;
     int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
     int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
@@ -317,7 +320,6 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
     std::vector<int> IUPACcounts; IUPACcounts.resize(allSeqs.size());
     for (std::vector<string>::size_type i = 0; i != altCodons.size(); i++) {
         altCodons[i] = "";
-        IUPACcounts[i] = 0;
     }
     
     
@@ -329,16 +331,8 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
         
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             if (allSeqs[j][i] != refBase) {
-                //if (i == 2)
-                //    std::cerr << sampleNames[j] << " " << allSeqs[j][i] << std::endl;
-                if (isDNAonly(allSeqs[j][i])) {
-                    countDerived = countDerived + 2;
-                    altBase = allSeqs[j][i];
-                } else {
-                    countDerived++;
-                    IUPACcounts[j]++;
-                    altBase = disambiguateIUPAC(refBase, allSeqs[j][i]);
-                }
+                altBase = allSeqs[j][i];
+                countDerived++;
                 altCodons[j] += altBase;
             } else {
                 altCodons[j] += refBase;
@@ -364,18 +358,11 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
             int numStops = 0;
             std::vector<string> haveStop;
             for (std::vector<string>::size_type j = 0; j != altCodons.size(); j++) {
-                if (IUPACcounts[j] > 1) // Multiple hets in a codon under IUPAC sequence encoding
-                    continue;
                 altAA = getAminoAcid(altCodons[j]);
                 if (altAA != refAA && altAA == "Stop") {
                     // We have a premature stop codon
-                    if (isDNAonlySeq(allSeqs[j].substr(i-2,3))) {
-                        haveStop.push_back(sampleNames[j]+"(hom)");
-                        numStops = numStops + 2;
-                    } else {
-                        haveStop.push_back(sampleNames[j]+"(het)");
-                        numStops++;
-                    }
+                    haveStop.push_back(sampleNames[j]);
+                    numStops++;
                 } else {
                     int thisIndDistance = getCodonDistance(refSeq.substr(i-2,3),altCodons[j]);
                     if (thisIndDistance == 1) {
@@ -387,7 +374,9 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
                         if (!isSingleChangeSynonymous(refSeq.substr(i-2,3),altCodons[j])) {
                             nonSynV2++;
                         }
-                        assert(nonSyn == nonSynV2);
+                        if (nonSyn != nonSynV2) {
+                            std::cerr << "refSeq.substr(i-2,3): " << refSeq.substr(i-2,3) << "; altCodons[j]: " << altCodons[j] << std::endl;
+                        }
                         if (altAA == refAA) {
                             syn++;
                         }
@@ -456,6 +445,170 @@ void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::
     // std::map<int,int> dafTable = tabulateVectorTemplate(derivedAlleleFequencies);
     // std::cerr << "Stats Done" << std::endl;
 }
+
+
+void getCodingSequenceStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
+    int numSegSites = 0;
+    int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
+    int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
+    double expectedNumNonSynAAchanges = 0;
+    double expectedNumSynAAchanges = 0;
+    std::vector<double> derivedAlleleFequencies;
+    std::vector<double> synonymousMinorAlleleFequencies;
+    std::vector<double> nonsynonymousMinorAlleleFequencies;
+    int numCopies = (int)allSeqs.size()*2;
+    // int numSynonymous = 0;
+    // int numNonSynonymous = 0;
+    // bool nonsenseMutation = false;
+    if (allSeqs[0].length() != refSeq.length()) {
+        std::cerr << "Error!!! allSeqs[0].length() != refSeq.length()" << std::endl;
+    }
+    std::vector<string> altCodons; altCodons.resize(allSeqs.size());
+    std::vector<int> IUPACcounts; IUPACcounts.resize(allSeqs.size());
+    for (std::vector<string>::size_type i = 0; i != altCodons.size(); i++) {
+        altCodons[i] = "";
+        IUPACcounts[i] = 0;
+    }
+    
+    
+    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    for (string::size_type i = 0; i != refSeq.length(); i++) {
+        char refBase = refSeq[i];
+        char altBase;
+        int countDerived = 0;
+        
+        for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
+            if (allSeqs[j][i] != refBase) {
+                //if (i == 2)
+                //    std::cerr << sampleNames[j] << " " << allSeqs[j][i] << std::endl;
+                if (isDNAonly(allSeqs[j][i])) {
+                    countDerived = countDerived + 2;
+                    altBase = allSeqs[j][i];
+                } else {
+                    countDerived++;
+                    IUPACcounts[j]++;
+                    altBase = disambiguateIUPAC(refBase, allSeqs[j][i]);
+                }
+                altCodons[j] += altBase;
+            } else {
+                altCodons[j] += refBase;
+            }
+        }
+        // Find the types of mutation we are dealing with
+        string refAA;
+        string altAA;
+        if ((i+1)%3 == 0) {
+            //if (i == 2)
+            //  std::cerr << "Got here; refseq length: " << refSeq.length() << " i-2:" << i-2 << std::endl;
+            refAA = getAminoAcid(refSeq.substr(i-2,3));
+            expectedNumNonSynAAchanges = expectedNumNonSynAAchanges + getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3));
+            expectedNumSynAAchanges = expectedNumSynAAchanges + (3 - getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3)));
+            //if (i == 2)
+            //  std::cerr << "And here" << std::endl;
+            string altAA = "";
+            //if (i == 2)
+            //    std::cerr << "Now going to loop through codons" << std::endl;
+            int nonSyn = 0;
+            int nonSynV2 = 0;
+            int syn = 0;
+            int numStops = 0;
+            std::vector<string> haveStop;
+            for (std::vector<string>::size_type j = 0; j != altCodons.size(); j++) {
+                if (IUPACcounts[j] > 1) // Multiple hets in a codon under IUPAC sequence encoding
+                    continue;
+                altAA = getAminoAcid(altCodons[j]);
+                if (altAA != refAA && altAA == "Stop") {
+                    // We have a premature stop codon
+                    if (isDNAonlySeq(allSeqs[j].substr(i-2,3))) {
+                        haveStop.push_back(sampleNames[j]+"(hom)");
+                        numStops = numStops + 2;
+                    } else {
+                        haveStop.push_back(sampleNames[j]+"(het)");
+                        numStops++;
+                    }
+                } else {
+                    int thisIndDistance = getCodonDistance(refSeq.substr(i-2,3),altCodons[j]);
+                    if (thisIndDistance == 1) {
+                        if (altAA != refAA) {
+                            nonSyn++;
+                            // std::cerr << "altCodons[i]: " << altCodons[j] << "refSeq.substr(i-2,3) " << refSeq.substr(i-2,3) << std::endl;
+                            // std::cerr << "allSeqs[0].substr(i-2,3): " << allSeqs[j].substr(i-2,3) << std::endl;
+                        }
+                        if (!isSingleChangeSynonymous(refSeq.substr(i-2,3),altCodons[j])) {
+                            nonSynV2++;
+                        }
+                        assert(nonSyn == nonSynV2);
+                        if (altAA == refAA) {
+                            syn++;
+                        }
+                    } else {
+                        // findCodonPaths(refSeq.substr(i-2,3),altCodons[j]);
+                    }
+                }
+                altCodons[j] = ""; IUPACcounts[j] = 0;
+            }
+            if (numStops > 0) {
+                std::string stopTranscriptDetails; stopTranscriptDetails.reserve(500);
+                stopTranscriptDetails = transcriptName + "\t" + numToString((i+1)/3) + "\t" + numToString(refSeq.length()/3) + "\t" + numToString((double)numStops/(sampleNames.size()*2)) + "\t";
+                for (std::vector<string>::size_type i = 0; i != haveStop.size(); i++) {
+                    stopTranscriptDetails.append(haveStop[i]);
+                    if (i != (haveStop.size()-1))
+                        stopTranscriptDetails.append(",");
+                }
+                *prematureStopCodonFile << stopTranscriptDetails << std::endl;
+                //print_vector(haveStop, *prematureStopCodonFile, ',');
+                stopsTranscriptRecord.push_back(stopTranscriptDetails);
+            }
+            double NRaf;
+            if (nonSyn > 0) {
+                numNonSynAAchanges++;
+                // std::cerr << "nonSyn: " << nonSyn << std::endl;
+                NRaf = (double)nonSyn/numCopies;
+                // std::cerr << "NRaf: " << NRaf << std::endl;
+                if (NRaf > 0.5) {
+                    nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
+                } else {
+                    nonsynonymousMinorAlleleFequencies.push_back(NRaf);
+                }
+            }
+            if (syn > 0) {
+                numSynAAchanges++;
+                NRaf = (double)syn/numCopies;
+                if (NRaf > 0.5) {
+                    synonymousMinorAlleleFequencies.push_back(1-NRaf);
+                } else {
+                    synonymousMinorAlleleFequencies.push_back(NRaf);
+                }
+            }
+        }
+        
+        if (countDerived > 0) {
+            numSegSites++;
+            double daf = (double)countDerived/numCopies;
+            derivedAlleleFequencies.push_back(daf);
+        }
+        // if (i%10==0) {
+        // std::cerr << "Processed " << i << "bp" << std::endl;
+        // }
+    }
+    
+    statsThisGene.push_back(numToString(refSeq.length()));
+    statsThisGene.push_back(numToString(numSegSites));
+    statsThisGene.push_back(numToString((double)numSegSites/refSeq.length()));
+    statsThisGene.push_back(numToString(refSeq.length()/3));
+    statsThisGene.push_back(numToString(numSynAAchanges));
+    statsThisGene.push_back(numToString((double)numSynAAchanges/(refSeq.length()/3)));
+    statsThisGene.push_back(numToString(numNonSynAAchanges));
+    statsThisGene.push_back(numToString((double)numNonSynAAchanges/(refSeq.length()/3)));
+    statsThisGene.push_back(numToString(vector_average(synonymousMinorAlleleFequencies)));
+    statsThisGene.push_back(numToString(vector_average(nonsynonymousMinorAlleleFequencies)));
+    
+    // std::map<int,int> dafTable = tabulateVectorTemplate(derivedAlleleFequencies);
+    // std::cerr << "Stats Done" << std::endl;
+}
+
+
+
 
 
 void parseGetCodingSeqOptions(int argc, char** argv) {

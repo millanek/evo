@@ -20,7 +20,8 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 // Return false if the length of the coding sequence is not divisible by three
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
-void getCodingSequenceStats(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
+void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
+void getCodingSequenceStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
 
 void parseGetCodingSeqOptions(int argc, char** argv);
 
