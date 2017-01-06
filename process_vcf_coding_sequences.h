@@ -266,10 +266,6 @@ inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::strin
         return true;
     else
         return false;
-    
-    
-    if (nuc == "AGC" || nuc == "AGT")
-        return "Ser";
 }
 
 
