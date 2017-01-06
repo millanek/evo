@@ -235,7 +235,7 @@ inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::strin
         return true;
     else if((refCdn == "CGT" && altCdn == "CGC") || (refCdn == "CGT" && altCdn == "CGG") || (refCdn == "CGT" && altCdn == "CGA"))
         return true;
-    else if((refCdn == "AGA" && altCdn == "AGG") || (refCdn == "AGT" && altCdn == "AGA"))
+    else if((refCdn == "AGA" && altCdn == "AGG") || (refCdn == "AGG" && altCdn == "AGA") || (refCdn == "AGA" && altCdn == "CGA") || (refCdn == "AGG" && altCdn == "CGG"))
         return true;
     // Gly
     else if((refCdn == "GGA" && altCdn == "GGC") || (refCdn == "GGA" && altCdn == "GGG") || (refCdn == "GGA" && altCdn == "GGT"))
@@ -255,9 +255,7 @@ inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::strin
         return true;
     else if((refCdn == "TCT" && altCdn == "TCC") || (refCdn == "TCT" && altCdn == "TCG") || (refCdn == "TCT" && altCdn == "TCA"))
         return true;
-    else if((refCdn == "AGA" && altCdn == "AGG") || (refCdn == "AGA" && altCdn == "CGA"))
-        return true;
-    else if((refCdn == "AGC" && altCdn == "AGT") || (refCdn == "AGC" && altCdn == "AGC"))
+    else if((refCdn == "AGC" && altCdn == "AGT") || (refCdn == "AGT" && altCdn == "AGC"))
         return true;
     // Stop
     else if((refCdn == "TAA" && altCdn == "TAG") || (refCdn == "TAA" && altCdn == "TGA"))
@@ -268,6 +266,10 @@ inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::strin
         return true;
     else
         return false;
+    
+    
+    if (nuc == "AGC" || nuc == "AGT")
+        return "Ser";
 }
 
 

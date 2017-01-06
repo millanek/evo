@@ -339,7 +339,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
             }
         }
         // Find the types of mutation we are dealing with
-        string refAA;
+        string refAA; 
         string altAA;
         if ((i+1)%3 == 0) {
             //if (i == 2)
