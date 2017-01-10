@@ -460,7 +460,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
 
 void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
     double pN = 0; double pS = 0;
-    assert(allSeqs[0].length() != refSeq.length());
+    assert(allSeqs[0].length() == refSeq.length());
     std::vector<string> altCodons; altCodons.resize(allSeqs.size());
     
     std::map<std::string, int> haveStop;
