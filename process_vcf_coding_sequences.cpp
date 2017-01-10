@@ -475,7 +475,7 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
     std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
     std::vector<std::vector<double> > S_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
     std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pN_jk, (int)altCodons.size());
-    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    std::cerr << "Collecting gene sequence statistics...." << std::endl;
     for (string::size_type i = 0; i != refSeq.length(); i++) {
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             altCodons[j] += allSeqs[j][i];
@@ -489,6 +489,8 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
                     haveStop[sampleNames[j]] = 1;
                 }
             }
+            if (i == 2)
+                std::cerr << "Now going to loop through codons" << std::endl;
          //     int n_di = 0; int s_di = 0;
          //     double N_i = 0; double S_i = 0;
             for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
