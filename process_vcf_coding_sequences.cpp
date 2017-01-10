@@ -501,6 +501,10 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
                     double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
                     std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
                     double s_d_ijk = d - n_d_ijk;
+                    std::cerr << "j = " << j << " k = " << k << std::endl;
+                    std::cerr << "N_d_jk.size() = " << N_d_jk.size() << std::endl;
+                    std::cerr << "N_d_jk[j].size() = " << N_d_jk[j].size() << std::endl;
+                    
                     N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                     S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
                   //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
