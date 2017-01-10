@@ -472,9 +472,9 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
     std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size()); 
     std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
     std::vector<std::vector<double> > pN_jk; initialize_matrix_double(pN_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > S_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pN_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pS_jk, (int)altCodons.size());
     // std::cerr << "Collecting gene sequence statistics...." << std::endl;
     for (string::size_type i = 0; i != refSeq.length(); i++) {
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
@@ -504,7 +504,8 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
                     std::cerr << "j = " << j << " k = " << k << std::endl;
                     std::cerr << "N_d_jk.size() = " << N_d_jk.size() << std::endl;
                     std::cerr << "N_d_jk[j].size() = " << N_d_jk[j].size() << std::endl;
-                    
+                    std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
+                    //print_matrix(N_d_jk, std::cout);
                     N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                     S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
                   //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
