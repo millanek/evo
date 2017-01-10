@@ -271,8 +271,13 @@ inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::strin
 
 inline double calculateN(const std::string& refCdn, const std::string& altCdn, int diffNum, bool refAncestral) {
     assert(refCdn.length() == altCdn.length());
-    assert(diffNum >= 1 && diffNum <= 3);
+    assert(diffNum >= 0 && diffNum <= 3);
     double N = 0;
+    
+    if (diffNum == 0) {
+        return getExpectedNumberOfNonsynonymousSites(refCdn);
+    }
+    
     if (diffNum == 1) {
         if (refAncestral) {
             return getExpectedNumberOfNonsynonymousSites(refCdn);
@@ -400,12 +405,6 @@ inline double calculateN(const std::string& refCdn, const std::string& altCdn, i
 
 inline double calculateNd(const std::string& refCdn, const std::string& altCdn, int diffNum) {
     assert(refCdn.length() == altCdn.length());
-    std::vector<std::string::size_type> diffPos;
-    for (std::string::size_type i = 0; i != refCdn.length(); i++) {
-        if (refCdn[i] != altCdn[i]) {
-            diffPos.push_back(i);
-        }
-    }
     std::string refStep = refCdn;
     int countNS = 0;
     double Nd = 0;
@@ -417,6 +416,12 @@ inline double calculateNd(const std::string& refCdn, const std::string& altCdn, 
     }
     
     if (diffNum == 2) {
+        std::vector<std::string::size_type> diffPos;
+        for (std::string::size_type i = 0; i != refCdn.length(); i++) {
+            if (refCdn[i] != altCdn[i]) {
+                diffPos.push_back(i);
+            }
+        }
         refStep[diffPos[0]] = altCdn[diffPos[0]];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
@@ -434,63 +439,63 @@ inline double calculateNd(const std::string& refCdn, const std::string& altCdn, 
     }
     
     if (diffNum == 3) { // six different mutation pathways (orders of mutations)
-        refStep[diffPos[0]] = altCdn[diffPos[0]]; // 1
+        refStep[0] = altCdn[0]; // 1
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        refStep[1] = altCdn[1];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        refStep[2] = altCdn[2];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
         refStep = refCdn;                           // 2
-        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        refStep[2] = altCdn[2];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        refStep[1] = altCdn[1];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        refStep[0] = altCdn[0];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
         refStep = refCdn;                           // 3
-        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        refStep[0] = altCdn[0];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        refStep[2] = altCdn[2];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        refStep[1] = altCdn[1];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
         refStep = refCdn;                           // 4
-        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        refStep[2] = altCdn[2];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        refStep[0] = altCdn[0];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        refStep[1] = altCdn[1];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
         refStep = refCdn;                           // 5
-        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        refStep[1] = altCdn[1];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        refStep[0] = altCdn[0];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        refStep[2] = altCdn[2];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
         refStep = refCdn;                           // 6
-        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        refStep[1] = altCdn[1];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        refStep[2] = altCdn[2];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
-        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        refStep[0] = altCdn[0];
         if (!isSingleChangeSynonymous(refCdn, refStep))
             countNS++;
         Nd = countNS/6.0;
