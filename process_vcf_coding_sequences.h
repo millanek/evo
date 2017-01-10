@@ -21,6 +21,7 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
 void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
+void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) ;
 void getCodingSequenceStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
 
 void parseGetCodingSeqOptions(int argc, char** argv);
@@ -268,16 +269,234 @@ inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::strin
         return false;
 }
 
+inline double calculateN(const std::string& refCdn, const std::string& altCdn, int diffNum, bool refAncestral) {
+    assert(refCdn.length() == altCdn.length());
+    assert(diffNum >= 1 && diffNum <= 3);
+    double N = 0;
+    if (diffNum == 1) {
+        if (refAncestral) {
+            return getExpectedNumberOfNonsynonymousSites(refCdn);
+        } else { // Also consider the reverse order of mutations if we don't know the ancestral allele
+            return (getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(altCdn))/2;
+        }
+    } else {
+        if (diffNum == 2) {
+            // Find where the diffs are
+            std::vector<std::string::size_type> diffPos;
+            for (std::string::size_type i = 0; i != refCdn.length(); i++) {
+                if (refCdn[i] != altCdn[i]) {
+                    diffPos.push_back(i);
+                }
+            }
+            
+            // Then calculate N for the possible mutation paths:
+            double Nsum = 0;
+            // e.g. TAA -> TGA -> TGG
+            std::string stepCdn = refCdn;
+            stepCdn[diffPos[0]] = altCdn[diffPos[0]];
+            Nsum = (getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn))/2;
+            
+            // e.g. TAA -> TAG -> TGG
+            stepCdn = refCdn;
+            stepCdn[diffPos[1]] = altCdn[diffPos[1]];
+            Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn))/2);
+            
+            if (refAncestral) {
+                return Nsum / 2;
+            } else { // Also consider the reverse order of mutations if we don't know the ancestral allele
+                // e.g. TAA <- TGA <- TGG
+                stepCdn = altCdn;
+                stepCdn[diffPos[0]] = refCdn[diffPos[0]];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn))/2);
+                
+                // e.g. TAA <- TAG <- TGG
+                stepCdn = altCdn; // the reverse order of mutations
+                stepCdn[diffPos[1]] = refCdn[diffPos[1]];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn))/2);
+                // Get the average N for the four mutation paths:
+                return Nsum / 4;
+            }
+        }
+        
+        // This could surely be simplified but I write out all the possible mutation paths explicitly
+        // one could even have a lookup table for all the three letter pairs and what N scores they give
+        if (diffNum == 3) {
+            double Nsum = 0;
+            
+            // e.g. AAA -> TAA -> TGA -> TGG
+            std::string stepCdn = refCdn; stepCdn[0] = altCdn[0];
+            std::string step2Cdn = stepCdn; step2Cdn[1] = altCdn[1];
+            Nsum = (getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3;
+            
+            // e.g. AAA -> TAA -> TAG -> TGG
+            stepCdn = refCdn; stepCdn[0] = altCdn[0];
+            step2Cdn = stepCdn; step2Cdn[2] = altCdn[2];
+            Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+            
+            // e.g. AAA -> AGA -> TGA -> TGG
+            stepCdn = refCdn; stepCdn[1] = altCdn[1];
+            step2Cdn = stepCdn; step2Cdn[0] = altCdn[0];
+            Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+            
+            // e.g. AAA -> AGA -> AGG -> TGG
+            stepCdn = refCdn; stepCdn[1] = altCdn[1];
+            step2Cdn = stepCdn; step2Cdn[2] = altCdn[2];
+            Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+            
+            // e.g. AAA -> AAG -> AGG -> TGG
+            stepCdn = refCdn; stepCdn[2] = altCdn[2];
+            step2Cdn = stepCdn; step2Cdn[1] = altCdn[1];
+            Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+            
+            // e.g. AAA -> AAG -> TAG -> TGG
+            stepCdn = refCdn; stepCdn[2] = altCdn[2];
+            step2Cdn = stepCdn; step2Cdn[0] = altCdn[0];
+            Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(refCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+            
+            if (refAncestral) {
+                return Nsum / 6;
+            } else { // Also consider the reverse order of mutations if we don't know the ancestral allele
+                // e.g. AAA <- TAA <- TGA <- TGG
+                stepCdn = altCdn; stepCdn[2] = refCdn[2];
+                step2Cdn = stepCdn; step2Cdn[1] = refCdn[1];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+                
+                // e.g. AAA <- TAA <- TAG <- TGG
+                stepCdn = altCdn; stepCdn[1] = refCdn[1];
+                step2Cdn = stepCdn; step2Cdn[2] = refCdn[2];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+                
+                // e.g. AAA -> AGA -> TGA -> TGG
+                stepCdn = altCdn; stepCdn[2] = refCdn[2];
+                step2Cdn = stepCdn; step2Cdn[0] = refCdn[0];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+                
+                // e.g. AAA <- AGA <- AGG <- TGG
+                stepCdn = altCdn; stepCdn[0] = refCdn[0];
+                step2Cdn = stepCdn; step2Cdn[2] = refCdn[2];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+                
+                // e.g. AAA <- AAG <- AGG <- TGG
+                stepCdn = altCdn; stepCdn[0] = refCdn[0];
+                step2Cdn = stepCdn; step2Cdn[1] = refCdn[1];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+                
+                // e.g. AAA <- AAG <- TAG <- TGG
+                stepCdn = altCdn; stepCdn[1] = refCdn[1];
+                step2Cdn = stepCdn; step2Cdn[0] = refCdn[0];
+                Nsum = Nsum + ((getExpectedNumberOfNonsynonymousSites(altCdn) + getExpectedNumberOfNonsynonymousSites(stepCdn) + getExpectedNumberOfNonsynonymousSites(step2Cdn))/3);
+                
+                // Get the average N for the twelve mutation paths:
+                return Nsum / 12;
+            }
+        }
+        
+    }
+    return N;
+}
 
 
-/*inline void findCodonPaths(const std::string& refCdn, const std::string& altCdn) {
-    assert(refCdn.lenGCh() == altCdn.length());
+
+
+inline double calculateNd(const std::string& refCdn, const std::string& altCdn, int diffNum) {
+    assert(refCdn.length() == altCdn.length());
+    std::vector<std::string::size_type> diffPos;
     for (std::string::size_type i = 0; i != refCdn.length(); i++) {
         if (refCdn[i] != altCdn[i]) {
-            numDiffs = numDiffs + 1;
+            diffPos.push_back(i);
         }
     }
-} */
+    std::string refStep = refCdn;
+    int countNS = 0;
+    double Nd = 0;
+    
+    if (diffNum == 1) {
+        if (!isSingleChangeSynonymous(refCdn,altCdn)) {
+            Nd = 1.0;
+        }
+    }
+    
+    if (diffNum == 2) {
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep = refCdn; // the reverse order of mutations
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        Nd = countNS/2.0;
+    }
+    
+    if (diffNum == 3) { // six different mutation pathways (orders of mutations)
+        refStep[diffPos[0]] = altCdn[diffPos[0]]; // 1
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep = refCdn;                           // 2
+        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep = refCdn;                           // 3
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep = refCdn;                           // 4
+        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep = refCdn;                           // 5
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep = refCdn;                           // 6
+        refStep[diffPos[1]] = altCdn[diffPos[1]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[2]] = altCdn[diffPos[2]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        refStep[diffPos[0]] = altCdn[diffPos[0]];
+        if (!isSingleChangeSynonymous(refCdn, refStep))
+            countNS++;
+        Nd = countNS/6.0;
+    }
+    return Nd;
+}
 
 
 
