@@ -475,22 +475,19 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
     std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
     std::vector<std::vector<double> > S_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
     std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pN_jk, (int)altCodons.size());
-    std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
     for (string::size_type i = 0; i != refSeq.length(); i++) {
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             altCodons[j] += allSeqs[j][i];
         }
         // Find the types of mutation we are dealing with
-        string refAA;
-        string altAA;
         if ((i+1)%3 == 0) {
             for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
                 if (getAminoAcid(altCodons[j]) == "Stop") {
                     haveStop[sampleNames[j]] = 1;
                 }
             }
-            if (i == 2)
-                std::cerr << "Now going to loop through codons" << std::endl;
+            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
          //     int n_di = 0; int s_di = 0;
          //     double N_i = 0; double S_i = 0;
             for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
@@ -499,14 +496,16 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
                 for (std::vector<std::string>::size_type k = j+1; k != altCodons.size(); k++) {
                     if (haveStop[sampleNames[k]] == 1)
                         continue;
-                    altAA = getAminoAcid(altCodons[j]);
                     int d = getCodonDistance(altCodons[j],altCodons[k]);
+                    std::cerr << "Got codon distance: d = " << d << std::endl;
                     double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
+                    std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
                     double s_d_ijk = d - n_d_ijk;
                     N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                     S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
                   //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
                     double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
+                    std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
                     double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
                     N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
                     //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
