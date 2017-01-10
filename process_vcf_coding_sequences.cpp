@@ -469,7 +469,7 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
         haveStop[sampleNames[i]] = 0;
     }
     
-    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size()); 
     std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
     std::vector<std::vector<double> > pN_jk; initialize_matrix_double(pN_jk, (int)altCodons.size());
     std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
