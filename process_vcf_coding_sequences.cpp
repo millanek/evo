@@ -330,7 +330,6 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
         }
         
         // Find the types of mutation we are dealing with
-        string refAA; 
         string altAA;
         if ((i+1)%3 == 0) {
             int numStopsHere = 0;
@@ -340,7 +339,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
                     numStopsHere++;
                 }
             }
-            refAA = getAminoAcid(refSeq.substr(i-2,3));
+
             expectedNumNonSynAAchanges = expectedNumNonSynAAchanges + getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3));
             expectedNumSynAAchanges = expectedNumSynAAchanges + (3 - getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3)));
             
@@ -348,14 +347,14 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
             int syn = 0;
             // int numStops = 0;
             string altAA = "";
-            for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
+            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
                 // only consider this individual if it did not have a premature stop codon
                 if (haveStop[sampleNames[j]] == 1)
                     continue;
                 
                 int thisIndDistance = getCodonDistance(refSeq.substr(i-2,3),altCodons[j]);
-                nonSyn = nonSyn + calculateN(refSeq.substr(i-2,3),altCodons[j], thisIndDistance, false);
-                syn = syn + (thisIndDistance - calculateN(refSeq.substr(i-2,3),altCodons[j], thisIndDistance, false));
+                nonSyn = nonSyn + calculateNd(refSeq.substr(i-2,3),altCodons[j], thisIndDistance);
+                syn = syn + (thisIndDistance - calculateNd(refSeq.substr(i-2,3),altCodons[j], thisIndDistance));
                 altCodons[j] = "";
             }
             
@@ -373,6 +372,10 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
                 stopsTranscriptRecord.push_back(stopTranscriptDetails);
             } */
             double NRaf;
+            if (nonSyn > 0 || syn > 0) {
+                numSegSites++;
+            }
+            
             if (nonSyn > 0) {
                 numNonSynAAchanges++;
                // std::cerr << "nonSyn: " << nonSyn << std::endl;
