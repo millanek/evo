@@ -210,7 +210,7 @@ int getCodingSeqMain(int argc, char** argv) {
                         if (opt::bIsCoding && geneLengthDivisibleByThree) {
                             if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
                                 getCodingSequenceStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
-                                getCodingSequencePhasedPnPs(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
+                                getCodingSequencePhasedPnPs(allSeqs, refSeq, statsThisGene, sampleNames);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else {
                                 getCodingSequenceStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
@@ -359,6 +359,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
                 altCodons[j] = "";
             }
             
+            /*
             if (numStopsHere > 0) {
                 std::string stopTranscriptDetails; stopTranscriptDetails.reserve(500);
                 stopTranscriptDetails = transcriptName + "\t" + numToString((i+1)/3) + "\t" + numToString(refSeq.length()/3) + "\t" + numToString((double)numStopsHere/(sampleNames.size()*2)) + "\t";
@@ -370,7 +371,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
                 }
                 *prematureStopCodonFile << stopTranscriptDetails << std::endl;
                 stopsTranscriptRecord.push_back(stopTranscriptDetails);
-            }
+            } */
             double NRaf;
             if (nonSyn > 0) {
                 numNonSynAAchanges++;
@@ -409,7 +410,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
     // std::cerr << "Stats Done" << std::endl;
 }
 
-void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
+void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const std::string& refSeq, std::vector<string>& statsThisGene, const std::vector<string>& sampleNames) {
     double pN = 0; double pS = 0;
     assert(allSeqs[0].length() == refSeq.length());
     std::vector<string> altCodons; altCodons.resize(allSeqs.size());
