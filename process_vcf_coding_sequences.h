@@ -543,31 +543,32 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
 }
 
 inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, double& sumPn, double& sumPs) {
-    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, (int)altCodons.size());
-    for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
+    int numSamples = (int)altCodons.size();
+    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, numSamples);
+    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, numSamples);
+    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
+    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, numSamples);
+    for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
         if (haveStop[j] == 1)
             continue; // only consider this individual if it did not have a premature stop codon
-        for (std::vector<std::string>::size_type k = 0; k != altCodons.size(); k++) {
+        for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (haveStopH2[k] == 1)
                 continue;
             if (j != k) {
                 int d = getCodonDistance(altCodons[j],altCodonsH2[k]);
-                double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
+                double n_d_ijk = calculateNd(altCodons[j],altCodonsH2[k], d);
                 double s_d_ijk = d - n_d_ijk;
                 N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                 S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
-                double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-                double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
+                double N_ijk = calculateN(altCodons[j],altCodonsH2[k], d, false);
+                double S_ijk = (3 - calculateN(altCodons[j],altCodonsH2[k], d, false));
                 N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
             }
         }
     }
     
-    for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
-        for (std::vector<std::string>::size_type k = 0; k != altCodons.size(); k++) {
+    for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+        for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
                 double pN_jk = N_d_jk[j][k]/N_jk[j][k];
                 double pS_jk = S_d_jk[j][k]/S_jk[j][k];

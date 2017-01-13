@@ -450,20 +450,18 @@ void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::strin
 //
 void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile) {
     double pN = 0; double pS = 0;
-    // int numSegSites = 0;
-    std::vector<string> altCodons; altCodons.resize(allSeqs.size());
-    std::vector<string> altCodonsH2; altCodonsH2.resize(allSeqsH2.size());
+    assert(allSeqs.size() == allSeqsH2.size());
+    int numSamples = (int)allSeqs.size();
+    std::vector<string> altCodons; altCodons.resize(numSamples);
+    std::vector<string> altCodonsH2; altCodonsH2.resize(numSamples);
     
     std::map<std::vector<string>::size_type, int> haveStop;
     std::map<std::vector<string>::size_type, int> haveStopH2;
-    for (std::vector<string>::size_type i = 0; i != altCodons.size(); i++) {
-        altCodons[i] = "";
-        altCodonsH2[i] = "";
-        haveStop[i] = 0;
-        haveStopH2[i] = 0;
+    for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
+        altCodons[i] = ""; altCodonsH2[i] = "";
+        haveStop[i] = 0; haveStopH2[i] = 0;
     }
     
-
     // std::cerr << "Collecting gene sequence statistics...." << std::endl;
     double sumPn = 0;
     double sumPs = 0;
@@ -474,7 +472,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         }
         // Find the types of mutation we are dealing with
         if ((i+1)%3 == 0) {
-            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
+            for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
                 if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
@@ -486,14 +484,14 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, sumPn, sumPs);
             std::cerr << "Added pairwise beween H1 and H2: i = " << i << std::endl;
             
-            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
-                altCodons[j] = "";
+            for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+                altCodons[j] = ""; altCodonsH2[j] = "";
             }
         }
     }
 
-    pN = sumPn/(2*(altCodons.size()*(altCodons.size()-1)));
-    pS = sumPs/(2*(altCodons.size()*(altCodons.size()-1)));
+    pN = sumPn/(2*(numSamples*(numSamples-1)));
+    pS = sumPs/(2*(numSamples*(numSamples-1)));
     
     statsThisGene.push_back(numToString(refSeq.length()));
     statsThisGene.push_back(numToString(pN));
