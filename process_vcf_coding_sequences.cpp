@@ -436,7 +436,8 @@ void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::strin
     statsThisGene.push_back(numToString(vector_average(synonymousMinorAlleleFequencies)));
     statsThisGene.push_back(numToString(vector_average(nonsynonymousMinorAlleleFequencies)));
     
-    int* pNpS; pNpS = getPhasedPnPs(allSeqs,sampleNames);
+    std::vector<double> pNpS; pNpS = getPhasedPnPs(allSeqs,sampleNames);
+    assert(pNpS.size() == 2);
     statsThisGene.push_back(numToString(pNpS[0]));
     statsThisGene.push_back(numToString(pNpS[1]));
     
