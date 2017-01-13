@@ -25,7 +25,7 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 "                                               (NOT COMPATIBLE WITH THE -n OPTION)\n"
 "       --only-stats                            only calculate statistics for coding sequences\n"
 "                                               do not output the sequences themselves\n"
-"       -H,   --het-treatment <r|p|i>           r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
+"       -H,   --het-treatment <r|p|b|i>         r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
 "\n\n"
@@ -235,6 +235,7 @@ int getCodingSeqMain(int argc, char** argv) {
                         // Get statistics for the sequences
                         if (opt::bIsCoding && geneLengthDivisibleByThree) {
                             assert(allSeqs[0].length() == refSeq.length());
+                            assert(allSeqsH2[0].length() == refSeq.length());
                             if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
                                 getStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                                 print_vector_stream(statsThisGene, std::cout);
@@ -447,7 +448,7 @@ void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::strin
 
 
 //
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames) {
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile) {
     double pN = 0; double pS = 0;
     // int numSegSites = 0;
     std::vector<string> altCodons; altCodons.resize(allSeqs.size());
@@ -463,7 +464,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     }
     
 
-    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    std::cerr << "Collecting gene sequence statistics...." << std::endl;
     double sumPn = 0;
     double sumPs = 0;
     for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
@@ -477,7 +478,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
-            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, sumPn, sumPs);
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2,sumPn, sumPs);
             addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, sumPn, sumPs);
