@@ -497,7 +497,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
 
 
 
-int (&getPhasedPnPs(const std::vector<std::string>& allSeqs, const std::vector<string>& sampleNames))[2] {
+std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs, const std::vector<string>& sampleNames) {
     double pN = 0; double pS = 0;
     std::vector<string> altCodons; altCodons.resize(allSeqs.size());
     
@@ -571,8 +571,7 @@ int (&getPhasedPnPs(const std::vector<std::string>& allSeqs, const std::vector<s
     pN = (2.0/(altCodons.size()*(altCodons.size()-1)))*sumPn;
     pS = (2.0/(altCodons.size()*(altCodons.size()-1)))*sumPs;
     
-    int pNpS [2];
-    pNpS[0] = pN; pNpS[1] = pN;
+    std::vector<double> pNpS; pNpS.push_back(pN); pNpS.push_back(pS);
     return pNpS;
 }
 
