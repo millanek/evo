@@ -464,7 +464,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     }
     
 
-    std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
     double sumPn = 0;
     double sumPs = 0;
     for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
@@ -480,8 +480,11 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             }
             std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, sumPn, sumPs);
+            std::cerr << "Added pairwise among H1: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2,sumPn, sumPs);
+            std::cerr << "Added pairwise among H2: i = " << i << std::endl;
             addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, sumPn, sumPs);
+            std::cerr << "Added pairwise beween H1 and H2: i = " << i << std::endl;
             
             for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
                 altCodons[j] = "";
