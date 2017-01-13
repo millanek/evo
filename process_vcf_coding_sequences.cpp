@@ -240,7 +240,7 @@ int getCodingSeqMain(int argc, char** argv) {
                                 getStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else if (opt::hetTreatment == 'b') {
-                                getStatsBothPhasedHaps(allSeqs, allSeqsH2, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
+                                getStatsBothPhasedHaps(allSeqs, allSeqsH2, refSeq, annotLineVec[4], statsThisGene,stopsFile);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else {
                                 getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
