@@ -20,9 +20,10 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 // Return false if the length of the coding sequence is not divisible by three
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
-void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
-void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const std::string& refSeq, std::vector<string>& statsThisGene, const std::vector<string>& sampleNames);
-void getCodingSequenceStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames,Annotation& wgAnnotation);
+void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames);
+int (&getPhasedPnPs(const std::vector<std::string>& allSeqs, const std::vector<string>& sampleNames))[2];
+void getStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
 
 void parseGetCodingSeqOptions(int argc, char** argv);
 
@@ -401,8 +402,6 @@ inline double calculateN(const std::string& refCdn, const std::string& altCdn, i
 }
 
 
-
-
 inline double calculateNd(const std::string& refCdn, const std::string& altCdn, int diffNum) {
     assert(refCdn.length() == altCdn.length());
     std::string refStep = refCdn;
@@ -500,10 +499,85 @@ inline double calculateNd(const std::string& refCdn, const std::string& altCdn, 
             countNS++;
         Nd = countNS/6.0;
     }
+    assert(Nd <= diffNum);
     return Nd;
 }
 
+inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, double& sumPn, double& sumPs) {
+    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, (int)altCodons.size());
+    for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
+        if (haveStop[j] == 1)
+            continue; // only consider this individual if it did not have a premature stop codon
+        for (std::vector<std::string>::size_type k = j+1; k != altCodons.size(); k++) {
+            if (haveStop[k] == 1)
+                continue;
+            int d = getCodonDistance(altCodons[j],altCodons[k]);
+            //std::cerr << "Got codon distance: d = " << d << std::endl;
+            double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
+            //std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
+            double s_d_ijk = d - n_d_ijk;
+            //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
+            //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
+            //print_matrix(N_d_jk, std::cout);
+            N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
+            S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
+            //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
+            double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
+            // std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
+            double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
+            N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
+            //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
+        }
+    }
+    for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
+        for (std::vector<std::string>::size_type k = j+1; k != altCodons.size(); k++) {
+            double pN_jk = N_d_jk[j][k]/N_jk[j][k];
+            double pS_jk = S_d_jk[j][k]/S_jk[j][k];
+            sumPn = sumPn + pN_jk;
+            sumPs = sumPs + pS_jk;
+        }
+    }
+}
 
+inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, double& sumPn, double& sumPs) {
+    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, (int)altCodons.size());
+    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, (int)altCodons.size());
+    for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
+        if (haveStop[j] == 1)
+            continue; // only consider this individual if it did not have a premature stop codon
+        for (std::vector<std::string>::size_type k = 0; k != altCodons.size(); k++) {
+            if (haveStopH2[k] == 1)
+                continue;
+            if (j != k) {
+                int d = getCodonDistance(altCodons[j],altCodonsH2[k]);
+                double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
+                double s_d_ijk = d - n_d_ijk;
+                N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
+                S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
+                double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
+                double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
+                N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
+            }
+        }
+    }
+    
+    for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
+        for (std::vector<std::string>::size_type k = 0; k != altCodons.size(); k++) {
+            if (j != k) {
+                double pN_jk = N_d_jk[j][k]/N_jk[j][k];
+                double pS_jk = S_d_jk[j][k]/S_jk[j][k];
+                sumPn = sumPn + pN_jk;
+                sumPs = sumPs + pS_jk;
+            }
+        }
+    }
+    
+}
 
 
 #endif /* defined(__vcf_process__process_vcf_coding_sequences__) */

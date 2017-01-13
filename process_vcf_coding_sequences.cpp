@@ -25,7 +25,7 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 "                                               (NOT COMPATIBLE WITH THE -n OPTION)\n"
 "       --only-stats                            only calculate statistics for coding sequences\n"
 "                                               do not output the sequences themselves\n"
-"       -H,   --het-treatment <r|p|i>           r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; i: use IUPAC codes\n"
+"       -H,   --het-treatment <r|p|i>           r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
 "\n\n"
@@ -125,12 +125,17 @@ int getCodingSeqMain(int argc, char** argv) {
     string thisScaffoldName;
     unsigned int processedVariantCounter = 0;
     std::vector<string> scaffoldStrings;
+    std::vector<string> scaffoldStringsH2;
     std::vector<std::vector<string> > statsAllGenes;
     string statsFileName = geneFileRoot + "_stats.txt";
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
     string stopsFileName = geneFileRoot + "_prematureStops.txt";
     *statsFile << "transcript" << "\t" << "length_in_nucleotides" << "\t" << "segregating_sites(ss)" << "\t" << "ss_proportion" << "\t" << "length_in_AA" << "\t" << "num_of_AA_with_synonymous_changes(synAAs)" << "\t" << "synAAs_proportion" << "\t" << "non_synonymous_AA_substitutions(nsAAs)" << "\t" << "nsAAs_proportion" << "\t" << "synonymousMAFaverage" << "\t" << "nonsynonymousMAFaverage" << "\t" << "pN" << "\t" << "pS" << std::endl;
-    std::cout << "transcript" << "\t" << "length_in_nucleotides" << "\t" << "segregating_sites(ss)" << "\t" << "ss_proportion" << "\t" << "length_in_AA" << "\t" << "num_of_AA_with_synonymous_changes(synAAs)" << "\t" << "synAAs_proportion" << "\t" << "non_synonymous_AA_substitutions(nsAAs)" << "\t" << "nsAAs_proportion" << "\t" << "synonymousMAFaverage" << "\t" << "nonsynonymousMAFaverage" << "\t" << "pN" << "\t" << "pS" << std::endl;
+    if (opt::hetTreatment == 'b') {
+        std::cout << "transcript" << "\t" << "pN" << "\t" << "pS" << std::endl;
+    } else {
+        std::cout << "transcript" << "\t" << "length_in_nucleotides" << "\t" << "segregating_sites(ss)" << "\t" << "ss_proportion" << "\t" << "length_in_AA" << "\t" << "num_of_AA_with_synonymous_changes(synAAs)" << "\t" << "synAAs_proportion" << "\t" << "non_synonymous_AA_substitutions(nsAAs)" << "\t" << "nsAAs_proportion" << "\t" << "synonymousMAFaverage" << "\t" << "nonsynonymousMAFaverage" << "\t" << "pN" << "\t" << "pS" << std::endl;
+    }
     std::ofstream* stopsFile = new std::ofstream(stopsFileName.c_str());
     *stopsFile << "transcript" << "\t" << "stopAA_position" << "\t" << "transcript_length" << "\t" << "stop_allele_frequency" << "\t" << "individuals_with_stop" << std::endl;
     string stopsPerGeneFileName = geneFileRoot + "_prematureStops_perGene.txt";
@@ -151,9 +156,16 @@ int getCodingSeqMain(int argc, char** argv) {
             numSamples = fields.size()-NUM_NON_GENOTYPE_COLUMNS;
             // Initialize vectors
             scaffoldStrings.resize(numSamples);
-            for (std::vector<string>::size_type i = 0; i != scaffoldStrings.size(); i++) {
+            for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
                 scaffoldStrings[i].reserve(100000000);
                 scaffoldStrings[i] = "";
+            }
+            if (opt::hetTreatment == 'b') {
+                scaffoldStringsH2.resize(numSamples);
+                for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
+                    scaffoldStringsH2[i].reserve(100000000);
+                    scaffoldStringsH2[i] = "";
+                }
             }
             
             for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
@@ -173,6 +185,11 @@ int getCodingSeqMain(int argc, char** argv) {
                     for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                         scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
                     }
+                    if (opt::hetTreatment == 'b') {
+                        for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                            scaffoldStringsH2[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
+                        }
+                    }
                     
 #ifdef DEBUG
                     if (scaffoldStrings[0].length() != currentScaffoldReference.length()) {
@@ -190,6 +207,7 @@ int getCodingSeqMain(int argc, char** argv) {
                         std::ofstream* geneOutFiles;
                         bool geneLengthDivisibleByThree = true;
                         std::vector<string> allSeqs;
+                        std::vector<string> allSeqsH2;
                         std::vector<string> statsThisGene; statsThisGene.push_back(annotLineVec[4]);
                         string refSeq = getReferenceForThisRegion(annotation[k], annotLineVec[3], currentScaffoldReference);
                         if (opt::bIsCoding)
@@ -203,17 +221,28 @@ int getCodingSeqMain(int argc, char** argv) {
                                 if (!opt::bOnlyStats) *geneOutFiles << geneSeq << std::endl;
                                 allSeqs.push_back(geneSeq);
                             }
+                            if (opt::hetTreatment == 'b') {
+                                string geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStringsH2[i]);
+                                if (geneLengthDivisibleByThree) {
+                                    if (!opt::bOnlyStats) *geneOutFiles << ">" << sampleNames[i] << "_H2" << std::endl;
+                                    if (!opt::bOnlyStats) *geneOutFiles << geneSeq << std::endl;
+                                    allSeqsH2.push_back(geneSeq);
+                                }
+                            }
                         }
                        // std::cerr << "Got all sequences for: " << annotLineVec[4] << std::endl;
                         
                         // Get statistics for the sequences
                         if (opt::bIsCoding && geneLengthDivisibleByThree) {
+                            assert(allSeqs[0].length() == refSeq.length());
                             if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
-                                getCodingSequenceStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
-                                getCodingSequencePhasedPnPs(allSeqs, refSeq, statsThisGene, sampleNames);
+                                getStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
+                                print_vector_stream(statsThisGene, std::cout);
+                            } else if (opt::hetTreatment == 'b') {
+                                getStatsBothPhasedHaps(allSeqs, allSeqsH2, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else {
-                                getCodingSequenceStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames, wgAnnotation);
+                                getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                             }
                             statsAllGenes.push_back(statsThisGene);
                             // std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
@@ -222,6 +251,7 @@ int getCodingSeqMain(int argc, char** argv) {
                     }
                     for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                         scaffoldStrings[i] = "";
+                        if (opt::hetTreatment == 'b') scaffoldStringsH2[i] = "";
                     }
                     processedVariantCounter = 1;
                     currentScaffoldNum = fields[0];
@@ -250,11 +280,22 @@ int getCodingSeqMain(int argc, char** argv) {
                 for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
                     //std::cerr << "Going through genotypes1:" << i << std::endl;
                     //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
-                    scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
+                    int sampleNum = (int)i - NUM_NON_GENOTYPE_COLUMNS;
+                    scaffoldStrings[sampleNum].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
+                    if (opt::hetTreatment == 'b')
+                        scaffoldStringsH2[sampleNum].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
                     std::vector<string> genotypeFields = split(fields[i], ':');
                     std::vector<char> genotype;
                     genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
-                    appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
+                    if (opt::hetTreatment == 'b') {
+                        // Somewhat hacky:
+                        // 1) add to the first haplotype
+                        appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, 'p');
+                        // 2) add to the second haplotype
+                        appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'b');
+                    } else {
+                        appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, opt::hetTreatment);
+                    }
                 }
                 inStrPos = atoi(fields[1].c_str());
                 
@@ -306,8 +347,7 @@ bool codingSequenceErrorChecks(const string& geneSeq, const string& transcriptNa
 // 1) Would also be good to distinguish derived vs. ancestral alleles
 // 2) Weigh Ns and synsonymous mutations based on their minor and/or derived allele frequencies to get a single score
 //    Or perhaps by how often they are homozygous ('fixed' in a species) vs. heterozygous
-void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
-    assert(allSeqs[0].length() == refSeq.length());
+void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames) {
     int numSegSites = 0;
     int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
     int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
@@ -358,19 +398,6 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
                 altCodons[j] = "";
             }
             
-            /*
-            if (numStopsHere > 0) {
-                std::string stopTranscriptDetails; stopTranscriptDetails.reserve(500);
-                stopTranscriptDetails = transcriptName + "\t" + numToString((i+1)/3) + "\t" + numToString(refSeq.length()/3) + "\t" + numToString((double)numStopsHere/(sampleNames.size()*2)) + "\t";
-                for (std::map<std::string, int>::iterator it = haveStop.begin(); it != haveStop.end(); i++) {
-                    if (it->second == 1) {
-                        stopTranscriptDetails.append(it->first);
-                        stopTranscriptDetails.append(",");
-                    }
-                }
-                *prematureStopCodonFile << stopTranscriptDetails << std::endl;
-                stopsTranscriptRecord.push_back(stopTranscriptDetails);
-            } */
             double NRaf;
             if (nonSyn > 0 || syn > 0) {
                 numSegSites++;
@@ -379,7 +406,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
             if (nonSyn > 0) {
                 numNonSynAAchanges++;
                // std::cerr << "nonSyn: " << nonSyn << std::endl;
-                NRaf = (double)nonSyn/numCopies;
+                NRaf = (double)nonSyn/(numCopies*3);
                // std::cerr << "NRaf: " << NRaf << std::endl;
                 if (NRaf > 0.5)
                     nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
@@ -388,7 +415,7 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
             }
             if (syn > 0) {
                 numSynAAchanges++;
-                NRaf = (double)syn/numCopies;
+                NRaf = (double)syn/(numCopies*3);
                 if (NRaf > 0.5)
                     synonymousMinorAlleleFequencies.push_back(1-NRaf);
                 else
@@ -409,13 +436,69 @@ void getCodingSequenceStatsPhasedSeq(const std::vector<std::string>& allSeqs, co
     statsThisGene.push_back(numToString(vector_average(synonymousMinorAlleleFequencies)));
     statsThisGene.push_back(numToString(vector_average(nonsynonymousMinorAlleleFequencies)));
     
+    int* pNpS; pNpS = getPhasedPnPs(allSeqs,sampleNames);
+    statsThisGene.push_back(numToString(pNpS[0]));
+    statsThisGene.push_back(numToString(pNpS[1]));
+    
     // std::map<int,int> dafTable = tabulateVectorTemplate(derivedAlleleFequencies);
     // std::cerr << "Stats Done" << std::endl;
 }
 
-void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const std::string& refSeq, std::vector<string>& statsThisGene, const std::vector<string>& sampleNames) {
+
+//
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames) {
     double pN = 0; double pS = 0;
-    assert(allSeqs[0].length() == refSeq.length());
+    // int numSegSites = 0;
+    std::vector<string> altCodons; altCodons.resize(allSeqs.size());
+    std::vector<string> altCodonsH2; altCodonsH2.resize(allSeqsH2.size());
+    
+    std::map<std::vector<string>::size_type, int> haveStop;
+    std::map<std::vector<string>::size_type, int> haveStopH2;
+    for (std::vector<string>::size_type i = 0; i != altCodons.size(); i++) {
+        altCodons[i] = "";
+        altCodonsH2[i] = "";
+        haveStop[i] = 0;
+        haveStopH2[i] = 0;
+    }
+    
+
+    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    double sumPn = 0;
+    double sumPs = 0;
+    for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
+        for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
+            altCodons[j] += allSeqs[j][i];
+            altCodonsH2[j] += allSeqsH2[j][i];
+        }
+        // Find the types of mutation we are dealing with
+        if ((i+1)%3 == 0) {
+            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
+                if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
+                if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
+            }
+            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, sumPn, sumPs);
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2,sumPn, sumPs);
+            addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, sumPn, sumPs);
+            
+            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
+                altCodons[j] = "";
+            }
+        }
+    }
+
+    pN = sumPn/(2*(altCodons.size()*(altCodons.size()-1)));
+    pS = sumPs/(2*(altCodons.size()*(altCodons.size()-1)));
+    
+    statsThisGene.push_back(numToString(refSeq.length()));
+    statsThisGene.push_back(numToString(pN));
+    statsThisGene.push_back(numToString(pS));
+}
+
+
+
+int (&getPhasedPnPs(const std::vector<std::string>& allSeqs, const std::vector<string>& sampleNames))[2] {
+    double pN = 0; double pS = 0;
     std::vector<string> altCodons; altCodons.resize(allSeqs.size());
     
     std::map<std::string, int> haveStop;
@@ -431,7 +514,7 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
     std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, (int)altCodons.size());
     std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pS_jk, (int)altCodons.size());
     // std::cerr << "Collecting gene sequence statistics...." << std::endl;
-    for (string::size_type i = 0; i != refSeq.length(); i++) {
+    for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             altCodons[j] += allSeqs[j][i];
         }
@@ -488,9 +571,9 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
     pN = (2.0/(altCodons.size()*(altCodons.size()-1)))*sumPn;
     pS = (2.0/(altCodons.size()*(altCodons.size()-1)))*sumPs;
     
-    statsThisGene.push_back(numToString(pN));
-    statsThisGene.push_back(numToString(pS));
-    
+    int pNpS [2];
+    pNpS[0] = pN; pNpS[1] = pN;
+    return pNpS;
 }
 
 
@@ -498,7 +581,7 @@ void getCodingSequencePhasedPnPs(const std::vector<std::string>& allSeqs, const 
 
 
 
-void getCodingSequenceStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames, Annotation& wgAnnotation) {
+void getStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<string>& sampleNames) {
     int numSegSites = 0;
     int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
     int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
@@ -686,8 +769,8 @@ void parseGetCodingSeqOptions(int argc, char** argv) {
         die = true;
     }
     
-    if (opt::hetTreatment != 'r' && opt::hetTreatment != 'p' && opt::hetTreatment != 'i') {
-        std::cerr << "The -H (--het-treatment) option can only have the values 'r', 'p', or 'i'\n";
+    if (opt::hetTreatment != 'r' && opt::hetTreatment != 'p' && opt::hetTreatment != 'b' && opt::hetTreatment != 'i') {
+        std::cerr << "The -H (--het-treatment) option can only have the values 'r', 'p', 'b', or 'i'\n";
         die = true;
     }
     

@@ -37,6 +37,8 @@ inline void appendGenotypeBaseToString(std::string& toExtend, const std::string&
         } else if (hetTreatment == 'i') {
             std::string ambiguityBase = getAmbiguityCode(ref, alt);
             toExtend.append(ambiguityBase);
+        } else if (hetTreatment == 'b') {
+            
         }
     }
 }
