@@ -504,26 +504,26 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     double sumPs = 0;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
-        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+        //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             double pN_jk = N_d_jk[j][k]/N_jk[j][k];
             //if (isnan(pN_jk) || N_jk[j][k] == 0) {
-                std::cerr << "j = " << j << "; k = " << k << std::endl;
-                std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
-                std::cerr << "pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
+                //std::cerr << "j = " << j << "; k = " << k << std::endl;
+                //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
+                //std::cerr << "pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             //}
             sumPn = sumPn + pN_jk;
             double pS_jk = S_d_jk[j][k]/S_jk[j][k]; sumPs = sumPs + pS_jk;
             double H2pN_jk = H2N_d_jk[j][k]/H2N_jk[j][k]; sumPn = sumPn + H2pN_jk;
-            std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
-            std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
+            //std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
+            //std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             double H2pS_jk = H2S_d_jk[j][k]/H2S_jk[j][k]; sumPs = sumPs + H2pS_jk;
         }
     }
     
     // Add the between H1 and H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
-        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+        //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
                 double H1H2pN_jk = H1H2N_d_jk[j][k]/H1H2N_jk[j][k];
