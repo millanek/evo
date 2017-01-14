@@ -516,7 +516,6 @@ void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& alt
             double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
             //std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
             double s_d_ijk = d - n_d_ijk;
-            //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
             //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
             //print_matrix(N_d_jk, std::cout);
             N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
@@ -526,13 +525,11 @@ void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& alt
             //std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
             double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
             N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
+            std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
             std::cerr << "j = " << j << "; k = " << k << std::endl;
             std::cerr << "d = " << d << "; n_d_ijk = " << n_d_ijk << "; N_ijk = " << N_ijk << std::endl;
             std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
-            //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
-            if (isnan(N_jk[j][k]) || isnan(N_d_jk[j][k])) {
-                std::cerr << "N_d_jk[j][k]: " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
-            }
+
         }
     }
 }

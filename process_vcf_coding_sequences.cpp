@@ -222,7 +222,7 @@ int getCodingSeqMain(int argc, char** argv) {
                                 allSeqs.push_back(geneSeq);
                             }
                             if (opt::hetTreatment == 'b') {
-                                string geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStringsH2[i]);
+                                geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStringsH2[i]);
                                 if (geneLengthDivisibleByThree) {
                                     if (!opt::bOnlyStats) *geneOutFiles << ">" << sampleNames[i] << "_H2" << std::endl;
                                     if (!opt::bOnlyStats) *geneOutFiles << geneSeq << std::endl;
