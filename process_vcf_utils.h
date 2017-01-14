@@ -23,7 +23,7 @@
 #include "gzstream.h"
 using std::string;
 #define PROGRAM_BIN "evo"
-#define PACKAGE_BUGREPORT "mm812@cam.ac.uk"
+#define PACKAGE_BUGREPORT "mm21@sanger.ac.uk"
 #define GZIP_EXT ".gz"
 
 // VCF format constant

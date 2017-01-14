@@ -486,7 +486,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
-            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
             //std::cerr << "Added pairwise among H1:" << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, H2N_d_jk, H2N_jk, H2S_d_jk, H2S_jk);
@@ -507,10 +507,10 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             double pN_jk = N_d_jk[j][k]/N_jk[j][k];
-            if (isnan(pN_jk) || N_jk[j][k] == 0) {
+            //if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 std::cerr << "j = " << j << "k = " << k << std::endl;
                 std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "N_jk[j][k] = " << N_jk[j][k] << std::endl;
-            }
+            //}
             sumPn = sumPn + pN_jk;
             double pS_jk = S_d_jk[j][k]/S_jk[j][k]; sumPs = sumPs + pS_jk;
             double H2pN_jk = H2N_d_jk[j][k]/H2N_jk[j][k]; sumPn = sumPn + H2pN_jk;
