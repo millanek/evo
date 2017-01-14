@@ -526,6 +526,9 @@ void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& alt
             //std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
             double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
             N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
+            std::cerr << "j = " << j << "; k = " << k << std::endl;
+            std::cerr << "d = " << d << "; n_d_ijk = " << n_d_ijk << "; N_ijk = " << N_ijk << std::endl;
+            std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
             //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
             if (isnan(N_jk[j][k]) || isnan(N_d_jk[j][k])) {
                 std::cerr << "N_d_jk[j][k]: " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;

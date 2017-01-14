@@ -500,7 +500,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         }
     }
      
-    double sumPn = 0;
+    double sumPn = 0; 
     double sumPs = 0;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
