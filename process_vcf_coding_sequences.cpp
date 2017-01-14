@@ -507,7 +507,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             double pN_jk = N_d_jk[j][k]/N_jk[j][k];
-            if (isnan(pN_jk)) {
+            if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 std::cerr << "j = " << j << "k = " << k << std::endl;
                 std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "N_jk[j][k] = " << N_jk[j][k] << std::endl;
             }
