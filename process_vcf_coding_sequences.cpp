@@ -240,8 +240,6 @@ int getCodingSeqMain(int argc, char** argv) {
                                 getStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else if (opt::hetTreatment == 'b') {
-                                std::cerr << "allSeqs[0]:\t" << allSeqs[0] << std::endl;
-                                std::cerr << "allSeqsH2[0]:\t" << allSeqsH2[0] << std::endl;
                                 getStatsBothPhasedHaps(allSeqs, allSeqsH2, refSeq, annotLineVec[4], statsThisGene,stopsFile);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else {
@@ -308,8 +306,11 @@ int getCodingSeqMain(int argc, char** argv) {
                 }
 #endif
             }
-            if (processedVariantCounter % 10000 == 0)
+            if (processedVariantCounter % 10000 == 0) {
                 std::cerr << processedVariantCounter << " variants processed..." << std::endl;
+                std::cerr << "scaffoldStrings[0]:\t" << scaffoldStrings[0] << std::endl;
+                std::cerr << "scaffoldStringsH2[0]:\t" << scaffoldStringsH2[0] << std::endl;
+            }
         }
     }
     
