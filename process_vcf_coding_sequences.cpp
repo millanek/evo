@@ -308,8 +308,8 @@ int getCodingSeqMain(int argc, char** argv) {
             }
             if (processedVariantCounter % 10000 == 0) {
                 std::cerr << processedVariantCounter << " variants processed..." << std::endl;
-                std::cerr << "scaffoldStrings[0]:\t" << scaffoldStrings[0] << std::endl;
-                std::cerr << "scaffoldStringsH2[0]:\t" << scaffoldStringsH2[0] << std::endl;
+                //std::cerr << "scaffoldStrings[0]:\t" << scaffoldStrings[0] << std::endl;
+                //std::cerr << "scaffoldStringsH2[0]:\t" << scaffoldStringsH2[0] << std::endl;
             }
         }
     }
