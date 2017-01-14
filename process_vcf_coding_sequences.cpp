@@ -291,7 +291,7 @@ int getCodingSeqMain(int argc, char** argv) {
                     if (opt::hetTreatment == 'b') {
                         // Somewhat hacky:
                         // 1) add to the first haplotype
-                        appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, 'p');
+                        appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'p');
                         // 2) add to the second haplotype
                         appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'b');
                     } else {
