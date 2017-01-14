@@ -240,6 +240,8 @@ int getCodingSeqMain(int argc, char** argv) {
                                 getStatsPhasedSeq(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else if (opt::hetTreatment == 'b') {
+                                std::cerr << "allSeqs[0]:\t" << allSeqs[0] << std::endl;
+                                std::cerr << "allSeqsH2[0]:\t" << allSeqsH2[0] << std::endl;
                                 getStatsBothPhasedHaps(allSeqs, allSeqsH2, refSeq, annotLineVec[4], statsThisGene,stopsFile);
                                 print_vector_stream(statsThisGene, std::cout);
                             } else {
@@ -291,7 +293,7 @@ int getCodingSeqMain(int argc, char** argv) {
                     if (opt::hetTreatment == 'b') {
                         // Somewhat hacky:
                         // 1) add to the first haplotype
-                        appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'p');
+                        appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, 'p');
                         // 2) add to the second haplotype
                         appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'b');
                     } else {
