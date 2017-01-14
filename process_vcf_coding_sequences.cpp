@@ -488,11 +488,11 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             }
             std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
-            //std::cerr << "Added pairwise among H1: i = " << i << std::endl;
+            std::cerr << "Added pairwise among H1: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, H2N_d_jk, H2N_jk, H2S_d_jk, H2S_jk);
-            // std::cerr << "Added pairwise among H2: i = " << i << std::endl;
+            std::cerr << "Added pairwise among H2: i = " << i << std::endl;
             addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, H1H2N_d_jk, H1H2N_jk, H1H2S_d_jk, H1H2S_jk);
-            // std::cerr << "Added pairwise beween H1 and H2: i = " << i << std::endl;
+            std::cerr << "Added pairwise beween H1 and H2: i = " << i << std::endl;
 
             for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
                 altCodons[j] = ""; altCodonsH2[j] = "";
