@@ -509,11 +509,12 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             double pN_jk = N_d_jk[j][k]/N_jk[j][k];
             //if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 std::cerr << "j = " << j << "k = " << k << std::endl;
-                std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "N_jk[j][k] = " << N_jk[j][k] << std::endl;
+                std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
             //}
             sumPn = sumPn + pN_jk;
             double pS_jk = S_d_jk[j][k]/S_jk[j][k]; sumPs = sumPs + pS_jk;
             double H2pN_jk = H2N_d_jk[j][k]/H2N_jk[j][k]; sumPn = sumPn + H2pN_jk;
+            std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
             double H2pS_jk = H2S_d_jk[j][k]/H2S_jk[j][k]; sumPs = sumPs + H2pS_jk;
         }
     }
