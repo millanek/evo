@@ -503,7 +503,7 @@ inline double calculateNd(const std::string& refCdn, const std::string& altCdn, 
     return Nd;
 }
 
-inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
+void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
 
     for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
         if (haveStop[j] == 1)
@@ -534,7 +534,7 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
     }
 }
 
-inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
+void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
     int numSamples = (int)altCodons.size();
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
         if (haveStop[j] == 1)
