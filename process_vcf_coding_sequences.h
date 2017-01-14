@@ -503,11 +503,8 @@ inline double calculateNd(const std::string& refCdn, const std::string& altCdn, 
     return Nd;
 }
 
-inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, double& sumPn, double& sumPs) {
-    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, (int)altCodons.size());
-    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, (int)altCodons.size());
+inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
+
     for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
         if (haveStop[j] == 1)
             continue; // only consider this individual if it did not have a premature stop codon
@@ -515,39 +512,27 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
             if (haveStop[k] == 1)
                 continue;
             int d = getCodonDistance(altCodons[j],altCodons[k]);
-            //std::cerr << "Got codon distance: d = " << d << std::endl;
+            std::cerr << "Got codon distance: d = " << d << std::endl;
             double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
-            //std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
+            std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
             double s_d_ijk = d - n_d_ijk;
-            //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
-            //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
+            std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
+            std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
             //print_matrix(N_d_jk, std::cout);
             N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
             S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
             //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
             double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-            // std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
+            std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
             double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
             N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
             //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
         }
     }
-    for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
-        for (std::vector<std::string>::size_type k = j+1; k != altCodons.size(); k++) {
-            double pN_jk = N_d_jk[j][k]/N_jk[j][k];
-            double pS_jk = S_d_jk[j][k]/S_jk[j][k];
-            sumPn = sumPn + pN_jk;
-            sumPs = sumPs + pS_jk;
-        }
-    }
 }
 
-inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, double& sumPn, double& sumPs) {
+inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
     int numSamples = (int)altCodons.size();
-    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, numSamples);
-    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, numSamples);
-    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
-    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, numSamples);
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
         if (haveStop[j] == 1)
             continue; // only consider this individual if it did not have a premature stop codon
@@ -566,18 +551,6 @@ inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<strin
             }
         }
     }
-    
-    for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
-        for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
-            if (j != k) {
-                double pN_jk = N_d_jk[j][k]/N_jk[j][k];
-                double pS_jk = S_d_jk[j][k]/S_jk[j][k];
-                sumPn = sumPn + pN_jk;
-                sumPs = sumPs + pS_jk;
-            }
-        }
-    }
-    
 }
 
 
