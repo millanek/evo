@@ -486,13 +486,13 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
-            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
-            //std::cerr << "Added pairwise among H1: i = " << i << std::endl;
+            //std::cerr << "Added pairwise among H1:" << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, H2N_d_jk, H2N_jk, H2S_d_jk, H2S_jk);
-            //std::cerr << "Added pairwise among H2: i = " << i << std::endl;
+            //std::cerr << "Added pairwise among H2: " << std::endl;
             addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, H1H2N_d_jk, H1H2N_jk, H1H2S_d_jk, H1H2S_jk);
-            //std::cerr << "Added pairwise beween H1 and H2: i = " << i << std::endl;
+            //std::cerr << "Added pairwise beween H1 and H2:" << std::endl;
 
             for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
                 altCodons[j] = ""; altCodonsH2[j] = "";
@@ -504,6 +504,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     double sumPs = 0;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
+        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != altCodons.size(); k++) {
             double pN_jk = N_d_jk[j][k]/N_jk[j][k]; sumPn = sumPn + pN_jk;
             double pS_jk = S_d_jk[j][k]/S_jk[j][k]; sumPs = sumPs + pS_jk;
@@ -514,6 +515,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     
     // Add the between H1 and H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
                 double H1H2pN_jk = H1H2N_d_jk[j][k]/H1H2N_jk[j][k];
