@@ -590,18 +590,18 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
                     if (haveStop[k] == 1)
                         continue;
                     int d = getCodonDistance(altCodons[j],altCodons[k]);
-                    //std::cerr << "Got codon distance: d = " << d << std::endl;
+                    std::cerr << "Got codon distance: d = " << d << std::endl;
                     double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
-                    //std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
+                    std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
                     double s_d_ijk = d - n_d_ijk;
-                    //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
-                    //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
+                    std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
+                    std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
                     //print_matrix(N_d_jk, std::cout);
                     N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                     S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
                   //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
                     double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-                    // std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
+                    std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
                     double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
                     N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
                     //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
