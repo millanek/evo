@@ -65,6 +65,7 @@ static const char *USAGE_MESSAGE =
 "           getWGSeq            obtain whole genome sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getMtSeq            obtain mitochondrial sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getCodingSeq        obtain coding sequences (e.g. for gene/variant classification - missense/nonsense/etc..)\n"
+"           codingStats         claculate various interesting statistics about protein coding sequences given multiple alignment\n"
 "           sequenom            prepare a variant list for a sequenom assay in the format used at the Sanger Institute\n"
 "           VCFfromSequenom     Generate a VCF file from a sequenom output file\n"
 " Various utils:    \n"
@@ -152,6 +153,8 @@ int main(int argc, char **argv) {
             reorderMain(argc - 1, argv + 1);
         else if (command == "VCFfromSequenom")
             VCFfromSequenomMain(argc - 1, argv + 1);
+        else if (command == "codingStats")
+            getCodingSeqMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

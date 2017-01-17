@@ -20,9 +20,9 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 // Return false if the length of the coding sequence is not divisible by three
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
-void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, const std::string& refSeq, const string& transcriptName, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile);
-std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs, const std::vector<string>& sampleNames);
+void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile);
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene);
+std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs);
 void getStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
 
 void parseGetCodingSeqOptions(int argc, char** argv);
@@ -142,6 +142,27 @@ inline int getCodonDistance(const std::string& refCdn, const std::string& altCdn
         }
     }
     return numDiffs;
+}
+
+inline bool isSingleChangeTransition(const std::string& refCdn, const std::string& altCdn) {
+    assert(refCdn.length() == altCdn.length());
+    std::vector<std::string::size_type> diffPos;
+    for (std::string::size_type i = 0; i != refCdn.length(); i++) {
+        if (refCdn[i] != altCdn[i])
+            diffPos.push_back(i);
+    }
+    assert(diffPos.size() == 1);
+
+    if (refCdn[diffPos[0]] == 'C' && altCdn[diffPos[0]] == 'T')
+        return true;
+    else if (refCdn[diffPos[0]] == 'T' && altCdn[diffPos[0]] == 'C')
+        return true;
+    else if (refCdn[diffPos[0]] == 'A' && altCdn[diffPos[0]] == 'G')
+        return true;
+    else if (refCdn[diffPos[0]] == 'G' && altCdn[diffPos[0]] == 'A')
+        return true;
+    else
+        return false;
 }
 
 inline bool isSingleChangeSynonymous(const std::string& refCdn, const std::string& altCdn) {
