@@ -567,7 +567,7 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
     std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
     std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, numSamples);
     std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pS_jk, numSamples);
-    std::cerr << "Collecting gene sequence statistics.... geneLengthNt = " << geneLengthNt << std::endl;
+    //std::cerr << "Collecting gene sequence statistics.... geneLengthNt = " << geneLengthNt << std::endl;
     for (string::size_type i = 0; i != geneLengthNt; i++) {
         for (int j = 0; j != numSamples; j++) {
             altCodons[j] += allSeqs[j][i];
@@ -580,42 +580,12 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
                 if (getAminoAcid(altCodons[j]) == "Stop")
                     haveStop[j] = 1;
             }
-           // std::cerr << "Now going to loop through codons: i = " << i << std::endl;
-         //     int n_di = 0; int s_di = 0;
-         //     double N_i = 0; double S_i = 0;
-            for (int j = 0; j != numSamples - 1; j++) {
-                if (haveStop[j] == 1)
-                    continue; // only consider this individual if it did not have a premature stop codon
-                for (int k = j+1; k != numSamples; k++) {
-                    if (haveStop[k] == 1)
-                        continue;
-                    int d = getCodonDistance(altCodons[j],altCodons[k]);
-                    /*if (i == 80) {
-                        std::cerr << "numSamples: " << numSamples << std::endl;
-                        std::cerr << "j = " << j << "k = " << k << std::endl;
-                        std::cerr << "Got codon distance: d = " << d << std::endl;
-                    }*/
-                    double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
-                    //if (i == 80) std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
-                    double s_d_ijk = d - n_d_ijk;
-                    //if (i == 80) std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
-                    //if (i == 80) std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
-                    //print_matrix(N_d_jk, std::cout);
-                    N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
-                    S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
-                  //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
-                    double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-                    //if (i == 80) std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
-                    double S_ijk = (3 - N_ijk);
-                    N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
-                    //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
-                }
-            }
-            //if (i == 80) std::cerr << "Finished loop" <<  std::endl;
+            
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
+            
             for (int j = 0; j != numSamples; j++) {
                 altCodons[j] = "";
             }
-           // if (i == 80) std::cerr << "Reset codons" <<  std::endl;
         }
     }
     

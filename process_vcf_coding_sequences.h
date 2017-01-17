@@ -544,7 +544,7 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
             //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
             double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
             //std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
-            double S_ijk = (3 - calculateN(altCodons[j],altCodons[k], d, false));
+            double S_ijk = (3 - N_ijk);
             N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
             //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
             //std::cerr << "j = " << j << "; k = " << k << std::endl;
@@ -570,7 +570,7 @@ inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<strin
                 N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                 S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
                 double N_ijk = calculateN(altCodons[j],altCodonsH2[k], d, false);
-                double S_ijk = (3 - calculateN(altCodons[j],altCodonsH2[k], d, false));
+                double S_ijk = (3 - N_ijk);
                 N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
             }
         }
