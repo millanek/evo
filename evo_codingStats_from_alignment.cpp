@@ -75,8 +75,10 @@ int getCodingStats(int argc, char** argv) {
         std::vector<string> allSeqs; std::vector<string> allSeqsH2;
         std::string line; int lineNum = 1;
         while (getline(*alignment, line)) {
+            if (lineNum % 2 == 1) assert(line[0] == '>');
+            lineNum++;
             if (line[0] == '>') continue;
-            if (opt::ploidy == 'd' && lineNum % 2 == 2)
+            if (opt::ploidy == 'd' && allSeqsH2.size() == (allSeqs.size() + 1))
                 allSeqsH2.push_back(line);
             else
                 allSeqs.push_back(line);
