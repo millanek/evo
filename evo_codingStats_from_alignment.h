@@ -12,6 +12,6 @@
 #include <stdio.h>
 
 void parseCodingStatsOptions(int argc, char** argv);
-int getCodingSeqMain(int argc, char** argv);
+int getCodingStats(int argc, char** argv);
 
 #endif /* evo_codingStats_from_alignment_hpp */

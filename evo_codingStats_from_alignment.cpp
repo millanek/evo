@@ -46,7 +46,7 @@ namespace opt
 }
 
 
-int getCodingSeqMain(int argc, char** argv) {
+int getCodingStats(int argc, char** argv) {
     parseCodingStatsOptions(argc, argv);
     std::vector<string> allAligmentFiles; string statsFileName;
     

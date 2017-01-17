@@ -33,6 +33,7 @@
 #include "process_vcf_join_multiFasta.h"
 #include "process_vcf_shortRNA.h"
 #include "process_vcf_linkGeneNames.h"
+#include "evo_codingStats_from_alignment.h"
 #include "remove_lowercase.h"
 
 
@@ -154,7 +155,7 @@ int main(int argc, char **argv) {
         else if (command == "VCFfromSequenom")
             VCFfromSequenomMain(argc - 1, argv + 1);
         else if (command == "codingStats")
-            getCodingSeqMain(argc - 1, argv + 1);
+            getCodingStats(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
