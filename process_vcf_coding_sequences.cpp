@@ -574,13 +574,13 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
         }
         // Find the types of mutation we are dealing with
         if ((i+1)%3 == 0) {
-            if (i == 83) std::cerr << "Here again; i = " << i <<  std::endl;
+            //if (i == 83) std::cerr << "Here again; i = " << i <<  std::endl;
             for (int j = 0; j != numSamples; j++) {
-                assert(allSeqs[i].length() == geneLengthNt);
+                assert(allSeqs[j].length() == geneLengthNt);
                 if (getAminoAcid(altCodons[j]) == "Stop")
                     haveStop[j] = 1;
             }
-            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+           // std::cerr << "Now going to loop through codons: i = " << i << std::endl;
          //     int n_di = 0; int s_di = 0;
          //     double N_i = 0; double S_i = 0;
             for (int j = 0; j != numSamples - 1; j++) {
@@ -611,11 +611,11 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
                     //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
                 }
             }
-            if (i == 80) std::cerr << "Finished loop" <<  std::endl;
+            //if (i == 80) std::cerr << "Finished loop" <<  std::endl;
             for (int j = 0; j != numSamples; j++) {
                 altCodons[j] = "";
             }
-            if (i == 80) std::cerr << "Reset codons" <<  std::endl;
+           // if (i == 80) std::cerr << "Reset codons" <<  std::endl;
         }
     }
     
