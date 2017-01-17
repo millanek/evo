@@ -75,6 +75,7 @@ int getCodingStats(int argc, char** argv) {
         std::vector<string> allSeqs; std::vector<string> allSeqsH2;
         std::string line; int lineNum = 1;
         while (getline(*alignment, line)) {
+            if (line[0] == '>') continue;
             if (opt::ploidy == 'd' && lineNum % 2 == 2)
                 allSeqsH2.push_back(line);
             else
@@ -90,7 +91,7 @@ int getCodingStats(int argc, char** argv) {
             print_vector_stream(statsThisGene, std::cout);
             print_vector(statsThisGene, *statsFile);
         } else {
-            std::vector<double> pNpS; pNpS = getPhasedPnPs(allSeqs);
+            std::vector<double> pNpS = getPhasedPnPs(allSeqs);
             assert(pNpS.size() == 2);
             statsThisGene.push_back(numToString(allSeqs[0].length()));
             statsThisGene.push_back(numToString(pNpS[0]));
