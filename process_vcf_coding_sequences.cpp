@@ -574,11 +574,11 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
         }
         // Find the types of mutation we are dealing with
         if ((i+1)%3 == 0) {
+            if (i == 83) std::cerr << "Here again; i = " << i <<  std::endl;
             for (int j = 0; j != numSamples; j++) {
                 assert(allSeqs[i].length() == geneLengthNt);
-                if (getAminoAcid(altCodons[j]) == "Stop") {
+                if (getAminoAcid(altCodons[j]) == "Stop")
                     haveStop[j] = 1;
-                }
             }
             std::cerr << "Now going to loop through codons: i = " << i << std::endl;
          //     int n_di = 0; int s_di = 0;
@@ -590,22 +590,22 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
                     if (haveStop[k] == 1)
                         continue;
                     int d = getCodonDistance(altCodons[j],altCodons[k]);
-                    if (i == 80) {
+                    /*if (i == 80) {
                         std::cerr << "numSamples: " << numSamples << std::endl;
                         std::cerr << "j = " << j << "k = " << k << std::endl;
                         std::cerr << "Got codon distance: d = " << d << std::endl;
-                    }
+                    }*/
                     double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
-                    if (i == 80) std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
+                    //if (i == 80) std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
                     double s_d_ijk = d - n_d_ijk;
-                    if (i == 80) std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
-                    if (i == 80) std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
+                    //if (i == 80) std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
+                    //if (i == 80) std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
                     //print_matrix(N_d_jk, std::cout);
                     N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
                     S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
                   //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
                     double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-                    if (i == 80) std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
+                    //if (i == 80) std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
                     double S_ijk = (3 - N_ijk);
                     N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
                     //N_i = N_i + N_ijk; S_i = S_i + S_ijk;
@@ -615,6 +615,7 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
             for (int j = 0; j != numSamples; j++) {
                 altCodons[j] = "";
             }
+            if (i == 80) std::cerr << "Reset codons" <<  std::endl;
         }
     }
     
