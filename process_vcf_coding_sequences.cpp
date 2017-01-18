@@ -156,17 +156,6 @@ int getCodingSeqMain(int argc, char** argv) {
             numSamples = fields.size()-NUM_NON_GENOTYPE_COLUMNS;
             // Initialize vectors
             scaffoldStrings.resize(numSamples);
-            for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
-                scaffoldStrings[i].reserve(100000000);
-                scaffoldStrings[i] = "";
-            }
-            if (opt::hetTreatment == 'b') {
-                scaffoldStringsH2.resize(numSamples);
-                for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
-                    scaffoldStringsH2[i].reserve(100000000);
-                    scaffoldStringsH2[i] = "";
-                }
-            }
             
             for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
                 if (opt::sampleNameFile.empty())
@@ -206,8 +195,7 @@ int getCodingSeqMain(int argc, char** argv) {
                         // std::cerr << "Gene:" << annotLineVec[4] << std::endl;
                         std::ofstream* geneOutFiles;
                         bool geneLengthDivisibleByThree = true;
-                        std::vector<string> allSeqs;
-                        std::vector<string> allSeqsH2;
+                        std::vector<string> allSeqs; std::vector<string> allSeqsH2;
                         std::vector<string> statsThisGene; statsThisGene.push_back(annotLineVec[4]);
                         string refSeq = getReferenceForThisRegion(annotation[k], annotLineVec[3], currentScaffoldReference);
                         if (opt::bIsCoding)
@@ -250,10 +238,10 @@ int getCodingSeqMain(int argc, char** argv) {
                         }
                         if (!opt::bOnlyStats) geneOutFiles->close();
                     }
-                    for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                        scaffoldStrings[i] = "";
-                        if (opt::hetTreatment == 'b') scaffoldStringsH2[i] = "";
-                    }
+                  //  for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                  //      scaffoldStrings[i] = "";
+                  //      if (opt::hetTreatment == 'b') scaffoldStringsH2[i] = "";
+                  //  }
                     processedVariantCounter = 1;
                     currentScaffoldNum = fields[0];
                     forwardGenomeToScaffold(currentScaffoldNum, genomeFile, thisScaffoldName);
@@ -275,6 +263,18 @@ int getCodingSeqMain(int argc, char** argv) {
                 thisScaffoldName.erase(0,1);
                 std::cerr << "Finished reading" << std::endl;
                 std::cerr << "Generating sequences with variants from the VCF file..." << std::endl;
+                
+                for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
+                    scaffoldStrings[i] = "";
+                    scaffoldStrings[i].reserve(currentScaffoldReference.length());
+                }
+                if (opt::hetTreatment == 'b') {
+                    scaffoldStringsH2.resize(numSamples);
+                    for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
+                        scaffoldStringsH2[i] = "";
+                        scaffoldStringsH2[i].reserve(currentScaffoldReference.length());
+                    }
+                }
                 
             }
             if (info[0] != "INDEL") {
