@@ -23,8 +23,8 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 "                                               i.e. the precise start and or end of coding sequence is unknown\n"
 "                                               ('5_prime_partial=true' or '3_prime_partial=true' in gff3 CDS line)\n"
 "                                               (NOT COMPATIBLE WITH THE -n OPTION)\n"
-"       --only-stats                            only calculate statistics for coding sequences\n"
-"                                               do not output the sequences themselves\n"
+"       --no-stats                              do not calculate statistics for coding sequences\n"
+"                                               only output the sequences themselves\n"
 "       -H,   --het-treatment <r|p|b|i>         r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
@@ -42,7 +42,7 @@ static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
     { "partial",   no_argument, NULL, 'p' },
     { "het-treatment",   required_argument, NULL, 'H' },
-    { "only-stats",   no_argument, NULL, OPT_ONLY_STATS },
+    { "no-stats",   no_argument, NULL, OPT_ONLY_STATS },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -54,7 +54,7 @@ namespace opt
     static string geneFile;
     static bool bIsCoding = true;
     static bool bUsePartial = false;
-    static bool bOnlyStats = false;
+    static bool bNoStats = false;
     static char hetTreatment = 'r';
     static string sampleNameFile;
     
@@ -200,20 +200,20 @@ int getCodingSeqMain(int argc, char** argv) {
                         string refSeq = getReferenceForThisRegion(annotation[k], annotLineVec[3], currentScaffoldReference);
                         if (opt::bIsCoding)
                             geneLengthDivisibleByThree = codingSequenceErrorChecks(refSeq, annotLineVec[4], annotation, (int)k, badStartStopCodonFile);
-                        if (geneLengthDivisibleByThree && !opt::bOnlyStats)
+                        if (geneLengthDivisibleByThree)
                             geneOutFiles = new std::ofstream(annotLineVec[4].c_str());
                         for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                             string geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStrings[i]);
                             if (geneLengthDivisibleByThree) {
-                                if (!opt::bOnlyStats) *geneOutFiles << ">" << sampleNames[i] << std::endl;
-                                if (!opt::bOnlyStats) *geneOutFiles << geneSeq << std::endl;
+                                *geneOutFiles << ">" << sampleNames[i] << std::endl;
+                                *geneOutFiles << geneSeq << std::endl;
                                 allSeqs.push_back(geneSeq);
                             }
                             if (opt::hetTreatment == 'b') {
                                 geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStringsH2[i]);
                                 if (geneLengthDivisibleByThree) {
-                                    if (!opt::bOnlyStats) *geneOutFiles << ">" << sampleNames[i] << "_H2" << std::endl;
-                                    if (!opt::bOnlyStats) *geneOutFiles << geneSeq << std::endl;
+                                    *geneOutFiles << ">" << sampleNames[i] << "_H2" << std::endl;
+                                    *geneOutFiles << geneSeq << std::endl;
                                     allSeqsH2.push_back(geneSeq);
                                 }
                             }
@@ -221,22 +221,24 @@ int getCodingSeqMain(int argc, char** argv) {
                         std::cerr << "Got all sequences for: " << annotLineVec[4] << std::endl;
                         
                         // Get statistics for the sequences
-                        if (opt::bIsCoding && geneLengthDivisibleByThree) {
-                            assert(allSeqs[0].length() == refSeq.length());
-                            assert(allSeqsH2[0].length() == refSeq.length());
-                            if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
-                                getStatsPhasedSeq(allSeqs, refSeq, statsThisGene,stopsFile);
-                                print_vector_stream(statsThisGene, std::cout);
-                            } else if (opt::hetTreatment == 'b') {
-                                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene);
-                                print_vector_stream(statsThisGene, std::cout);
-                            } else {
-                                getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
+                        if (!opt::bNoStats) {
+                            if (opt::bIsCoding && geneLengthDivisibleByThree) {
+                                assert(allSeqs[0].length() == refSeq.length());
+                                assert(allSeqsH2[0].length() == refSeq.length());
+                                if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
+                                    getStatsPhasedSeq(allSeqs, refSeq, statsThisGene,stopsFile);
+                                    print_vector_stream(statsThisGene, std::cout);
+                                } else if (opt::hetTreatment == 'b') {
+                                    getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene);
+                                    print_vector_stream(statsThisGene, std::cout);
+                                } else {
+                                    getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
+                                }
+                                statsAllGenes.push_back(statsThisGene);
+                                std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
                             }
-                            statsAllGenes.push_back(statsThisGene);
-                            std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
                         }
-                        if (!opt::bOnlyStats) geneOutFiles->close();
+                        geneOutFiles->close();
                     }
                   //  for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                   //      scaffoldStrings[i] = "";
@@ -787,7 +789,7 @@ void parseGetCodingSeqOptions(int argc, char** argv) {
             case 'p': opt::bUsePartial = true; break;
             case 'H': arg >> opt::hetTreatment; break;
             case 's': arg >> opt::sampleNameFile; break;
-            case OPT_ONLY_STATS: opt::bOnlyStats = true; break;
+            case OPT_ONLY_STATS: opt::bNoStats = true; break;
             case 'h':
                 std::cout << CODINGSEQ_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
