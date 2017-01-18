@@ -76,8 +76,13 @@ int getCodingStats(int argc, char** argv) {
     }
     
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
-    std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
-    *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
+    if (opt::ploidy == 'd') {
+        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << std::endl;
+        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << std::endl;
+    } else {
+        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
+        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
+    }
     // Loop over the mutiple alignment files:
     for (std::vector<std::string>::size_type i = 0; i != allAligmentFiles.size(); i++) {
         std::ifstream* alignment = new std::ifstream(allAligmentFiles[i].c_str());

@@ -12,6 +12,36 @@
 #include "process_vcf_seq_utils.h"
 #include "process_vcf_annotation_tools.h"
 
+
+class CDSComparisonMatrices {
+public:
+    CDSComparisonMatrices(int numSamples) {
+        initialize_matrix_double(N_d_jk, numSamples); initialize_matrix_double(N_jk, numSamples);
+        initialize_matrix_double(S_d_jk, numSamples); initialize_matrix_double(S_jk, numSamples);
+    }
+    std::vector<std::vector<double> > N_d_jk; std::vector<std::vector<double> > N_jk;
+    std::vector<std::vector<double> > S_d_jk; std::vector<std::vector<double> > S_jk;
+    
+};
+
+
+class CDSH1H2ComparisonMatrices {
+public:
+    CDSH1H2ComparisonMatrices(int numSamples) {
+        H1p = new CDSComparisonMatrices(numSamples);
+        H2p = new CDSComparisonMatrices(numSamples);
+        H1H2p = new CDSComparisonMatrices(numSamples);
+    }
+    
+    CDSComparisonMatrices* H1p;
+    CDSComparisonMatrices* H2p;
+    CDSComparisonMatrices* H1H2p;
+};
+
+
+
+
+
 // Process the fifth column from the annatation file to get this gene name
 // and information about whether this gene is 'partial' (passed on through the bool parameter)
 std::string getGeneName(const std::string& geneColumn, bool& bPartial);
@@ -524,7 +554,7 @@ inline double calculateNd(const std::string& refCdn, const std::string& altCdn, 
     return Nd;
 }
 
-inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
+inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, CDSComparisonMatrices& p) {
 
     for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
         if (haveStop[j] == 1)
@@ -537,25 +567,25 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
             double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
             //std::cerr << "Calculated Nd; n_d_ijk = " << n_d_ijk << std::endl;
             double s_d_ijk = d - n_d_ijk;
-            //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << std::endl;
+            //std::cerr << "N_d_jk[j][k] = " << p.N_d_jk[j][k] << std::endl;
             //print_matrix(N_d_jk, std::cout);
-            N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
-            S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
+            p.N_d_jk[j][k] = p.N_d_jk[j][k] + n_d_ijk;
+            p.S_d_jk[j][k] = p.S_d_jk[j][k] + s_d_ijk;
             //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
             double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-            //std::cerr << "Calculated N; N_ijk = " << N_ijk << std::endl;
+            //std::cerr << "Calculated N; N_ijk = " <<N_ijk << std::endl;
             double S_ijk = (3 - N_ijk);
-            N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
+            p.N_jk[j][k] = p.N_jk[j][k] + N_ijk; p.S_jk[j][k] = p.S_jk[j][k] + S_ijk;
             //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
             //std::cerr << "j = " << j << "; k = " << k << std::endl;
             //std::cerr << "d = " << d << "; n_d_ijk = " << n_d_ijk << "; N_ijk = " << N_ijk << std::endl;
-            //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
+            //std::cerr << "N_d_jk[j][k] = " << p.N_d_jk[j][k] << "; N_jk[j][k] = " << p.N_jk[j][k] << std::endl;
 
         }
     }
 }
 
-inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, std::vector<std::vector<double> >& N_d_jk, std::vector<std::vector<double> >& N_jk, std::vector<std::vector<double> >& S_d_jk, std::vector<std::vector<double> >& S_jk) {
+inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, CDSComparisonMatrices& p) {
     int numSamples = (int)altCodons.size();
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
         if (haveStop[j] == 1)
@@ -567,15 +597,39 @@ inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<strin
                 int d = getCodonDistance(altCodons[j],altCodonsH2[k]);
                 double n_d_ijk = calculateNd(altCodons[j],altCodonsH2[k], d);
                 double s_d_ijk = d - n_d_ijk;
-                N_d_jk[j][k] = N_d_jk[j][k] + n_d_ijk;
-                S_d_jk[j][k] = S_d_jk[j][k] + s_d_ijk;
+                p.N_d_jk[j][k] = p.N_d_jk[j][k] + n_d_ijk;
+                p.S_d_jk[j][k] = p.S_d_jk[j][k] + s_d_ijk;
                 double N_ijk = calculateN(altCodons[j],altCodonsH2[k], d, false);
                 double S_ijk = (3 - N_ijk);
-                N_jk[j][k] = N_jk[j][k] + N_ijk; S_jk[j][k] = S_jk[j][k] + S_ijk;
+                p.N_jk[j][k] = p.N_jk[j][k] + N_ijk; p.S_jk[j][k] = p.S_jk[j][k] + S_ijk;
             }
         }
     }
 }
+
+inline void addN_S_Nd_Sd_SameIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, CDSComparisonMatrices& p) {
+    int numSamples = (int)altCodons.size();
+    for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+        if (haveStop[j] == 1)
+            continue; // only consider this individual if it did not have a premature stop codon
+        for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
+            if (haveStopH2[k] == 1)
+                continue;
+            if (j == k) {
+                int d = getCodonDistance(altCodons[j],altCodonsH2[k]);
+                double n_d_ijk = calculateNd(altCodons[j],altCodonsH2[k], d);
+                double s_d_ijk = d - n_d_ijk;
+                p.N_d_jk[j][k] = p.N_d_jk[j][k] + n_d_ijk;
+                p.S_d_jk[j][k] = p.S_d_jk[j][k] + s_d_ijk;
+                double N_ijk = calculateN(altCodons[j],altCodonsH2[k], d, false);
+                double S_ijk = (3 - N_ijk);
+                p.N_jk[j][k] = p.N_jk[j][k] + N_ijk; p.S_jk[j][k] = p.S_jk[j][k] + S_ijk;
+            }
+        }
+    }
+}
+
+
 
 
 #endif /* defined(__vcf_process__process_vcf_coding_sequences__) */

@@ -455,6 +455,7 @@ void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::strin
 void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene) {
     //std::cerr << "Collecting gene sequence statistics...." << std::endl;
     double pN = 0; double pS = 0;
+    double hetN = 0; double hetS = 0;
     assert(allSeqs.size() == allSeqsH2.size());
     std::string::size_type geneLengthNt = allSeqs[0].length();
     int numSamples = (int)allSeqs.size();
@@ -470,18 +471,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         haveStop[i] = 0; haveStopH2[i] = 0;
     }
     
-    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, numSamples);
-    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, numSamples);
-    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
-    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, numSamples);
-    std::vector<std::vector<double> > H2N_d_jk; initialize_matrix_double(H2N_d_jk, numSamples);
-    std::vector<std::vector<double> > H2N_jk; initialize_matrix_double(H2N_jk, numSamples);
-    std::vector<std::vector<double> > H2S_d_jk; initialize_matrix_double(H2S_d_jk, numSamples);
-    std::vector<std::vector<double> > H2S_jk; initialize_matrix_double(H2S_jk, numSamples);
-    std::vector<std::vector<double> > H1H2N_d_jk; initialize_matrix_double(H1H2N_d_jk, numSamples);
-    std::vector<std::vector<double> > H1H2N_jk; initialize_matrix_double(H1H2N_jk, numSamples);
-    std::vector<std::vector<double> > H1H2S_d_jk; initialize_matrix_double(H1H2S_d_jk, numSamples);
-    std::vector<std::vector<double> > H1H2S_jk; initialize_matrix_double(H1H2S_jk, numSamples);
+    CDSH1H2ComparisonMatrices pairwiseMatrices(numSamples);
     for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             altCodons[j] += allSeqs[j][i];
@@ -494,59 +484,70 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
             //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
-            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, *pairwiseMatrices.H1p);
             //std::cerr << "Added pairwise among H1:" << std::endl;
-            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, H2N_d_jk, H2N_jk, H2S_d_jk, H2S_jk);
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, *pairwiseMatrices.H2p);
             //std::cerr << "Added pairwise among H2: " << std::endl;
-            addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, H1H2N_d_jk, H1H2N_jk, H1H2S_d_jk, H1H2S_jk);
+            addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, *pairwiseMatrices.H1H2p);
             //std::cerr << "Added pairwise beween H1 and H2:" << std::endl;
-
+            addN_S_Nd_Sd_SameIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, *pairwiseMatrices.H1H2p);
+            //std::cerr << "Added heterozygosity beween H1 and H2:" << std::endl;
+            
             for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
                 altCodons[j] = ""; altCodonsH2[j] = "";
             }
         }
     }
      
-    double sumPn = 0; 
-    double sumPs = 0;
+    double sumPn = 0; double sumPs = 0;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
         //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
-            double pN_jk = N_d_jk[j][k]/N_jk[j][k];
+            double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
             //if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 //std::cerr << "j = " << j << "; k = " << k << std::endl;
                 //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
                 //std::cerr << "pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             //}
             sumPn = sumPn + pN_jk;
-            double pS_jk = S_d_jk[j][k]/S_jk[j][k]; sumPs = sumPs + pS_jk;
-            double H2pN_jk = H2N_d_jk[j][k]/H2N_jk[j][k]; sumPn = sumPn + H2pN_jk;
+            double pS_jk = pairwiseMatrices.H1p->S_d_jk[j][k]/pairwiseMatrices.H1p->S_jk[j][k]; sumPs = sumPs + pS_jk;
+            double H2pN_jk = pairwiseMatrices.H2p->N_d_jk[j][k]/pairwiseMatrices.H2p->N_jk[j][k]; sumPn = sumPn + H2pN_jk;
             //std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
             //std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
-            double H2pS_jk = H2S_d_jk[j][k]/H2S_jk[j][k]; sumPs = sumPs + H2pS_jk;
+            double H2pS_jk = pairwiseMatrices.H2p->S_d_jk[j][k]/pairwiseMatrices.H2p->S_jk[j][k]; sumPs = sumPs + H2pS_jk;
         }
     }
     
+    double sumHetPn = 0; double sumHetPs = 0;
     // Add the between H1 and H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
         //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
-                double H1H2pN_jk = H1H2N_d_jk[j][k]/H1H2N_jk[j][k];
-                double H1H2pS_jk = H1H2S_d_jk[j][k]/H1H2S_jk[j][k];
+                double H1H2pN_jk = pairwiseMatrices.H1H2p->N_d_jk[j][k]/pairwiseMatrices.H1H2p->N_jk[j][k];
+                double H1H2pS_jk = pairwiseMatrices.H1H2p->S_d_jk[j][k]/pairwiseMatrices.H1H2p->S_jk[j][k];
                 sumPn = sumPn + H1H2pN_jk;
                 sumPs = sumPs + H1H2pS_jk;
+            } else {
+                double H1H2pN_jj = pairwiseMatrices.H1H2p->N_d_jk[j][j]/pairwiseMatrices.H1H2p->N_jk[j][j];
+                double H1H2pS_jj = pairwiseMatrices.H1H2p->S_d_jk[j][j]/pairwiseMatrices.H1H2p->S_jk[j][j];
+                sumHetPn = sumHetPn + H1H2pN_jj;
+                sumHetPs = sumHetPs + H1H2pS_jj;
             }
         }
     }
 
     pN = sumPn/(2*(numSamples*(numSamples-1)));
     pS = sumPs/(2*(numSamples*(numSamples-1)));
+    hetN = sumHetPn/numSamples;
+    hetS = sumHetPs/numSamples;
     
     statsThisGene.push_back(numToString(geneLengthNt));
     statsThisGene.push_back(numToString(pN));
     statsThisGene.push_back(numToString(pS));
+    statsThisGene.push_back(numToString(hetN));
+    statsThisGene.push_back(numToString(hetS));
 }
 
 
@@ -563,12 +564,8 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
         haveStop[i] = 0;
     }
     
-    std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, numSamples);
-    std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, numSamples);
-    std::vector<std::vector<double> > pN_jk; initialize_matrix_double(pN_jk, numSamples);
-    std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
-    std::vector<std::vector<double> > S_jk; initialize_matrix_double(S_jk, numSamples);
-    std::vector<std::vector<double> > pS_jk; initialize_matrix_double(pS_jk, numSamples);
+    
+    CDSComparisonMatrices pairwiseMatrices(numSamples);
     //std::cerr << "Collecting gene sequence statistics.... geneLengthNt = " << geneLengthNt << std::endl;
     for (string::size_type i = 0; i != geneLengthNt; i++) {
         for (int j = 0; j != numSamples; j++) {
@@ -583,7 +580,7 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
                     haveStop[j] = 1;
             }
             
-            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, pairwiseMatrices);
             
             for (int j = 0; j != numSamples; j++) {
                 altCodons[j] = "";
@@ -595,10 +592,10 @@ std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
     double sumPs = 0;
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
-            pN_jk[j][k] = N_d_jk[j][k]/N_jk[j][k];
-            pS_jk[j][k] = S_d_jk[j][k]/S_jk[j][k];
-            sumPn = sumPn + pN_jk[j][k];
-            sumPs = sumPs + pS_jk[j][k];
+            double pN_jk = pairwiseMatrices.N_d_jk[j][k]/pairwiseMatrices.N_jk[j][k];
+            double pS_jk = pairwiseMatrices.S_d_jk[j][k]/pairwiseMatrices.S_jk[j][k];
+            sumPn = sumPn + pN_jk;
+            sumPs = sumPs + pS_jk;
         }
     }
     pN = (2.0/(numSamples*(numSamples-1)))*sumPn;
