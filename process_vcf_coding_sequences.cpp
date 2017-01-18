@@ -451,7 +451,7 @@ void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::strin
 // 2) Incorporate unequal tS/tV mutation probabilities
 // 3) Would also be good to distinguish derived vs. ancestral alleles?
 void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene) {
-    std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    //std::cerr << "Collecting gene sequence statistics...." << std::endl;
     double pN = 0; double pS = 0;
     assert(allSeqs.size() == allSeqsH2.size());
     std::string::size_type geneLengthNt = allSeqs[0].length();
@@ -491,7 +491,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
-            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
             //std::cerr << "Added pairwise among H1:" << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, H2N_d_jk, H2N_jk, H2S_d_jk, H2S_jk);
