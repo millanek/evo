@@ -465,7 +465,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         haveStop[i] = 0; haveStopH2[i] = 0;
     }
     
-    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
+    std::cerr << "Collecting gene sequence statistics...." << std::endl;
     std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, numSamples);
     std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, numSamples);
     std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
@@ -491,7 +491,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
                 if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
             }
-            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, N_d_jk, N_jk, S_d_jk, S_jk);
             //std::cerr << "Added pairwise among H1:" << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, H2N_d_jk, H2N_jk, H2S_d_jk, H2S_jk);
