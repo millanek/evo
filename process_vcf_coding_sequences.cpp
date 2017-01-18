@@ -218,7 +218,7 @@ int getCodingSeqMain(int argc, char** argv) {
                                 }
                             }
                         }
-                       // std::cerr << "Got all sequences for: " << annotLineVec[4] << std::endl;
+                        std::cerr << "Got all sequences for: " << annotLineVec[4] << std::endl;
                         
                         // Get statistics for the sequences
                         if (opt::bIsCoding && geneLengthDivisibleByThree) {
@@ -234,7 +234,7 @@ int getCodingSeqMain(int argc, char** argv) {
                                 getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                             }
                             statsAllGenes.push_back(statsThisGene);
-                            // std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
+                            std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
                         }
                         if (!opt::bOnlyStats) geneOutFiles->close();
                     }
