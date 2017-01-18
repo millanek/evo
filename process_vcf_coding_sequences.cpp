@@ -451,6 +451,7 @@ void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::strin
 // 2) Incorporate unequal tS/tV mutation probabilities
 // 3) Would also be good to distinguish derived vs. ancestral alleles?
 void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene) {
+    std::cerr << "Collecting gene sequence statistics...." << std::endl;
     double pN = 0; double pS = 0;
     assert(allSeqs.size() == allSeqsH2.size());
     std::string::size_type geneLengthNt = allSeqs[0].length();
@@ -465,7 +466,6 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         haveStop[i] = 0; haveStopH2[i] = 0;
     }
     
-    std::cerr << "Collecting gene sequence statistics...." << std::endl;
     std::vector<std::vector<double> > N_d_jk; initialize_matrix_double(N_d_jk, numSamples);
     std::vector<std::vector<double> > N_jk; initialize_matrix_double(N_jk, numSamples);
     std::vector<std::vector<double> > S_d_jk; initialize_matrix_double(S_d_jk, numSamples);
