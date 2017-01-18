@@ -54,8 +54,17 @@ int getCodingStats(int argc, char** argv) {
     
     if (opt::alignmentFile != "") {
         allAligmentFiles.push_back(opt::alignmentFile);
-        statsFileName = stripExtension(opt::alignmentFile) + "_stats.txt";
-        std::cerr << "for the gene: " << stripExtension(opt::alignmentFile) << std::endl;
+        // look at suffix
+        size_t suffixPos = opt::alignmentFile.find_last_of('.');
+        if (suffixPos !=  std::string::npos) {
+            if (opt::alignmentFile.substr(suffixPos) == ".fa" || opt::alignmentFile.substr(suffixPos) == ".fasta") {
+                statsFileName = stripExtension(opt::alignmentFile) + "_stats.txt";
+                std::cerr << "for the gene: " << stripExtension(opt::alignmentFile) << std::endl;
+            } else {
+                statsFileName = opt::alignmentFile + "_stats.txt";
+                std::cerr << "for the gene: " << opt::alignmentFile << std::endl;
+            }
+        }
     } else {
         std::ifstream* alignmentList = new std::ifstream(opt::alignmentListFile.c_str());
         statsFileName = stripExtension(opt::alignmentListFile) + "_stats.txt";
@@ -78,17 +87,19 @@ int getCodingStats(int argc, char** argv) {
             if (lineNum % 2 == 1) assert(line[0] == '>');
             lineNum++;
             if (line[0] == '>') continue;
-            if (opt::ploidy == 'd' && allSeqsH2.size() == (allSeqs.size() + 1))
+            if (opt::ploidy == 'd' && allSeqsH2.size() == (allSeqs.size() - 1))
                 allSeqsH2.push_back(line);
             else
                 allSeqs.push_back(line);
         }
+        //std::cerr << "loaded seqs for: " << allAligmentFiles[i] << std::endl;
         assert(allSeqs[0].length() % 3 == 0); // The gene length must be divisible by three
         if (opt::ploidy == 'd')
             assert(allSeqs[0].length() == allSeqsH2[0].length());
         
-        std::vector<string> statsThisGene; statsThisGene.push_back(stripExtension(allAligmentFiles[i]));
+        std::vector<string> statsThisGene; statsThisGene.push_back(allAligmentFiles[i]);
         if (opt::ploidy == 'd') {
+            //std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
             getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene);
             print_vector_stream(statsThisGene, std::cout);
             print_vector(statsThisGene, *statsFile);
