@@ -462,6 +462,8 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     std::map<std::vector<string>::size_type, int> haveStop;
     std::map<std::vector<string>::size_type, int> haveStopH2;
     for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
+        assert(allSeqs[i].length() == geneLengthNt);
+        assert(allSeqsH2[i].length() == geneLengthNt);
         altCodons[i] = ""; altCodonsH2[i] = "";
         haveStop[i] = 0; haveStopH2[i] = 0;
     }
@@ -479,8 +481,6 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     std::vector<std::vector<double> > H1H2S_d_jk; initialize_matrix_double(H1H2S_d_jk, numSamples);
     std::vector<std::vector<double> > H1H2S_jk; initialize_matrix_double(H1H2S_jk, numSamples);
     for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
-        assert(allSeqs[i].length() == geneLengthNt);
-        assert(allSeqsH2[i].length() == geneLengthNt);
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             altCodons[j] += allSeqs[j][i];
             altCodonsH2[j] += allSeqsH2[j][i];
