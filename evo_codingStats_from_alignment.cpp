@@ -21,18 +21,20 @@ static const char *CODINGSTATS_USAGE_MESSAGE =
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -p,   --ploidy <d|h>                    d: diploid (default, sequences for haplotypes 1 and 2 are assumed to be interleaved in the alignment files); h: haploid\n"
+"       -t,   --tStV RATIO                      observed genome-wide tS/tV ratio in the dataset\n"
 "       -a,   --alignment FILE.fa               a multiple alignment file (either -a or -l required)\n"
 "       -l,   --listOfFiles LIST.txt            a list with multiple alignment filenames, one per line (either -a or -l required)\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hp:a:l:";
+static const char* shortopts = "hp:a:l:t:";
 
 
 
 static const struct option longopts[] = {
     { "ploidy",   required_argument, NULL, 'p' },
     { "alignment",   required_argument, NULL, 'a' },
+    { "tStV",   required_argument, NULL, 't' },
     { "listOfFiles",   required_argument, NULL, 'l' },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -43,6 +45,8 @@ namespace opt
     static string alignmentFile = "";
     static string alignmentListFile = "";
     static char ploidy = 'd';
+    static double tStVratio = 0.5;      // Under equal mutation probability,
+                                        //half transitions will be observed compared with transversions
 }
 
 
@@ -77,8 +81,8 @@ int getCodingStats(int argc, char** argv) {
     
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
     if (opt::ploidy == 'd') {
-        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << std::endl;
-        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << std::endl;
+        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
+        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << std::endl;
     } else {
         std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
         *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
@@ -96,29 +100,34 @@ int getCodingStats(int argc, char** argv) {
                 allSeqsH2.push_back(line);
             else
                 allSeqs.push_back(line);
-        }
+        } alignment->close();
+        
         //std::cerr << "loaded seqs for: " << allAligmentFiles[i] << std::endl;
-        assert(allSeqs[0].length() % 3 == 0); // The gene length must be divisible by three
-        if (opt::ploidy == 'd')
-            assert(allSeqs[0].length() == allSeqsH2[0].length());
-        
-        std::vector<string> statsThisGene; statsThisGene.push_back(allAligmentFiles[i]);
-        if (opt::ploidy == 'd') {
-            //std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
-            getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene);
-            print_vector_stream(statsThisGene, std::cout);
-            print_vector(statsThisGene, *statsFile);
-        } else {
-            std::vector<double> pNpS = getPhasedPnPs(allSeqs);
-            assert(pNpS.size() == 2);
-            statsThisGene.push_back(numToString(allSeqs[0].length()));
-            statsThisGene.push_back(numToString(pNpS[0]));
-            statsThisGene.push_back(numToString(pNpS[1]));
-            print_vector_stream(statsThisGene, std::cout);
-            print_vector(statsThisGene, *statsFile);
+        //std::cerr << "allSeqs.size(): " << allSeqs.size() << std::endl;
+        if (allSeqs.size() > 0) {
+            assert(allSeqs[0].length() % 3 == 0); // The gene length must be divisible by three
+            if (opt::ploidy == 'd')
+                assert(allSeqs[0].length() == allSeqsH2[0].length());
+            
+            std::vector<string> statsThisGene; statsThisGene.push_back(allAligmentFiles[i]);
+            if (opt::ploidy == 'd') {
+                // std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
+                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, opt::tStVratio);
+                print_vector_stream(statsThisGene, std::cout);
+                print_vector(statsThisGene, *statsFile);
+            } else {
+                std::vector<double> pNpS = getPhasedPnPs(allSeqs);
+                assert(pNpS.size() == 2);
+                statsThisGene.push_back(numToString(allSeqs[0].length()));
+                statsThisGene.push_back(numToString(pNpS[0]));
+                statsThisGene.push_back(numToString(pNpS[1]));
+                print_vector_stream(statsThisGene, std::cout);
+                print_vector(statsThisGene, *statsFile);
+            }
+        } else{
+            std::cout << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
+            *statsFile << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
         }
-        
-        
     }
     return 0;
 }
@@ -135,6 +144,7 @@ void parseCodingStatsOptions(int argc, char** argv) {
             case 'p': arg >> opt::ploidy; break;
             case 'a': arg >> opt::alignmentFile; break;
             case 'l': arg >> opt::alignmentListFile; break;
+            case 't': arg >> opt::tStVratio; break;
             case 'h':
                 std::cout << CODINGSTATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
@@ -156,6 +166,12 @@ void parseCodingStatsOptions(int argc, char** argv) {
         std::cerr << "At the moment I don't support other than haploid and diploid species\n";
         die = true;
     }
+    
+    if (opt::tStVratio <= 0) {
+        std::cerr << "The tS/tV ratio must be positive\n";
+        die = true;
+    }
+    
     
     if (argc - optind < 0) {
         std::cerr << "missing arguments\n";
