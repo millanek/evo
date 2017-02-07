@@ -34,6 +34,9 @@
 #include "process_vcf_shortRNA.h"
 #include "process_vcf_linkGeneNames.h"
 #include "evo_codingStats_from_alignment.h"
+#include "evo_DNA_to_Protein.h"
+#include "evo_protein_SegregatingSites.h"
+#include "evo_codingSeqs_fromGenomes.h"
 #include "remove_lowercase.h"
 
 
@@ -41,7 +44,7 @@
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r8"
+#define PACKAGE_VERSION "0.1 r9"
 
 
 static const char *VERSION_MESSAGE =
@@ -66,6 +69,7 @@ static const char *USAGE_MESSAGE =
 "           getWGSeq            obtain whole genome sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getMtSeq            obtain mitochondrial sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getCodingSeq        obtain coding sequences (e.g. for gene/variant classification - missense/nonsense/etc..)\n"
+"           SeqFromGenomes      Get subsequences (usually genes) from whole genome sequences\n"
 "           codingStats         claculate various interesting statistics about protein coding sequences given multiple alignment\n"
 "           sequenom            prepare a variant list for a sequenom assay in the format used at the Sanger Institute\n"
 "           VCFfromSequenom     Generate a VCF file from a sequenom output file\n"
@@ -78,6 +82,8 @@ static const char *USAGE_MESSAGE =
 "           reorder             Shuffle columns in a vcf file\n"
 "           fixed-search        Search for fixed (and nearly fixed) variants between two (arbitrary) sets of samples\n"
 "           fst                 Calculating Fst values from VCF, ms simulations, or summarising eigensoft output\n"
+"           DNAtoProtein        Translate multiple aligments of gene sequences from DNA into protein\n"
+"           ProteinSs           Output segregating sites from a (protein) multiple alignment\n"
 "           smallRNA            Generate a distribution showing read lengths and the starting nucleotide for a smallRNA library\n"
 "           multi-fasta         A utility tool for dealing with a multi-fasta file (e.g. join all sequences)\n"
 "           statsTest           Testing statistical routines in development\n"
@@ -156,6 +162,12 @@ int main(int argc, char **argv) {
             VCFfromSequenomMain(argc - 1, argv + 1);
         else if (command == "codingStats")
             getCodingStats(argc - 1, argv + 1);
+        else if (command == "SeqFromGenomes")
+            SeqFromGenomes(argc - 1, argv + 1);
+        else if (command == "DNAtoProtein")
+            DNAtoProtein(argc - 1, argv + 1);
+        else if (command == "ProteinSs")
+            ProteinSs(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

@@ -205,6 +205,63 @@ inline std::string getAminoAcid(const std::string& nuc)
 }
 
 
+// Stop codons are 'X'
+// And unrecodnised sequences are 'Z'
+inline char getAminoAcidOneLetterCode(const std::string& nuc)
+{
+    assert(nuc.length() == 3);
+    if (nuc == "TTT" || nuc == "TTC")
+        return 'F';
+    if (nuc == "TTA" || nuc == "TTG" || nuc == "CTA" || nuc == "CTC" || nuc == "CTG" || nuc == "CTT")
+        return 'L';
+    if (nuc == "ATA" || nuc == "ATC" || nuc == "ATT")
+        return 'I';
+    if (nuc == "ATG")
+        return 'M';
+    if (nuc == "GTA" || nuc == "GTC" || nuc == "GTG" || nuc == "GTT")
+        return 'V';
+    if (nuc == "TCA" || nuc == "TCC" || nuc == "TCG" || nuc == "TCT")
+        return 'S';
+    if (nuc == "CCA" || nuc == "CCC" || nuc == "CCG" || nuc == "CCT")
+        return 'P';
+    if (nuc == "ACA" || nuc == "ACC" || nuc == "ACG" || nuc == "ACT")
+        return 'T';
+    if (nuc == "GCA" || nuc == "GCC" || nuc == "GCG" || nuc == "GCT")
+        return 'A';
+    if (nuc == "TAC" || nuc == "TAT")
+        return 'Y';
+    if (nuc == "TAA" || nuc == "TAG" || nuc == "TGA")
+        return 'X';
+    if (nuc == "CAC" || nuc == "CAT")
+        return 'H';
+    if (nuc == "CAA" || nuc == "CAG")
+        return 'Q';
+    if (nuc == "AAC" || nuc == "AAT")
+        return 'N';
+    if (nuc == "AAA" || nuc == "AAG")
+        return 'K';
+    if (nuc == "GAC" || nuc == "GAT")
+        return 'D';
+    if (nuc == "GAA" || nuc == "GAG")
+        return 'E';
+    if (nuc == "TGC" || nuc == "TGT")
+        return 'C';
+    if (nuc == "TGG")
+        return 'W';
+    if (nuc == "CGA" || nuc == "CGC" || nuc == "CGG" || nuc == "CGT")
+        return 'R';
+    if (nuc == "AGC" || nuc == "AGT")
+        return 'S';
+    if (nuc == "AGA" || nuc == "AGG")
+        return 'R';
+    if (nuc == "GGA" || nuc == "GGC" || nuc == "GGG" || nuc == "GGT")
+        return 'G';
+    else
+        return 'Z';
+    
+}
+
+
 inline double getExpectedNumberOfNonsynonymousSites(const std::string& nuc)
 {
     switch (s_mapStringToTcodon[nuc])

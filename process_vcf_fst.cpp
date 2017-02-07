@@ -275,7 +275,7 @@ void getFstFromVCF() {
     fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
     string heterozygositySetsFileName = fileRoot + opt::runName + "_w_" + numToString(opt::windowSize) + "_heterozygosity.txt";
     if (opt::accesibleGenBedFile.empty()) {
-        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << std::endl;
+        *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << "\t" << "Set1_VariantDensity" << "\t" << "Set2_VariantDensity" << std::endl;
     } else {
         *fstDxyFixedWindowFile << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy" << "\t" << "Set1_pi" << "\t" << "Set2_pi" << "\t" << "Accessible_bp" << "\t" << "Set1_VariantDensity" << "\t" << "Set2_VariantDensity" << std::endl;
     }
@@ -351,11 +351,12 @@ void getFstFromVCF() {
             
             if (opt::windowSize > 0) {
                 if (opt::windowSize == opt::windowStep) {
-                    *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
-                    *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy_onlyVaiants" << "\t" << "Dxy_AllSites" << "\t" << "windowSize" << std::endl;
+                    *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
+                    *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy_onlyVariants" << "\t" << "Dxy_AllSites" << "\t" << "windowSize" << std::endl;
                     if (opt::regAbove > 0) *regionsAboveFstFile << "scaffold" << "\t" << "Start" << "\t" << "End" << std::endl;
                 } else {
                     *pHetSets << "Middle_SNP_position" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
+                    *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy_onlyVariants" << "\t" << "Dxy_AllSites" << "\t" << "windowSize" << std::endl;
                 }
             }
         } else {
@@ -594,8 +595,8 @@ void getFstFromMs() {
         std::cerr << "Warning: the Fst column is going to contain '-1' values where the site is not a segregating site in the sampled individuals for Fst calcultation" << std::endl;
     }
     
-    std::vector<double> fstNumerators; fstNumerators.reserve(500000000);
-    std::vector<double> fstDenominators; fstDenominators.reserve(500000000);
+    std::vector<double> fstNumerators; fstNumerators.reserve(50000000);
+    std::vector<double> fstDenominators; fstDenominators.reserve(50000000);
     
     
     string line;

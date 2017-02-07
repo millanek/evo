@@ -476,7 +476,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     }
     
     CDSH1H2ComparisonMatrices pairwiseMatrices(numSamples);
-    for (string::size_type i = 0; i != allSeqs[0].length(); i++) {
+    for (string::size_type i = 0; i != geneLengthNt; i++) {
         for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
             altCodons[j] += allSeqs[j][i];
             altCodonsH2[j] += allSeqsH2[j][i];

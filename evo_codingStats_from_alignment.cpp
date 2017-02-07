@@ -126,7 +126,7 @@ int getCodingStats(int argc, char** argv) {
             }
         } else{
             std::cout << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
-            *statsFile << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
+            *statsFile << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
         }
     }
     return 0;
