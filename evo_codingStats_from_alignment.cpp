@@ -77,15 +77,15 @@ int getCodingStats(int argc, char** argv) {
         while (getline(*alignmentList, line)) {
             allAligmentFiles.push_back(line);
         }
-    }
-    
+    } 
+      
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
     if (opt::ploidy == 'd') {
         std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
         *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << std::endl;
     } else {
-        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
-        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << std::endl;
+        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
+        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
     }
     // Loop over the mutiple alignment files:
     for (std::vector<std::string>::size_type i = 0; i != allAligmentFiles.size(); i++) {
@@ -116,11 +116,7 @@ int getCodingStats(int argc, char** argv) {
                 print_vector_stream(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
             } else {
-                std::vector<double> pNpS = getPhasedPnPs(allSeqs);
-                assert(pNpS.size() == 2);
-                statsThisGene.push_back(numToString(allSeqs[0].length()));
-                statsThisGene.push_back(numToString(pNpS[0]));
-                statsThisGene.push_back(numToString(pNpS[1]));
+                getStatsHaploidSeq(allSeqs,statsThisGene, opt::tStVratio);
                 print_vector_stream(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
             }

@@ -96,11 +96,12 @@ int SeqFromGenomes(int argc, char** argv) {
             scaffoldSeq.append(line);
         } genome->close();
         allSeqs[thisScaffold] = scaffoldSeq; // The final scaffold
+        std::cerr << "Loaded sequences from: " << allGenomeFiles[i] << std::endl;
         allGenomes.push_back(allSeqs);
     }
     
     for(std::map<std::string,string>::iterator itGenome = allGenomes[0].begin(); itGenome != allGenomes[0].end(); ++itGenome) {
-        std::cerr << itGenome->first << std::endl;
+        //std::cerr << itGenome->first << std::endl;
         
         annotation = wgAnnotation.annotationMap[itGenome->first]; // Get annotation for this scaffold
         if (annotation.size() == 0) continue; // if we don't have any, just move to the next scaffold
@@ -111,8 +112,9 @@ int SeqFromGenomes(int argc, char** argv) {
             if (allGenomes[i].count(itGenome->first) == 0)
                 scaffoldInAllGenomes = false;
         }
+        if (!scaffoldInAllGenomes) continue; // if not, just move on to the next scaffold
         
-        std::cerr << "Going through the annotation..." << std::endl;
+        //std::cerr << "Going through the annotation..." << std::endl;
         for (std::vector<std::vector<string> >::size_type k = 0; k != annotation.size(); k++) {
             std::vector<string> annotLineVec = split(annotation[k][0], '\t');
             string thisGeneName = annotLineVec[4];
@@ -125,8 +127,8 @@ int SeqFromGenomes(int argc, char** argv) {
                 *geneOutFiles << ">" << stripExtension(allGenomeFiles[i]) << std::endl;
                 string geneSequence = getReferenceForThisRegion(annotation[k], annotLineVec[3], allGenomes[i][itGenome->first]);
                 *geneOutFiles << geneSequence << std::endl;
-            }
-            std::cerr << "Got all sequences for: " << thisGeneName << std::endl;
+            } geneOutFiles->close();
+            //std::cerr << "Got all sequences for: " << thisGeneName << std::endl;
         }
     }
     return 0;

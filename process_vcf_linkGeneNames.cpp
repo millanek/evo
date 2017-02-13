@@ -13,23 +13,27 @@
 #define DEBUG 1
 
 static const char *LINKGN_USAGE_MESSAGE =
-"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] SINGLE_COVER_GENE_PRED_FILE.gp ci_orthologous_clusters.txt/full_orthologs ENSEMBL_Entrez_gene_link.txt\n"
+"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] SINGLE_COVER_GENE_PRED_FILE.gp ENSEMBL_Entrez_gene_link.txt\n"
 "Use homology information from David Brawand to link his gene names with known zebrafish gene names\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -o, --out=RUN_NAME                      RUN_NAME will be a part of the output files' names\n"
 "       -s, --species=SPECIES                   the cichlid species (mz,pn,ab,nb, or on)\n"
-"       --v2                                    using v2 annotation (e.g. BROADMZ2,full_orthologs)\n"
+"       --v1=ci_orthologous_clusters.txt        using ortholog assignment from v1 annotation\n"
+"       --v2=full_orthologs                     using v2 annotation (e.g. BROADMZ2,full_orthologs)\n"
+"                                               only --v1 can be used with BROADMZ1\n"
+"                                               either --v1 or --v2 or both can be used with BROADMZ2\n"
 "       --NtoN                                  include genes with 1-to-N and N-to-N relationships (for Gene Ontology analysis)\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 static const char* shortopts = "ho:s:";
-enum { OPT_V2, OPT_NtoN };
+enum { OPT_V1, OPT_V2, OPT_NtoN };
 
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
-    { "v2",   no_argument, NULL, OPT_V2 },
+    { "v1",   required_argument, NULL, OPT_V1 },
+    { "v2",   required_argument, NULL, OPT_V2 },
     { "NtoN",   no_argument, NULL, OPT_NtoN },
     { "out",   no_argument, NULL, 'o' },
     { "species",   no_argument, NULL, 's' },
@@ -40,11 +44,11 @@ namespace opt
 {
     
     static string gpFile;
-    static string orthologousClustersFile;
+    static string v1orthologousClustersFile = "";
     static string ensGeneFile;
     static string ensEntrezFile;
     static string out = "";
-    static bool v2 = false;
+    static string v2orthologsFile = "";
     static bool NtoN = false;
     static string species = "mz";
 }
@@ -58,6 +62,23 @@ inline int getSpeciesColumn(const string& species) {
     return -1;
 }
 
+
+inline void attemptMappingUpdate(std::map<string,string>& cichlidDanRerMap, const std::string& thisCichlid, const std::string& thisDanRer) {
+    if (cichlidDanRerMap.count(thisCichlid) == 0) {
+        cichlidDanRerMap[thisCichlid] = thisDanRer;
+    } else {
+        // Prefer zebrafish homologs as they have the best GO annotation
+        if (cichlidDanRerMap[thisCichlid].substr(0,6) == "ENSDAR") { return; }
+        if (thisDanRer.substr(0,6) == "ENSDAR") { cichlidDanRerMap[thisCichlid] = thisDanRer; }
+        // Next best option is Medaka
+        if (cichlidDanRerMap[thisCichlid].substr(0,6) == "ENSORL") { return; }
+        if (thisDanRer.substr(0,6) == "ENSORL") { cichlidDanRerMap[thisCichlid] = thisDanRer; }
+        // Next is stickleback:
+        if (cichlidDanRerMap[thisCichlid].substr(0,6) == "ENSGAC") { return; }
+        if (thisDanRer.substr(0,6) == "ENSGAC") { cichlidDanRerMap[thisCichlid] = thisDanRer; }
+        // Tetraodon would be added only if there wasn't any other homolo before
+    }
+}
 
 int linkGNMain(int argc, char** argv) {
     linkGNOptions(argc, argv);
@@ -81,13 +102,16 @@ int linkGNMain(int argc, char** argv) {
     
     string line;
     int geneNum = 1;
-    bool multi = false;
+    bool multi = false; // If we don't want NtoN relationships, indicate that this has multiple copies in zfish
     int copiesInCichlid = 1;
     string thisCichlid = ""; string thisDanRer = "";
-    std::map<string,string> cichlidDanRer;
-    std::ifstream* ocFile = new std::ifstream(opt::orthologousClustersFile);
     
-    if (opt::v2) {
+    // Load David Brawand's assignment of orthologs
+    // Mapping from cichlid IDs to a zebrafish ortholog (or medaka
+    // stickleback, tetraodon, if zebrafish not available)
+    std::map<string,string> cichlidDanRer;
+    if (opt::v2orthologsFile != "") {
+        std::ifstream* ocFile = new std::ifstream(opt::v2orthologsFile);
         while (getline(*ocFile, line)) {
             std::vector<string> orthVec = split(line, '\t');
             int c = getSpeciesColumn(opt::species);
@@ -98,29 +122,54 @@ int linkGNMain(int argc, char** argv) {
                 else if (orthVec[6] != "NA") { cichlidDanRer[orthVec[c]] = orthVec[6]; } // Tetraodon
                 else { cichlidDanRer[orthVec[c]] = "novelCichlidGene"; }
             } else { continue; }
-        }
-    } else {
+        } ocFile->close();
+    }
+    
+    if (opt::v1orthologousClustersFile != "") {
+        std::ifstream* ocFile = new std::ifstream(opt::v1orthologousClustersFile);
         while (getline(*ocFile, line)) {
             std::vector<string> idAndNum = split(line, '\t');
-            if (atoi(idAndNum[1].c_str()) == geneNum) {
-                if (idAndNum[0].substr(0,2) == opt::species) {
-                    if (thisCichlid == "") { thisCichlid = idAndNum[0]; }
-                    else { if (thisDanRer != "" && !multi) { cichlidDanRer[thisCichlid] = thisDanRer + "/" + numToString(copiesInCichlid); thisCichlid = idAndNum[0]; copiesInCichlid++;} }
+            string thisLineGeneID = idAndNum[0];  int thisLineGeneClusterNumber = atoi(idAndNum[1].c_str());
+            // Another line for the same cluster
+            if (thisLineGeneClusterNumber == geneNum) {
+                if (thisLineGeneID.substr(0,2) == opt::species) {
+                    // First copy in the cichlid species (e.g. mz)
+                    if (thisCichlid == "") { thisCichlid = thisLineGeneID; }
+                    else { // There is more than one copy in the cichlid
+                        if (thisDanRer != "" && !multi) {
+                            attemptMappingUpdate(cichlidDanRer, thisCichlid, thisDanRer + "/" + numToString(copiesInCichlid));
+                            thisCichlid = thisLineGeneID; copiesInCichlid++;
+                        }
+                    }
                 }
-                if (idAndNum[0].substr(0,6) == "ENSDAR") {
-                    if (thisDanRer == "") { thisDanRer = idAndNum[0]; }
-                    else { if (!opt::NtoN) multi = true; else if (rand() < 0.5) thisDanRer = idAndNum[0];}
+                if (thisLineGeneID.substr(0,6) == "ENSDAR") {
+                    if (thisDanRer == "") { thisDanRer = thisLineGeneID; }
+                    else {
+                        if (!opt::NtoN) multi = true; // Indicate that this gene has multiple copies in zfish
+                        else if (rand() < 0.5) thisDanRer = thisLineGeneID; // 50% chance of using this zfish copy
+                    }
+                } else if (thisLineGeneID.substr(0,6) == "ENSGAC") {
+                    if (thisDanRer == "") { thisDanRer = thisLineGeneID; }
+                } else if (thisLineGeneID.substr(0,6) == "ENSORL") {
+                    if (thisDanRer == "" || thisDanRer.substr(0,6) == "ENSGAC") { thisDanRer = thisLineGeneID; }
+                } else if (thisLineGeneID.substr(0,6) == "ENSTNI") {
+                    if (thisDanRer == "") { thisDanRer = thisLineGeneID; }
                 }
                 // std::cerr << atoi(idAndNum[1].c_str()) << "\t" << geneNum << std::endl;
-            } else {
-                if (thisCichlid != "" && thisDanRer != "" && !multi) { cichlidDanRer[thisCichlid] = thisDanRer; }
+            } else { // First line for a new cluster read
+                // so first add the mapping for the previous cluster
+                if (thisCichlid != "" && thisDanRer != "" && !multi) {
+                    attemptMappingUpdate(cichlidDanRer, thisCichlid,thisDanRer);
+                }
                 thisCichlid = ""; thisDanRer = ""; multi = false; copiesInCichlid = 2;
-                geneNum = atoi(idAndNum[1].c_str());
-                if (idAndNum[0].substr(0,2) == opt::species) { thisCichlid = idAndNum[0]; }
-                if (idAndNum[0].substr(0,6) == "ENSDAR") { thisDanRer = idAndNum[0]; }
+                geneNum = thisLineGeneClusterNumber;
+                if (thisLineGeneID.substr(0,2) == opt::species) { thisCichlid = thisLineGeneID; }
+                if (thisLineGeneID.substr(0,6) == "ENSDAR") { thisDanRer = thisLineGeneID; }
             }
-        }
+        } ocFile->close();
     }
+    
+    // Load gene names and descriptions from ENSEMBL
     std::map<string,string> ensGeneMap;
     std::map<string,string> ensGeneDescriptionMap;
     std::map<string,string> ensEntrezMap;
@@ -155,9 +204,9 @@ int linkGNMain(int argc, char** argv) {
     
   
     
-    
+    // Go through the gene prediction file and generate the final outputs
     std::ifstream* gpFile = new std::ifstream(opt::gpFile);
-    int countNovel = 1;
+    int countNovel = 1; int countUnknown = 1;
     while (getline(*gpFile, line)) {
         std::vector<string> gpVec = split(line, '\t');
         if ( cichlidDanRer.find(gpVec[0]) != cichlidDanRer.end() ) {
@@ -187,13 +236,22 @@ int linkGNMain(int argc, char** argv) {
                     }
                 }
             } else if (ensembl[0] == "novelCichlidGene") {
-                std::cout << gpVec[0] << "\t" << ensembl[0] << "\t" << opt::species + ".novel." + numToString(countNovel) << std::endl;
+                std::cout << nameWdots << "\t" << ensembl[0] << "\t0" << "\t" << opt::species + ".novel." + numToString(countNovel) << std::endl;
                 gpVec[11] = opt::species + ".novel." + numToString(countNovel);
                 countNovel++;
                 print_vector(gpVec, *gpOutFile);
                 *refLinkFile << opt::species + ".novel." + numToString(countNovel) << "\t" << "novel gene found only in cichlids" << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << "0" << "\t0" << std::endl;
             }
             //std::cout << "hello" << std::endl;
+        } else {
+            std::vector<string> myNameVec = split(gpVec[0], '.');
+            std::string nameWdots = gpVec[0] + ".1";
+            gpVec[0] = myNameVec[0] + "_" + myNameVec[1] + "_" + myNameVec[2] + "_" + myNameVec[3];
+            std::cout << nameWdots << "\t" << "noOrthologAssigned" << "\t" << "0" << "\t" << opt::species + ".unknown." + numToString(countUnknown) << std::endl;
+            *refLinkFile << opt::species + ".unknown." + numToString(countUnknown) << "\t" << "unknown - no ortholog from Brawand data" << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << "0" << "\t0" << std::endl;
+            gpVec[11] = opt::species + ".unknown." + numToString(countUnknown);
+            print_vector(gpVec, *gpOutFile);
+            countUnknown++;
         }
     }
     
@@ -210,18 +268,25 @@ void linkGNOptions(int argc, char** argv) {
             case '?': die = true; break;
             case 'o': arg >> opt::out; break;
             case 's': arg >> opt::species; break;
-            case OPT_V2: opt::v2 = true; break;
+            case OPT_V1: arg >> opt::v1orthologousClustersFile; break;
+            case OPT_V2: arg >> opt::v2orthologsFile; break;
             case OPT_NtoN: opt::NtoN = true; break;
             case 'h':
                 std::cout << LINKGN_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
         }
     }
-    if (argc - optind < 2) {
+    
+    if (opt::v1orthologousClustersFile == "" && opt::v2orthologsFile == "") {
+        std::cerr << "either --v1 or --v2 ortholog assigment must be supplied\n";
+        die = true;
+    }
+    
+    if (argc - optind < 1) {
         std::cerr << "missing arguments\n";
         die = true;
     }
-    else if (argc - optind > 3)
+    else if (argc - optind > 2)
     {
         std::cerr << "too many arguments\n";
         die = true;
@@ -236,7 +301,6 @@ void linkGNOptions(int argc, char** argv) {
     
     // Parse the input filenames
     opt::gpFile = argv[optind++];
-    opt::orthologousClustersFile = argv[optind++];
     if (argc - optind >= 1) {
         opt::ensGeneFile = argv[optind++];
     }

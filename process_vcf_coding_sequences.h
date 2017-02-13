@@ -142,9 +142,8 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 // Return false if the length of the coding sequence is not divisible by three
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
-void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile);
+void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<std::string>& statsThisGene, double tStVratio = 0.5);
 void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, double tStVratio = 0.5);
-std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs);
 void getStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
 
 void parseGetCodingSeqOptions(int argc, char** argv);
@@ -1184,13 +1183,13 @@ inline std::vector<double> calculateNd_tS_tV(const std::string& refCdn, const st
 inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<string>& altCodons, std::map<std::vector<string>::size_type, int>& haveStop, CDSComparisonMatrices& p) {
 
     for (std::vector<std::string>::size_type j = 0; j != altCodons.size() - 1; j++) {
-        if (haveStop[j] == 1 || getAminoAcid(altCodons[j]) != "Uncrecognised codon....")
+        if (haveStop[j] == 1 || getAminoAcid(altCodons[j]) == "Uncrecognised codon....")
             continue; // only consider this individual if it did not have a premature stop codon and there are no unrecognised letters
         for (std::vector<std::string>::size_type k = j+1; k != altCodons.size(); k++) {
-            if (haveStop[k] == 1 || getAminoAcid(altCodons[k]) != "Uncrecognised codon....")
+            if (haveStop[k] == 1 || getAminoAcid(altCodons[k]) == "Uncrecognised codon....")
                 continue;
             int d = getCodonDistance(altCodons[j],altCodons[k]);
-           // std::cerr << "Got codon distance: d = " << d << std::endl;
+            // std::cerr << "Got codon distance: d = " << d << std::endl;
 //            double n_d_ijk = calculateNd(altCodons[j],altCodons[k], d);
 //            double s_d_ijk = d - n_d_ijk;
             //std::cerr << "N_d_jk[j][k] = " << p.N_d_jk[j][k] << std::endl;
@@ -1208,7 +1207,7 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
             
             //  n_di = n_di + n_d_ijk; s_di = s_di + s_d_ijk;
             double N_ijk = calculateN(altCodons[j],altCodons[k], d, false);
-           // std::cerr << "Calculated N; N_ijk = " <<N_ijk << std::endl;
+            //std::cerr << "Calculated N; N_ijk = " <<N_ijk << std::endl;
             double S_ijk = (3 - N_ijk);
             p.N_jk[j][k] = p.N_jk[j][k] + N_ijk; p.S_jk[j][k] = p.S_jk[j][k] + S_ijk;
             //std::cerr << "altCodons[j] = " << altCodons[j] << "; altCodons[k] = " << altCodons[k] << std::endl;
@@ -1229,10 +1228,10 @@ inline void addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(const std::vector<strin
 inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, CDSComparisonMatrices& p) {
     int numSamples = (int)altCodons.size();
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
-        if (haveStop[j] == 1 || getAminoAcid(altCodons[j]) != "Uncrecognised codon....")
+        if (haveStop[j] == 1 || getAminoAcid(altCodons[j]) == "Uncrecognised codon....")
             continue; // only consider this individual if it did not have a premature stop codon
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
-            if (haveStopH2[k] == 1 || getAminoAcid(altCodonsH2[k]) != "Uncrecognised codon....")
+            if (haveStopH2[k] == 1 || getAminoAcid(altCodonsH2[k]) == "Uncrecognised codon....")
                 continue;
             if (j != k) {
                 int d = getCodonDistance(altCodons[j],altCodonsH2[k]);

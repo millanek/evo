@@ -37,6 +37,7 @@
 #include "evo_DNA_to_Protein.h"
 #include "evo_protein_SegregatingSites.h"
 #include "evo_codingSeqs_fromGenomes.h"
+#include "evo_fullAnnotationExtract.h"
 #include "remove_lowercase.h"
 
 
@@ -44,7 +45,7 @@
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r9"
+#define PACKAGE_VERSION "0.1 r10"
 
 
 static const char *VERSION_MESSAGE =
@@ -87,6 +88,7 @@ static const char *USAGE_MESSAGE =
 "           smallRNA            Generate a distribution showing read lengths and the starting nucleotide for a smallRNA library\n"
 "           multi-fasta         A utility tool for dealing with a multi-fasta file (e.g. join all sequences)\n"
 "           statsTest           Testing statistical routines in development\n"
+"           AnnotationPreformat Extract CDS coordinates from ANNOTATION.gtf for use in 'getCodingSeq'\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 int main(int argc, char **argv) {
@@ -166,6 +168,8 @@ int main(int argc, char **argv) {
             SeqFromGenomes(argc - 1, argv + 1);
         else if (command == "DNAtoProtein")
             DNAtoProtein(argc - 1, argv + 1);
+        else if (command == "AnnotationPreformat")
+            AnnotationPreformat(argc - 1, argv + 1);
         else if (command == "ProteinSs")
             ProteinSs(argc - 1, argv + 1);
         else

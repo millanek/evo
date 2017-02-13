@@ -227,7 +227,7 @@ int getCodingSeqMain(int argc, char** argv) {
                                 assert(allSeqs[0].length() == refSeq.length());
                                 assert(allSeqsH2[0].length() == refSeq.length());
                                 if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
-                                    getStatsPhasedSeq(allSeqs, refSeq, statsThisGene,stopsFile);
+                                    getStatsHaploidSeq(allSeqs, statsThisGene);
                                     print_vector_stream(statsThisGene, std::cout);
                                 } else if (opt::hetTreatment == 'b') {
                                     getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene);
@@ -352,109 +352,92 @@ bool codingSequenceErrorChecks(const string& geneSeq, const string& transcriptNa
     return divisibleByThree;
 }
  
-void getStatsPhasedSeq(const std::vector<std::string>& allSeqs, const std::string& refSeq, std::vector<string>& statsThisGene, std::ofstream*& prematureStopCodonFile) {
-    int numSegSites = 0;
-    int numNonSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
-    int numSynAAchanges = 0;  // NUmber of non-synonymous amino-acid changes
-    double expectedNumNonSynAAchanges = 0;
-    double expectedNumSynAAchanges = 0;
-    std::vector<double> synonymousMinorAlleleFequencies;
-    std::vector<double> nonsynonymousMinorAlleleFequencies;
-    int numCopies = (int)allSeqs.size();
-    std::vector<string> altCodons; altCodons.resize(allSeqs.size());
+void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<string>& statsThisGene, double tStVratio) {
+    std::string::size_type geneLengthNt = allSeqs[0].length();
+    int numSamples = (int)allSeqs.size();
+    double pN = 0; double pS = 0;
+    std::vector<string> altCodons; altCodons.resize(numSamples);
     std::map<std::vector<string>::size_type, int> haveStop;
-    for (std::vector<string>::size_type i = 0; i != altCodons.size(); i++) {
-        altCodons[i] = "";
-        haveStop[i] = 0;
+    
+    for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
+        assert(allSeqs[i].length() == geneLengthNt);
+        altCodons[i] = ""; haveStop[i] = 0; 
     }
     
-    // std::cerr << "Collecting gene sequence statistics...." << std::endl;
-    for (string::size_type i = 0; i != refSeq.length(); i++) {
-        for (std::vector<std::string>::size_type j = 0; j != allSeqs.size(); j++) {
+    CDSComparisonMatrices* pairwiseMatrices = new CDSComparisonMatrices(numSamples);
+    for (string::size_type i = 0; i != geneLengthNt; i++) {
+        for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
             altCodons[j] += allSeqs[j][i];
         }
-        
         // Find the types of mutation we are dealing with
-        string altAA;
         if ((i+1)%3 == 0) {
-            int numStopsHere = 0;
-            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
-                if (getAminoAcid(altCodons[j]) == "Stop") {
-                    haveStop[j] = 1;
-                    numStopsHere++;
-                }
+            for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+                if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
             }
-
-            expectedNumNonSynAAchanges = expectedNumNonSynAAchanges + getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3));
-            expectedNumSynAAchanges = expectedNumSynAAchanges + (3 - getExpectedNumberOfNonsynonymousSites(refSeq.substr(i-2,3)));
-            
-            int nonSyn = 0;
-            int syn = 0;
-            // int numStops = 0;
-            string altAA = "";
-            for (std::vector<std::string>::size_type j = 0; j != altCodons.size(); j++) {
-                // only consider this individual if it did not have a premature stop codon
-                if (haveStop[j] == 1)
-                    continue;
-                
-                int thisIndDistance = getCodonDistance(refSeq.substr(i-2,3),altCodons[j]);
-                nonSyn = nonSyn + calculateNd(refSeq.substr(i-2,3),altCodons[j], thisIndDistance);
-                syn = syn + (thisIndDistance - calculateNd(refSeq.substr(i-2,3),altCodons[j], thisIndDistance));
+           // std::cerr << "Now going to loop through codons: i = " << i << "altCodons.size():" << altCodons.size() << std::endl;
+            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, *pairwiseMatrices);
+            //std::cerr << "Added pairwise among H1:" << std::endl;
+            for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+             //   std::cerr << "j = " << j << "; altCodons[j]: " << altCodons[j] << std::endl;
                 altCodons[j] = "";
-            }
-            
-            double NRaf;
-            if (nonSyn > 0 || syn > 0) {
-                numSegSites++;
-            }
-            
-            if (nonSyn > 0) {
-                numNonSynAAchanges++;
-               // std::cerr << "nonSyn: " << nonSyn << std::endl;
-                NRaf = (double)nonSyn/(numCopies*3);
-               // std::cerr << "NRaf: " << NRaf << std::endl;
-                if (NRaf > 0.5)
-                    nonsynonymousMinorAlleleFequencies.push_back(1-NRaf);
-                else
-                    nonsynonymousMinorAlleleFequencies.push_back(NRaf);
-            }
-            if (syn > 0) {
-                numSynAAchanges++;
-                NRaf = (double)syn/(numCopies*3);
-                if (NRaf > 0.5)
-                    synonymousMinorAlleleFequencies.push_back(1-NRaf);
-                else
-                    synonymousMinorAlleleFequencies.push_back(NRaf);
-                
+               // std::cerr << "j = " << j << "; haveStop[j]: " << haveStop[j] << std::endl;
             }
         }
     }
      
-    statsThisGene.push_back(numToString(refSeq.length()));
-    statsThisGene.push_back(numToString(numSegSites));
-    statsThisGene.push_back(numToString((double)numSegSites/refSeq.length()));
-    statsThisGene.push_back(numToString(refSeq.length()/3));
-    statsThisGene.push_back(numToString(numSynAAchanges));
-    statsThisGene.push_back(numToString((double)numSynAAchanges/(refSeq.length()/3)));
-    statsThisGene.push_back(numToString(numNonSynAAchanges));
-    statsThisGene.push_back(numToString((double)numNonSynAAchanges/(refSeq.length()/3)));
-    statsThisGene.push_back(numToString(vector_average(synonymousMinorAlleleFequencies)));
-    statsThisGene.push_back(numToString(vector_average(nonsynonymousMinorAlleleFequencies)));
+    double sumPn = 0; double sumPs = 0;
+    std::vector<double> pNjackknifeVector;
+    std::vector<double> pSjackknifeVector;
+    std::vector<double> pN_pSjackknifeVector;
+    // Add the within H1 and within H2 comparisons
+    for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
+        //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+        for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
+            //double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
+            double pN_jk = pairwiseMatrices->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices->tS_N_jk[j][k])+pairwiseMatrices->tV_N_jk[j][k]);
+            if (std::isnan(pN_jk) || pairwiseMatrices->tS_N_jk[j][k] == 0) {
+            std::cerr << "j = " << j << "; k = " << k << std::endl;
+            std::cerr << "N_d_jk[j][k] = " << pairwiseMatrices->N_d_jk[j][k] << "; tS_N_jk[j][k] = " << pairwiseMatrices->tS_N_jk[j][k] << std::endl;
+            std::cerr << "pN_jk = " << pN_jk << "; sumPn = " << sumPn << std::endl;
+                print_matrix(pairwiseMatrices->N_d_jk, std::cerr);
+                print_matrix(pairwiseMatrices->S_d_jk, std::cerr);
+            }
+            sumPn = sumPn + pN_jk;
+            double pS_jk = pairwiseMatrices->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices->tS_S_jk[j][k])+pairwiseMatrices->tV_S_jk[j][k]);
+            sumPs = sumPs + pS_jk;
     
-    std::vector<double> pNpS; pNpS = getPhasedPnPs(allSeqs);
-    assert(pNpS.size() == 2);
-    statsThisGene.push_back(numToString(pNpS[0]));
-    statsThisGene.push_back(numToString(pNpS[1]));
+            // make sure each sample is used only once in the jackknife calculation
+            // to keep the observations independent
+            if ((j % 2 == 0) && (k == j+1)) {
+                pNjackknifeVector.push_back(pN_jk); pSjackknifeVector.push_back(pS_jk);
+                pN_pSjackknifeVector.push_back(pN_jk-pS_jk);
+            }
+        }
+    }
+    pN = (2.0/(numSamples*(numSamples-1)))*sumPn;
+    pS = (2.0/(numSamples*(numSamples-1)))*sumPs;
     
-    // std::map<int,int> dafTable = tabulateVectorTemplate(derivedAlleleFequencies);
-    // std::cerr << "Stats Done" << std::endl;
+    statsThisGene.push_back(numToString(geneLengthNt));
+    statsThisGene.push_back(numToString(pN));
+    statsThisGene.push_back(numToString(pS));
+    if (pNjackknifeVector.size() > 10) {
+        double pNstdErr = jackknive_std_err(pNjackknifeVector);
+        double pSstdErr = jackknive_std_err(pSjackknifeVector);
+        double pNpSstdErr = jackknive_std_err(pN_pSjackknifeVector);
+        statsThisGene.push_back(numToString(pNstdErr));
+        statsThisGene.push_back(numToString(pSstdErr));
+        statsThisGene.push_back(numToString(pNpSstdErr));
+    } else {
+        statsThisGene.push_back("NA");
+        statsThisGene.push_back("NA");
+        statsThisGene.push_back("NA");
+    }
 }
 
 
 // To DO:
 // 1) Get some sort of inbreeding coefficient (how often are they homozygous ('fixed' in a species) vs. heterozygous)
-// 2) Think about assessing statistical significance --- jackkniving?
-// 3) Would also be good to distinguish derived vs. ancestral alleles?
+// 2) Would also be good to distinguish derived vs. ancestral alleles?
 void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, double tStVratio) {
     //std::cerr << "Collecting gene sequence statistics...." << std::endl;
     clock_t begin = clock();
@@ -571,64 +554,6 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
    // double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     //std::cerr << "Time per gene: " << elapsed_secs << std::endl;
 }
-
-
-
-std::vector<double> getPhasedPnPs(const std::vector<std::string>& allSeqs) {
-    double pN = 0; double pS = 0;
-    std::string::size_type geneLengthNt = allSeqs[0].length();
-    int numSamples = (int)allSeqs.size();
-    std::vector<string> altCodons; altCodons.resize(numSamples);
-    
-    std::map<std::vector<string>::size_type, int> haveStop;
-    for (std::vector<string>::size_type i = 0; i != numSamples; i++) {
-        altCodons[i] = "";
-        haveStop[i] = 0;
-    }
-    
-    
-    CDSComparisonMatrices pairwiseMatrices(numSamples);
-    //std::cerr << "Collecting gene sequence statistics.... geneLengthNt = " << geneLengthNt << std::endl;
-    for (string::size_type i = 0; i != geneLengthNt; i++) {
-        for (int j = 0; j != numSamples; j++) {
-            altCodons[j] += allSeqs[j][i];
-        }
-        // Find the types of mutation we are dealing with
-        if ((i+1)%3 == 0) {
-            //if (i == 83) std::cerr << "Here again; i = " << i <<  std::endl;
-            for (int j = 0; j != numSamples; j++) {
-                assert(allSeqs[j].length() == geneLengthNt);
-                if (getAminoAcid(altCodons[j]) == "Stop")
-                    haveStop[j] = 1;
-            }
-            
-            addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, pairwiseMatrices);
-            
-            for (int j = 0; j != numSamples; j++) {
-                altCodons[j] = "";
-            }
-        }
-    }
-    
-    double sumPn = 0;
-    double sumPs = 0;
-    for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
-        for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
-            double pN_jk = pairwiseMatrices.N_d_jk[j][k]/pairwiseMatrices.N_jk[j][k];
-            double pS_jk = pairwiseMatrices.S_d_jk[j][k]/pairwiseMatrices.S_jk[j][k];
-            sumPn = sumPn + pN_jk;
-            sumPs = sumPs + pS_jk;
-        }
-    }
-    pN = (2.0/(numSamples*(numSamples-1)))*sumPn;
-    pS = (2.0/(numSamples*(numSamples-1)))*sumPs;
-    
-    std::vector<double> pNpS; pNpS.push_back(pN); pNpS.push_back(pS);
-    return pNpS;
-}
-
-
-
 
 
 
