@@ -26,6 +26,8 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 "                                               (NOT COMPATIBLE WITH THE -n OPTION)\n"
 "       --no-stats                              do not calculate statistics for coding sequences\n"
 "                                               only output the sequences themselves\n"
+"       --output-nondiv-3=prefix                output genes whose coding sequence length is not divisible by three\n"
+"                                               the specified prefix will be added to output file names\n"
 "       -H,   --het-treatment <r|p|b|i>         r: assign het bases randomly (default); p: use the phase information in a VCF outputting haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
@@ -35,7 +37,7 @@ static const char *CODINGSEQ_USAGE_MESSAGE =
 static const char* shortopts = "hpws:cH:";
 static std::vector<string> stopsTranscriptRecord;
 
-enum { OPT_ONLY_STATS, OPT_USE_PHASE };
+enum { OPT_ONLY_STATS, OPT_NONDIV_THREE, OPT_USE_PHASE };
 
 
 static const struct option longopts[] = {
@@ -43,6 +45,7 @@ static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
     { "partial",   no_argument, NULL, 'p' },
     { "het-treatment",   required_argument, NULL, 'H' },
+    { "output-nondiv-3", required_argument, NULL, OPT_NONDIV_THREE },
     { "no-stats",   no_argument, NULL, OPT_ONLY_STATS },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -57,6 +60,7 @@ namespace opt
     static bool bUsePartial = false;
     static bool bNoStats = false;
     static char hetTreatment = 'r';
+    static string nonDivPrefix = "";
     static string sampleNameFile;
     
 }
@@ -197,30 +201,30 @@ int getCodingSeqMain(int argc, char** argv) {
                         std::ofstream* geneOutFiles;
                         bool geneLengthDivisibleByThree = true;
                         std::vector<string> allSeqs; std::vector<string> allSeqsH2;
-                        std::vector<string> statsThisGene; statsThisGene.push_back(annotLineVec[4]);
+                        string geneName = annotLineVec[4];
+                        std::vector<string> statsThisGene; statsThisGene.push_back(geneName);
                         string refSeq = getReferenceForThisRegion(annotation[k], annotLineVec[3], currentScaffoldReference);
                         if (opt::bIsCoding)
-                            geneLengthDivisibleByThree = codingSequenceErrorChecks(refSeq, annotLineVec[4], annotation, (int)k, badStartStopCodonFile);
+                            geneLengthDivisibleByThree = codingSequenceErrorChecks(refSeq, geneName, annotation, (int)k, badStartStopCodonFile);
                         if (geneLengthDivisibleByThree)
-                            geneOutFiles = new std::ofstream(annotLineVec[4].c_str());
-                        for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                            string geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStrings[i]);
-                            if (geneLengthDivisibleByThree) {
+                            geneOutFiles = new std::ofstream(geneName.c_str());
+                        else if (opt::nonDivPrefix != "")
+                            geneOutFiles = new std::ofstream((opt::nonDivPrefix+'_'+geneName).c_str());
+                        if (geneLengthDivisibleByThree || opt::nonDivPrefix != "") {
+                            for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                                string geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStrings[i]);
                                 *geneOutFiles << ">" << sampleNames[i] << std::endl;
                                 *geneOutFiles << geneSeq << std::endl;
                                 allSeqs.push_back(geneSeq);
-                            }
-                            if (opt::hetTreatment == 'b') {
-                                geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStringsH2[i]);
-                                if (geneLengthDivisibleByThree) {
+                                if (opt::hetTreatment == 'b') {
+                                    geneSeq = getIndividualSequenceForThisRegion(annotation[k], annotLineVec[3], scaffoldStringsH2[i]);
                                     *geneOutFiles << ">" << sampleNames[i] << "_H2" << std::endl;
                                     *geneOutFiles << geneSeq << std::endl;
                                     allSeqsH2.push_back(geneSeq);
                                 }
-                            }
+                            } geneOutFiles->close();
+                            std::cerr << "Got all sequences for: " << annotLineVec[4] << std::endl;
                         }
-                        std::cerr << "Got all sequences for: " << annotLineVec[4] << std::endl;
-                        
                         // Get statistics for the sequences
                         if (!opt::bNoStats) {
                             if (opt::bIsCoding && geneLengthDivisibleByThree) {
@@ -239,7 +243,6 @@ int getCodingSeqMain(int argc, char** argv) {
                                 std::cerr << "Got statistics for: " << annotLineVec[4] << std::endl;
                             }
                         }
-                        geneOutFiles->close();
                     }
                   //  for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                   //      scaffoldStrings[i] = "";
@@ -734,6 +737,7 @@ void parseGetCodingSeqOptions(int argc, char** argv) {
             case 'H': arg >> opt::hetTreatment; break;
             case 's': arg >> opt::sampleNameFile; break;
             case OPT_ONLY_STATS: opt::bNoStats = true; break;
+            case OPT_NONDIV_THREE: arg >> opt::nonDivPrefix; break;
             case 'h':
                 std::cout << CODINGSEQ_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
