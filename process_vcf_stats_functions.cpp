@@ -16,10 +16,13 @@ static const double DIFF_WEIGHT_HOM_DIFFERENCE_RICHARD = (2.0/3.0);
 static const double DIFF_WEIGHT_ONE_HOM_ONE_HET = 0.5;
 
 // Increment a counter for each individual who is het at this site
-void het_analysis(std::vector<int>& hetCounts, FilterResult& result) {
+void het_analysis(std::vector<int>& hetCounts, std::vector<int>& sharedHetCounts, FilterResult& result) {
     for (std::vector<int>::size_type i = 0; i < hetCounts.size(); i++) {
         if (result.counts.individualsWithVariant[i] == 1) {
             hetCounts[i]++;
+            if (result.counts.overall > 1) {
+                sharedHetCounts[i]++;
+            }
         }
     }
 }

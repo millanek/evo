@@ -111,6 +111,7 @@ int linkGNMain(int argc, char** argv) {
     // stickleback, tetraodon, if zebrafish not available)
     std::map<string,string> cichlidDanRer;
     if (opt::v2orthologsFile != "") {
+        std::cerr << "Reading the v2 full orthologs file:" << std::endl;
         std::ifstream* ocFile = new std::ifstream(opt::v2orthologsFile);
         while (getline(*ocFile, line)) {
             std::vector<string> orthVec = split(line, '\t');
@@ -126,6 +127,7 @@ int linkGNMain(int argc, char** argv) {
     }
     
     if (opt::v1orthologousClustersFile != "") {
+        std::cerr << "Reading the v1 orthologous cluster file: " << std::endl;
         std::ifstream* ocFile = new std::ifstream(opt::v1orthologousClustersFile);
         while (getline(*ocFile, line)) {
             std::vector<string> idAndNum = split(line, '\t');
@@ -209,10 +211,10 @@ int linkGNMain(int argc, char** argv) {
     int countNovel = 1; int countUnknown = 1;
     while (getline(*gpFile, line)) {
         std::vector<string> gpVec = split(line, '\t');
-        if ( cichlidDanRer.find(gpVec[0]) != cichlidDanRer.end() ) {
+        if ( cichlidDanRer.count(gpVec[0]) == 1) {
             std::vector<string> ensembl = split(cichlidDanRer[gpVec[0]], '/');
             std::vector<string> myNameVec = split(gpVec[0], '.');
-            std::string nameWdots = gpVec[0] + ".1";
+            std::string nameWdots = gpVec[0];
             gpVec[0] = myNameVec[0] + "_" + myNameVec[1] + "_" + myNameVec[2] + "_" + myNameVec[3];
             
             if ( ensGeneMap.find(ensembl[0]) != ensGeneMap.end() ) {

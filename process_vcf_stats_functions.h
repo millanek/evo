@@ -11,7 +11,7 @@
 #include "process_vcf_utils.h"
 
 // Increment a counter for each individual who is het at this site
-void het_analysis(std::vector<int>& hetCounts, FilterResult& result);
+void het_analysis(std::vector<int>& hetCounts, std::vector<int>& sharedHetCounts, FilterResult& result);
 
 
 // DOUBLETONS:

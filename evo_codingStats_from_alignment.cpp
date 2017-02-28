@@ -24,18 +24,21 @@ static const char *CODINGSTATS_USAGE_MESSAGE =
 "       -t,   --tStV RATIO                      observed genome-wide tS/tV ratio in the dataset\n"
 "       -a,   --alignment FILE.fa               a multiple alignment file (either -a or -l required)\n"
 "       -l,   --listOfFiles LIST.txt            a list with multiple alignment filenames, one per line (either -a or -l required)\n"
+"       --genomeWide_dXY=MATRIX.txt             a matrix that can be used to normalise the pairwise scores to be\n"
+"                                               per-unit of sequence divergence\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 static const char* shortopts = "hp:a:l:t:";
 
-
+enum { OPT_DXY_MATRIX };
 
 static const struct option longopts[] = {
     { "ploidy",   required_argument, NULL, 'p' },
     { "alignment",   required_argument, NULL, 'a' },
     { "tStV",   required_argument, NULL, 't' },
     { "listOfFiles",   required_argument, NULL, 'l' },
+    { "genomeWide_dXY",   required_argument, NULL, OPT_DXY_MATRIX },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -44,6 +47,7 @@ namespace opt
 {
     static string alignmentFile = "";
     static string alignmentListFile = "";
+    string genomeWide_DxyMatrixFile = "";
     static char ploidy = 'd';
     static double tStVratio = 0.5;      // Under equal mutation probability,
                                         //half transitions will be observed compared with transversions
@@ -53,6 +57,16 @@ namespace opt
 int getCodingStats(int argc, char** argv) {
     parseCodingStatsOptions(argc, argv);
     std::vector<string> allAligmentFiles; string statsFileName;
+    
+    std::vector<std::vector<std::string>> genomeWide_Dxy;
+    if (opt::genomeWide_DxyMatrixFile != "") {
+        std::ifstream* genomeWide_DxyMatrixFile = new std::ifstream(opt::genomeWide_DxyMatrixFile);
+        string line;
+        while (getline(*genomeWide_DxyMatrixFile, line)) {
+            std::vector<string> thisIndDxyVec = split(line, '\t');
+            genomeWide_Dxy.push_back(thisIndDxyVec);
+        }
+    }
     
     std::cerr << "Calculating gene coding statistics" << std::endl;
     
@@ -141,6 +155,7 @@ void parseCodingStatsOptions(int argc, char** argv) {
             case 'a': arg >> opt::alignmentFile; break;
             case 'l': arg >> opt::alignmentListFile; break;
             case 't': arg >> opt::tStVratio; break;
+            case OPT_DXY_MATRIX: arg >> opt::genomeWide_DxyMatrixFile; break;
             case 'h':
                 std::cout << CODINGSTATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

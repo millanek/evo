@@ -9,15 +9,6 @@
 #include <iostream>
 #include "process_vcf_print_routines.h"
 
-// Print a header (helper function used by all the functions below)
-void print_header(const std::vector<std::string>& header, std::ofstream& outFile) {
-    for (int i = 0; i < header.size(); i++) {
-        if (i == (header.size()-1))
-            outFile << header[i] << std::endl;
-        else 
-            outFile << header[i] << "\t";
-    }
-}
 
 // Printing doubletons
 void print_doubleton_distribution(const string& fileRoot, const std::vector<std::string>& header, std::vector<std::vector<int> >& doubletons) {
@@ -28,33 +19,39 @@ void print_doubleton_distribution(const string& fileRoot, const std::vector<std:
     *pDoubletonOutFile << "# Doubleton distribution:" << fileRoot << ".vcf" << std::endl;
     *pDoubletonOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
     
-    
-    // Print a header
-    print_header(header,*pDoubletonOutFile);
-    
     // Print the doubletons matrix
+    print_vector(header,*pDoubletonOutFile);
     print_matrix<std::vector<std::vector<int> >&>(doubletons, *pDoubletonOutFile);
     
 }
 
 // Printing het counts
-void print_het_counts(const string& fileRoot, const std::vector<std::string>& header, const std::vector<int>& hetCounts) {
+void print_het_counts(const string& fileRoot, const std::vector<std::string>& header, const std::vector<int>& hetCounts, const std::vector<int>& sharedHetCounts) {
+    assert(hetCounts.size() == sharedHetCounts.size());
     std::ios_base::openmode mode_out = std::ios_base::out;
     string hetFileName = fileRoot + ".hets.txt";
+    string sharedHetFileName = fileRoot + ".sharedHets.txt";
     std::ofstream* pHetsOutFile = new std::ofstream(hetFileName.c_str(), mode_out);
+    std::ofstream* pSharedHetsOutFile = new std::ofstream(sharedHetFileName.c_str(), mode_out);
     *pHetsOutFile << "# Het counts" << std::endl;
     *pHetsOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
     
-    // print a header
-    print_header(header,*pHetsOutFile);
+    *pSharedHetsOutFile << "# Shared het counts (line1) and proportions (line 2)" << std::endl;
+    *pSharedHetsOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
 
+    // Calculate shared het proportions
+    std::vector<double> sharedHetProportions;
+    for (int i = 0; i < (int)sharedHetCounts.size(); i++) {
+        sharedHetProportions.push_back((double)sharedHetCounts[i]/hetCounts[i]);
+    }
+    
     // print het counts
-    for (int i = 0; i < hetCounts.size(); i++) {
-        if (i == (hetCounts.size()-1))
-            *pHetsOutFile << hetCounts[i] << std::endl;
-        else 
-            *pHetsOutFile << hetCounts[i] << "\t";
-    } 
+    print_vector(header,*pHetsOutFile);
+    print_vector(hetCounts, *pHetsOutFile);
+    
+    // print shared het counts and proportions
+    print_vector(header,*pSharedHetsOutFile);
+    print_vector(sharedHetCounts, *pSharedHetsOutFile);
 }
 
 
@@ -78,9 +75,9 @@ void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::st
     *pHetHomOutFile << "# For a free mixing population, we expect this number ~2; for fully separated species ~0" << std::endl;
     
     // print headers
-    print_header(header,*pDiffOutFile);
-    print_header(header,*pDiffMeOutFile);
-    print_header(header,*pHetHomOutFile);
+    print_vector(header,*pDiffOutFile);
+    print_vector(header,*pDiffMeOutFile);
+    print_vector(header,*pHetHomOutFile);
     
     // print statistics
     print_matrix<const std::vector<std::vector<double> >&>(diffMatrix, *pDiffOutFile);
@@ -102,11 +99,8 @@ void print_H1_pairwise_diff_stats(const string& fileRoot, std::vector<std::strin
         header[i] = header[i] + "_H1";
     }
     
-    // print headers
-    print_header(header,*pDiffH1OutFile);
-
-    
-    // print statistics
+    // print
+    print_vector(header,*pDiffH1OutFile);
     print_matrix<const std::vector<std::vector<double> >&>(diffMatrixH1, *pDiffH1OutFile);
     
 }
@@ -126,11 +120,8 @@ void print_AllH_pairwise_diff_stats(const string& fileRoot, const std::vector<st
         header.push_back(samples[i] + "_H2");
     }
     
-    // print headers
-    print_header(header,*pDiffAllHOutFile);
-    
-    
     // print statistics
+    print_vector(header,*pDiffAllHOutFile);
     print_matrix<const std::vector<std::vector<double> >&>(diffMatrixAllH, *pDiffAllHOutFile);
     
 }

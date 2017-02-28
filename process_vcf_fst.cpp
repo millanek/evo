@@ -351,8 +351,12 @@ void getFstFromVCF() {
             
             if (opt::windowSize > 0) {
                 if (opt::windowSize == opt::windowStep) {
-                    *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
-                    *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy_onlyVariants" << "\t" << "Dxy_AllSites" << "\t" << "windowSize" << std::endl;
+                    if (opt::windowSize == 1) {
+                        *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Position" << "\t" << "Fst" << "\t" << "Dxy_thisVariant" << std::endl;
+                    } else {
+                        *pHetSets << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;
+                        *pFst << "var_num" << "\t" << "scaffold" << "\t" << "Start" << "\t" << "End" << "\t" << "Fst" << "\t" << "Dxy_onlyVariants" << "\t" << "Dxy_AllSites" << "\t" << "windowSize" << std::endl;
+                    }
                     if (opt::regAbove > 0) *regionsAboveFstFile << "scaffold" << "\t" << "Start" << "\t" << "End" << std::endl;
                 } else {
                     *pHetSets << "Middle_SNP_position" << "\t" << "Set1_heterozygosity" << "\t" << "Set2_heterozygosity" << "\t" << "Set1_heterozygosity_Nei" << "\t" << "Set2_heterozygosity_Nei" << "\t" << "Set1_nucleotideDiversity_pi" << "\t" << "Set2_nucleotideDiversity_pi" << std::endl;

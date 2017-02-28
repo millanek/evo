@@ -90,6 +90,7 @@ int statsMain(int argc, char** argv) {
     
     // Data structures to hold the results
     std::vector<int> hetCounts;
+    std::vector<int> hetsSharedWithOthers;
     std::vector<std::vector<int> > doubletons;
     std::vector<std::vector<double> > diffMatrix;
     std::vector<std::vector<double> > diffMatrixMe;
@@ -103,9 +104,11 @@ int statsMain(int argc, char** argv) {
     initialize_matrix_double(diffMatrixAllH, (int)indPopVector.size()*2);
     
     std::cerr << "Calculating statistics from: " << fileName << std::endl;
-    if (opt::countHets) 
+    if (opt::countHets) {
         std::cerr << "Het count per individual are going to be output to: " << fileRoot + ".hets.txt" << std::endl;
-    if (opt::bDoubleton) { 
+        std::cerr << "Counts of hets (per individual) shared with others are going to be output to: " << fileRoot + ".sharedHets.txt" << std::endl;
+    }
+    if (opt::bDoubleton) {
         std::cerr << "The distribution of doubletons is going to be output to: " <<  fileRoot + ".doubletons.txt" << std::endl;
         pop_unique = initializeDoubletons(doubletons, indPopVector,fieldsPopMap);
     }
@@ -127,13 +130,14 @@ int statsMain(int argc, char** argv) {
                 std::cerr << "Number of chromosomes: " << numChromosomes << std::endl;
                 gotChromosomeNumber = true;
                 hetCounts.assign(numSamples, 0);
+                hetsSharedWithOthers.assign(numSamples, 0);
             }
             
             result.counts = getThisVariantCounts(fields);
             // Only do these calculations if none of the genotypes are missing:
             if (result.counts.bAnyMissingGenotypes == false) {
                 if (opt::countHets) {
-                    het_analysis(hetCounts,result);
+                    het_analysis(hetCounts, hetsSharedWithOthers, result);
                 }
                 if (opt::bDoubleton) {
                     doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);  
@@ -160,7 +164,7 @@ int statsMain(int argc, char** argv) {
     
     // Printing het counts
     if (opt::countHets) 
-        print_het_counts(fileRoot, indPopVector, hetCounts);  
+        print_het_counts(fileRoot, indPopVector, hetCounts, hetsSharedWithOthers);
     
     // Printing pairwise difference statistics
     if (opt::bDiffs) {
