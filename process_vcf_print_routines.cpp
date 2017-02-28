@@ -52,6 +52,7 @@ void print_het_counts(const string& fileRoot, const std::vector<std::string>& he
     // print shared het counts and proportions
     print_vector(header,*pSharedHetsOutFile);
     print_vector(sharedHetCounts, *pSharedHetsOutFile);
+    print_vector(sharedHetProportions, *pSharedHetsOutFile);
 }
 
 

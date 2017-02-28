@@ -34,7 +34,7 @@ static const char *STATS_USAGE_MESSAGE =
 "       --diff-matrix-allH                          Generate a half-matrix measuring pairwise differences between all haplotypes\n"
 "       The program can also output 100 bootstrap replicates of the distance matrices unsing a block 'case resampling' scheme:\n"
 "       --block-bootstrap=BLOCKSIZE (default 100)  Generate 100 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
-"\nReport bugs to mm812@cam.ac.uk\n\n";
+"\nReport bugs to" PACKAGE_BUGREPORT "\n\n";
 
 enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP };
 
