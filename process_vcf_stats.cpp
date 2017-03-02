@@ -36,7 +36,7 @@ static const char *STATS_USAGE_MESSAGE =
 "       --diff-matrix-allH                          Generate a half-matrix measuring pairwise differences between all haplotypes\n"
 "       The program can also output 100 bootstrap replicates of the distance matrices unsing a block 'case resampling' scheme:\n"
 "       --block-bootstrap=BLOCKSIZE (default 100)  Generate 100 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
-"\nReport bugs to" PACKAGE_BUGREPORT "\n\n";
+"\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS };
 
@@ -52,7 +52,7 @@ static const struct option longopts[] = {
     { "diff-matrix-h1", no_argument,    NULL, OPT_DIFF_MATRIX_H1 },
     { "diff-matrix-allH", no_argument,    NULL, OPT_DIFF_MATRIX_ALLH },
     { "block-bootstrap", required_argument,    NULL, OPT_BLOCK_BOOTSTRAP },
-    { "private-variants", required_argument,    NULL, OPT_PRIVATE_VARS },
+    { "private-variants", no_argument,    NULL, OPT_PRIVATE_VARS },
     { NULL, 0, NULL, 0 }
 };
 
