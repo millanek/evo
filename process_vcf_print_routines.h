@@ -17,7 +17,7 @@ void print_doubleton_distribution(const string& fileRoot, const std::vector<std:
 // Printing het counts
 void print_het_counts(const string& fileRoot, const std::vector<std::string>& header, const std::vector<int>& hetCounts, const std::vector<int>& sharedHetCounts);
 
-void print_privateFixedVarsSummary(const string& fileRoot, const string& populationsFile, const std::vector<int>& privateVarCounts);
+void print_privateFixedVarsSummary(const string& fileRoot, const std::vector<std::string>& header, const string& populationsFile,  const std::vector<int>& privateVarCounts);
  
 
 // Printing pairwise difference statistics

@@ -186,7 +186,7 @@ int statsMain(int argc, char** argv) {
     
     // Printing statistics for private variants
     if (opt::countPrivateVars)
-        print_privateFixedVarsSummary(fileRoot, opt::populationsFile, privateVarCounts);
+    print_privateFixedVarsSummary(fileRoot, populationLabels, opt::populationsFile, privateVarCounts);
     
     // Printing pairwise difference statistics
     if (opt::bDiffs) {
