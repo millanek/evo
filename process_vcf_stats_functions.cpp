@@ -74,7 +74,7 @@ void initializeDoubletons(std::vector<std::vector<int> >& d, const std::vector<s
 }
 
 
-void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices) {
+void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices, const std::vector<std::vector<size_t> >& populationsIndicesComplements) {
     for (int i = 0; i < (int)populationsIndices.size(); i++) {
         bool allAlts = true; bool allRefs = true;
         for (int j = 0; j < populationsIndices[i].size(); j++) {
@@ -90,17 +90,17 @@ void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult
         
         // If all individuals in the population have the same allele (either all alt or all ref)
         // Then we look at the rest of the individuals in the dataset (complement)
-        std::vector<size_t> populationsIndexComplement = complementIndices(result.counts.individualsWithVariant.size(), populationsIndices[i]);
+       
         bool privateVar = true;
         if (allAlts) {
-            for (int j = 0; j < populationsIndexComplement.size(); j++) {
-                if (result.counts.individualsWithVariant[populationsIndexComplement[j]] != 0)
+            for (int j = 0; j < populationsIndicesComplements[i].size(); j++) {
+                if (result.counts.individualsWithVariant[populationsIndicesComplements[i][j]] != 0)
                     privateVar = false;
             }
         }
         if (allRefs) {
-            for (int j = 0; j < (int)populationsIndexComplement.size(); j++) {
-                if (result.counts.individualsWithVariant[populationsIndexComplement[j]] != 2)
+            for (int j = 0; j < (int)populationsIndicesComplements[i].size(); j++) {
+                if (result.counts.individualsWithVariant[populationsIndicesComplements[i][j]] != 2)
                     privateVar = false;
             }
         }

@@ -82,7 +82,8 @@ int statsMain(int argc, char** argv) {
     
     // Data structures to hold individual and population identifiers
     std::vector<std::string> sampleNames; std::vector<string> populationLabels;
-    std::vector<std::string> populationsStrings; std::vector<std::vector<size_t> > populationsIndices;
+    std::vector<std::string> populationsStrings;
+    std::vector<std::vector<size_t> > populationsIndices; std::vector<std::vector<size_t> > populationsIndicesComplements;
     // Read in the POPULATIONS_FILE if supplied
     if (!opt::populationsFile.empty()) {
         popFile = new std::ifstream(opt::populationsFile.c_str());
@@ -112,6 +113,7 @@ int statsMain(int argc, char** argv) {
     if (opt::countPrivateVars) {
         std::cerr << "The numbers of private variants fixed in groups defined in " << opt::populationsFile << " are going to be output to: " <<  fileRoot + ".privateFixedVars.txt" << std::endl;
         //pop_unique = initializeDoubletons(doubletons, indPopVector,fieldsPopMap);
+        
     }
     
     // Start reading from the vcf file
@@ -142,6 +144,17 @@ int statsMain(int argc, char** argv) {
                     populationsIndices.push_back(thisIndices);
                 }
             }
+            if (opt::countPrivateVars) {
+                for (int i = 0; i < (int)populationsStrings.size(); i++) {
+                    populationsIndicesComplements.push_back(complementIndices(numSamples, populationsIndices[i]));
+                    std::cerr << "Pop: " << populationLabels[i] << "\t";
+                    print_vector_stream(populationsIndices[i], std::cerr,',');
+                    std::cerr << "complement: " << populationLabels[i] << "\t";
+                    print_vector_stream(populationsIndicesComplements[i], std::cerr,',');
+                    
+                }
+            }
+            
         } else {
             totalVariantNumber++;
             std::vector<std::string> fields = split(line, '\t');
@@ -155,7 +168,7 @@ int statsMain(int argc, char** argv) {
                     het_analysis(hetCounts, hetsSharedWithOthers, result);
                 }
                 if (opt::countPrivateVars) {
-                    privateVars_analysis(privateVarCounts,result,populationsIndices);
+                    privateVars_analysis(privateVarCounts,result,populationsIndices, populationsIndicesComplements);
                 }
                 if (opt::bDoubleton) {
                 //    doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);

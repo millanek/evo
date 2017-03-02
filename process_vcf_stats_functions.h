@@ -23,7 +23,7 @@ void het_analysis(std::vector<int>& hetCounts, std::vector<int>& sharedHetCounts
 void initializeDoubletons(std::vector<std::vector<int> >& d, const std::vector<std::string> populations);
 // Performing doubleton analysis
 void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult& result, int numChromosomes, const std::vector<std::string> p, std::map<std::string,int>& p_int_map);
-void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices);
+void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices, const std::vector<std::vector<size_t> >& populationsIndicesComplements);
 
 // Increment the diff (half)matrix, recording the differences 
 void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, FilterResult& result);
