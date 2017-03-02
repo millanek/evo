@@ -10,18 +10,20 @@
 #define vcf_process_process_vcf_stats_functions_h
 #include "process_vcf_utils.h"
 
+// Some helper functions for doing analyses at the level of populations
+std::vector<string> initialisePopulationMap(const std::vector<std::string> populations, std::map<std::string,int>& fp_map);
+std::map<std::string,std::vector<int>> getPopulationsToIndividualsMap(std::vector<std::string> populations, std::map<std::string,int>& fp_map);
+
 // Increment a counter for each individual who is het at this site
 void het_analysis(std::vector<int>& hetCounts, std::vector<int>& sharedHetCounts, FilterResult& result);
 
 
 // DOUBLETONS:
-// Initializing the doubleton data structure to get doubleton distribution per individual
-void initializeDoubletonsIndividuals(std::vector<std::vector<int> >& d, const std::vector<std::string> individuals);
 // Initializing the doubleton data structure if counting doubletons per population
-std::vector<std::string> initializeDoubletons(std::vector<std::vector<int> >& d, const std::vector<std::string> populations, std::map<std::string,int>& fp_map);
+void initializeDoubletons(std::vector<std::vector<int> >& d, const std::vector<std::string> populations);
 // Performing doubleton analysis
 void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult& result, int numChromosomes, const std::vector<std::string> p, std::map<std::string,int>& p_int_map);
-
+void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices);
 
 // Increment the diff (half)matrix, recording the differences 
 void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, FilterResult& result);

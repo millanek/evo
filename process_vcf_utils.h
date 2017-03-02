@@ -255,6 +255,8 @@ std::map<int, int> tabulateVector(std::vector<int>& vec);
 void initialize_matrix_double(std::vector<std::vector<double> >& m, int m_size);
 void initialize_matrix_int(std::vector<std::vector<int> >& m, int m_size);
 
+std::vector<size_t> complementIndices(const size_t fullVectorSize, const std::vector<size_t>& originalIndices);
+
 // Remove a single file extension from the filename
 std::string stripExtension(const std::string& filename);
 

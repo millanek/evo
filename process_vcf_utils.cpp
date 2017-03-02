@@ -638,6 +638,20 @@ std::vector<size_t> locateSet(std::vector<std::string>& sample_names, const std:
     return setLocs;
 }
 
+std::vector<size_t> complementIndices(const size_t fullVectorSize, const std::vector<size_t>& originalIndices) {
+    std::vector<size_t> indexComplement;
+    std::vector<bool> isInOriginal(fullVectorSize, false);
+    for (const size_t j : originalIndices) {
+        isInOriginal[j] = true;
+    }
+    indexComplement.reserve(fullVectorSize - originalIndices.size());
+    for (size_t i = 0; i < fullVectorSize; i++) {
+        if (!isInOriginal[i])
+        indexComplement.push_back(i);
+    }
+    return indexComplement;
+}
+
 size_t locateOneSample(std::vector<std::string>& sample_names, const std::string toFind) {
     size_t pos = 0;
     std::vector<std::string>::iterator it = std::find(sample_names.begin(), sample_names.end(), toFind);

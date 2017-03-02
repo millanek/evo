@@ -27,41 +27,88 @@ void het_analysis(std::vector<int>& hetCounts, std::vector<int>& sharedHetCounts
     }
 }
 
+std::vector<string> initialisePopulationMap(const std::vector<std::string> populations, std::map<std::string,int>& fp_map) {
+    std::vector<std::string> pop_unique = populations;
+    std::sort(pop_unique.begin(), pop_unique.end());
+    std::vector<std::string>::iterator it = std::unique(pop_unique.begin(), pop_unique.end());
+    pop_unique.resize(std::distance(pop_unique.begin(), it));
+    std::vector<std::string>::size_type n_pop = pop_unique.size();
+    // Initialize fields to populations map
+    for (int i = 0; i < n_pop; i++) {
+        fp_map[pop_unique[i]] = i;
+    }
+    std::cerr << "Initialised the population map; there are " << n_pop << " populations" << std::endl;
+    return pop_unique;
+}
+
+std::map<std::string,std::vector<int>> getPopulationsToIndividualsMap(std::vector<std::string> populations, std::map<std::string,int>& fp_map) {
+    std::map<std::string,std::vector<int>> popsToIndivMap;
+    for (std::map<std::string,int>::iterator it = fp_map.begin(); it != fp_map.end(); it++) {
+        std::vector<int> thisPopI;
+        std::vector<std::string>::iterator it_i =  std::find(populations.begin(), populations.end(), it->first);
+        while (it_i != populations.end()) {
+            thisPopI.push_back((int)std::distance(populations.begin(), it_i));
+            ++it_i;
+            it_i = std::find(it_i, populations.end(), it->first);
+        }
+        popsToIndivMap[it->first] = thisPopI;
+    }
+    return popsToIndivMap;
+}
+
+
+
 
 // Initializing the doubleton data structure
-std::vector<std::string> initializeDoubletons(std::vector<std::vector<int> >& d, const std::vector<std::string> populations, std::map<std::string,int>& fp_map) {
-    std::vector<std::string> pop_unique = populations;
-    //std::sort(pop_unique.begin(), pop_unique.end());
-    //std::vector<std::string>::iterator it = std::unique (pop_unique.begin(), pop_unique.end());
-    //pop_unique.resize(std::distance(pop_unique.begin(), it));
-    std::vector<std::string>::size_type n_pop = pop_unique.size();
+void initializeDoubletons(std::vector<std::vector<int> >& d, const std::vector<std::string> populationsUnique) {
+    std::vector<std::string>::size_type n_pop = populationsUnique.size();
     
     // Initialize doubletons
     for (int i = 0; i < n_pop; i++) { 
         std::vector<int> v(n_pop,0);
         d.push_back(v);
-    }   
-    // Initialize fields to populations map
-    for (int i = 0; i < n_pop; i++) { 
-        fp_map[pop_unique[i]] = i;
     }
 #ifdef TESTING
     std::cerr << "Doubletons initialised with size: " << n_pop << std::endl;
 #endif
-    return pop_unique;
 }
 
-// Initializing the doubleton data structure to get doubleton distribution per individual
-void initializeDoubletonsIndividuals(std::vector<std::vector<int> >& d, const std::vector<std::string> individuals) {
-    std::vector<std::string>::size_type n = individuals.size();
-    
-    // Initialize doubletons
-    for (int i = 0; i < n; i++) { 
-        std::vector<int> v(n,0);
-        d.push_back(v);
-    }   
-}
 
+void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices) {
+    for (int i = 0; i < (int)populationsIndices.size(); i++) {
+        bool allAlts = true; bool allRefs = true;
+        for (int j = 0; j < populationsIndices[i].size(); j++) {
+            if (result.counts.individualsWithVariant[populationsIndices[i][j]] != 2)
+                allAlts = false;
+            if (result.counts.individualsWithVariant[populationsIndices[i][j]] != 0)
+                allRefs = false;
+            if (!allAlts && !allRefs)
+                break;
+        }
+        if (!allAlts && !allRefs)
+            break;
+        
+        // If all individuals in the population have the same allele (either all alt or all ref)
+        // Then we look at the rest of the individuals in the dataset (complement)
+        std::vector<size_t> populationsIndexComplement = complementIndices(result.counts.individualsWithVariant.size(), populationsIndices[i]);
+        bool privateVar = true;
+        if (allAlts) {
+            for (int j = 0; j < populationsIndexComplement.size(); j++) {
+                if (result.counts.individualsWithVariant[populationsIndexComplement[j]] != 0)
+                    privateVar = false;
+            }
+        }
+        if (allRefs) {
+            for (int j = 0; j < (int)populationsIndexComplement.size(); j++) {
+                if (result.counts.individualsWithVariant[populationsIndexComplement[j]] != 2)
+                    privateVar = false;
+            }
+        }
+        if (privateVar) {
+            privateVarCounts[i]++;
+        }
+    }
+}
 
 // Filling in the doubleton data structure
 void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult& result, int numChromosomes, const std::vector<std::string> p, std::map<std::string,int>& p_int_map) {
