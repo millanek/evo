@@ -111,7 +111,7 @@ int statsMain(int argc, char** argv) {
         //pop_unique = initializeDoubletons(doubletons, indPopVector,fieldsPopMap);
     }
     if (opt::countPrivateVars) {
-        std::cerr << "The numbers of private variants fixed in groups defined in " << opt::populationsFile << " are going to be output to: " <<  fileRoot + ".privateFixedVars.txt" << std::endl;
+        std::cerr << "The numbers of private variants fixed in groups defined in " << opt::populationsFile << " are going to be output to: " <<  fileRoot + "_" + stripExtension(opt::populationsFile) + ".privateFixedVars.txt" << std::endl;
         //pop_unique = initializeDoubletons(doubletons, indPopVector,fieldsPopMap);
         
     }
@@ -160,7 +160,7 @@ int statsMain(int argc, char** argv) {
             std::vector<std::string> fields = split(line, '\t');
             
             FilterResult result;
-            result.counts = getThisVariantCounts(fields);
+            result.counts = getThisVariantCountsSimple(fields);
             
             // Only do these calculations if none of the genotypes are missing:
             if (result.counts.bAnyMissingGenotypes == false) {

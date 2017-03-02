@@ -114,6 +114,50 @@ double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) 
 }
 
 
+
+Counts getThisVariantCountsSimple(const std::vector<std::string>& fields) {
+    Counts thisVariantCounts;
+    thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
+    thisVariantCounts.haplotypesWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS)*2,0);
+    //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
+    // Find the position of DP (per sample read depth) in the genotypeData vector below
+    std::vector<std::string> format = split(fields[8], ':');
+
+        // Find the position of GQ (genotype quality) in the genotypeData vector below
+    
+    if (fields[NUM_NON_GENOTYPE_COLUMNS][1] == '|') { thisVariantCounts.bPhased = true; }
+    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
+        char v1 = fields[i][0]; char v2 = fields[i][2];
+        if (v1 == '.' || v2 == '.') {
+            thisVariantCounts.bAnyMissingGenotypes = true;
+        }
+        if (thisVariantCounts.bPhased == false) {
+            if ((v1 == '0' && v2 == '1') || (v1 == '1' && v2 == '0')) {
+                double r = ((double) rand() / (RAND_MAX));
+                if (r > 0.5) {
+                    v1 = '0'; v2 = '1';
+                } else {
+                    v1 = '1'; v2 = '0';
+                }
+            }
+        }
+        
+        if (v1 == '1') {
+            thisVariantCounts.overall++;
+            thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
+            thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)]++;
+        }
+        if (v2 == '1') {
+            thisVariantCounts.overall++;
+            thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
+            thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)+1]++;
+        }
+    }
+    return thisVariantCounts;
+}
+
+
+
 Counts getThisVariantCounts(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
     bool hasGQ = false; bool hasDP = false;

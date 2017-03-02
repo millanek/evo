@@ -90,18 +90,19 @@ void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult
         
         // If all individuals in the population have the same allele (either all alt or all ref)
         // Then we look at the rest of the individuals in the dataset (complement)
-       
         bool privateVar = true;
         if (allAlts) {
             for (int j = 0; j < populationsIndicesComplements[i].size(); j++) {
                 if (result.counts.individualsWithVariant[populationsIndicesComplements[i][j]] != 0)
                     privateVar = false;
             }
+            //print_vector_stream(populationsIndices[i], std::cerr);
+            //print_vector_stream(result.counts.individualsWithVariant, std::cerr);
         }
         if (allRefs) {
             for (int j = 0; j < (int)populationsIndicesComplements[i].size(); j++) {
                 if (result.counts.individualsWithVariant[populationsIndicesComplements[i][j]] != 2)
-                    privateVar = false;
+                privateVar = false;
             }
         }
         if (privateVar) {

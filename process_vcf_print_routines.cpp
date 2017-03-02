@@ -57,7 +57,7 @@ void print_het_counts(const string& fileRoot, const std::vector<std::string>& he
 
 
 void print_privateFixedVarsSummary(const string& fileRoot, const std::vector<std::string>& header, const string& populationsFile,  const std::vector<int>& privateVarCounts) {
-    string privateVarFileName = fileRoot + ".privateFixedVars.txt";
+    string privateVarFileName = fileRoot + "_" + stripExtension(populationsFile) + ".privateFixedVars.txt";
     std::ofstream* pPrivateVarFile = new std::ofstream(privateVarFileName.c_str());
     *pPrivateVarFile << "# Counts of private fixed variants:" << std::endl;
     *pPrivateVarFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
