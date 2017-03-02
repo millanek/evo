@@ -81,14 +81,16 @@ int statsMain(int argc, char** argv) {
     std::ifstream* popFile;
     
     // Data structures to hold individual and population identifiers
-    std::vector<std::string> sampleNames;
+    std::vector<std::string> sampleNames; std::vector<string> populationLabels;
     std::vector<std::string> populationsStrings; std::vector<std::vector<size_t> > populationsIndices;
     // Read in the POPULATIONS_FILE if supplied
     if (!opt::populationsFile.empty()) {
         popFile = new std::ifstream(opt::populationsFile.c_str());
         string line;
         while (getline(*popFile, line)) {
-            populationsStrings.push_back(line);
+            std::vector<std::string> popnamePopstring = split(line, '\t');
+            populationLabels.push_back(popnamePopstring[0]);
+            populationsStrings.push_back(popnamePopstring[1]);
         }
     }
     
