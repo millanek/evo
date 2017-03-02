@@ -135,7 +135,7 @@ int statsMain(int argc, char** argv) {
             initialize_matrix_double(diffMatrix, numSamples); initialize_matrix_double(diffMatrixMe, numSamples);
             initialize_matrix_double(diffMatrixHetsVsHomDiff, numSamples);
             initialize_matrix_double(diffMatrixH1, numSamples); initialize_matrix_double(diffMatrixAllH, numSamples);
-            privateVarCounts.assign(numSamples, 0); hetCounts.assign(numSamples, 0); hetsSharedWithOthers.assign(numSamples, 0);
+            privateVarCounts.assign(populationLabels.size(), 0); hetCounts.assign(numSamples, 0); hetsSharedWithOthers.assign(numSamples, 0);
             if (!populationsStrings.empty()) {
                 for (int i = 0; i != (int)populationsStrings.size(); i++) {
                     std::vector<size_t> thisIndices = locateSet(sampleNames, split(populationsStrings[i],','));
