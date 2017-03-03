@@ -101,42 +101,47 @@ SetCounts getVariantCountsForFst(const std::vector<std::string>& fields, const s
     thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
     thisVariantCounts.set1individualsWithVariant.assign(set1_loci.size(),0);
     thisVariantCounts.set2individualsWithVariant.assign(set2_loci.size(),0);
-    int n1 = (int)(set1_loci.size()+set1_loci.size()); int n2 = (int)(set2_loci.size()+set2_loci.size());
+    int n1 = (int)(set1_loci.size()*2); int n2 = (int)(set2_loci.size()*2);
     thisVariantCounts.set1HaplotypeVariant.assign(n1,0);
     thisVariantCounts.set2HaplotypeVariant.assign(n2,0);
-    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
-    int set1i = 0; bool inSet1 = false; int set2i = 0; bool inSet2 = false; int set1hapI = 0; int set2hapI = 0;
-    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-        if (std::find(set1_loci.begin(), set1_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set1_loci.end()) { inSet1 = true; }
-        if (std::find(set2_loci.begin(), set2_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set2_loci.end()) { inSet2 = true; }
-        
-        if (fields[i][0] == '1') {
-            thisVariantCounts.overall++;
-            if (inSet1) {
-                thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
-                thisVariantCounts.set1HaplotypeVariant[set1hapI]++;
-            }
-            if (inSet2) {
-                thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
-                thisVariantCounts.set2HaplotypeVariant[set2hapI]++;
-            }
-            thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
+    int set1i = 0; int set2i = 0; int set1hapI = 0; int set2hapI = 0;
+    std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+    // std::cerr << fields[0] << "\t" << fields[1] << "\tgenotypes.size()" << genotypes.size() << std::endl;
+    for (const size_t i : set1_loci) {
+        if (genotypes[i][0] == '1') {
+            thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
+            thisVariantCounts.set1HaplotypeVariant[set1hapI]++;
         }
-        if (fields[i][2] == '1') {
-            thisVariantCounts.overall++;
-            if (inSet1) {
-                thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
-                thisVariantCounts.set1HaplotypeVariant[set1hapI+1]++;
-            }
-            if (inSet2) {
-                thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
-                thisVariantCounts.set2HaplotypeVariant[set2hapI+1]++;
-            }
-            thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
+        if (genotypes[i][2] == '1') {
+            thisVariantCounts.set1Count++; thisVariantCounts.set1individualsWithVariant[set1i]++;
+            thisVariantCounts.set1HaplotypeVariant[set1hapI+1]++;
         }
-        if (inSet1) { set1i++; set1hapI = set1hapI+2; inSet1 = false; }
-        if (inSet2) { set2i++; set2hapI = set2hapI+2; inSet2 = false; }
+        set1i++; set1hapI = set1hapI+2;
     }
+    for (const size_t i : set2_loci) {
+        if (genotypes[i][0] == '1') {
+            thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
+            thisVariantCounts.set2HaplotypeVariant[set2hapI]++;
+        }
+        if (genotypes[i][2] == '1') {
+            thisVariantCounts.set2Count++; thisVariantCounts.set2individualsWithVariant[set2i]++;
+            thisVariantCounts.set2HaplotypeVariant[set2hapI+1]++;
+        }
+        set2i++; set2hapI = set2hapI+2;
+    }
+    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
+        if (fields[i][0] == '1')
+            thisVariantCounts.overall++;
+        if (fields[i][2] == '1')
+            thisVariantCounts.overall++;
+    }
+    // std::cerr << "got here" << std::endl;
+    /*if (fields[1] == "13433") {
+        std::cerr << thisVariantCounts.set1Count << std::endl;
+        std::cerr << thisVariantCounts.set2Count << std::endl;
+        print_vector_stream(thisVariantCounts.set1individualsWithVariant, std::cerr);
+        print_vector_stream(thisVariantCounts.set2individualsWithVariant, std::cerr);
+    } */
     return thisVariantCounts;
 }
 
@@ -218,6 +223,7 @@ std::vector<double> getSetHeterozygozities(const SetCounts& thisVarCounts, const
 
 
 void getFstFromVCF() {
+    clock_t begin = clock();
     std::cerr << "Calculating Fst using variants from: " << opt::vcfFile << std::endl;
     std::cerr << "Between the two 'populations' defined in: " << opt::sampleSets << std::endl;
     if (opt::windowSize > 0) {
@@ -370,6 +376,7 @@ void getFstFromVCF() {
             string scaffold = fields[0]; string loc = fields[1]; // Scaffold
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {  // Without indels
+                
                 SetCounts counts = getVariantCountsForFst(fields,set1Loci,set2Loci);
                 //std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
                 //std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << "\t" << n1 << std::endl;
@@ -542,6 +549,10 @@ void getFstFromVCF() {
     std::cerr << "Fst: " << Fst << std::endl;
     std::cerr << "Heterozygosities: " << "\tS1:" << overallHetS1 << "\tS2:" << overallHetS2 << "\tNei1:" << overallHetNei1 << "\tNei2" << overallHetNei2 << std::endl;
     *pHetSets << "#Heterozygosities: " << "\tS1:" << overallHetS1 << "\tS2:" << overallHetS2 << "\tNei1:" << overallHetNei1 << "\tNei2" << overallHetNei2 << std::endl;
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    std::cerr << "Time taken: " << elapsed_secs << std::endl;
+
     fstDxyFixedWindowFile->close();
 }
 
