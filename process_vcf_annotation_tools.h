@@ -61,8 +61,8 @@ private:
             for (int i = 0; i < intervalLength; i++) {
                 // Mapping will be 1-indexed, as in VCF files
                 int pos = linearPosition+i;
-                if (pos % 100000 == 0)
-                    std::cerr << "Loaded and mapped " << pos << " bp" << std::endl;
+                if (pos % 1000000 == 0)
+                    std::cerr << "Loaded and mapped " << pos/1000000 << "Mb" << std::endl;
                 linearToGenomeCoordMap[pos] = currentScaffold+"\t"+numToString(left+i+1);
             } linearPosition = linearPosition + intervalLength;
             
