@@ -48,4 +48,36 @@ inline double calculateExpectedHeterozygosityNei78(const double p, const int n) 
     return heterozygosity;
 }
 
+// For now this requires that the VCF has one individual per species
+inline double calculateOverallDxy(const Counts& thisVarCounts) {
+    double Dxy;
+    int numSamples = (int)thisVarCounts.individualsWithVariant.size();
+    int sumKij = 0;
+    for (std::vector<std::string>::size_type i = 0; i != numSamples - 1; i++) {
+        for (std::vector<std::string>::size_type j = i+1; j != numSamples; j++) {
+            if (thisVarCounts.individualsWithVariant[i] == 0 && thisVarCounts.individualsWithVariant[j] == 0) {
+            } else if (thisVarCounts.individualsWithVariant[i] == 1 && thisVarCounts.individualsWithVariant[j] == 0) {
+                sumKij = sumKij + 2;
+            } else if (thisVarCounts.individualsWithVariant[i] == 0 && thisVarCounts.individualsWithVariant[j] == 1) {
+                sumKij = sumKij + 2;
+            } else if (thisVarCounts.individualsWithVariant[i] == 1 && thisVarCounts.individualsWithVariant[j] == 1) {
+                sumKij = sumKij + 2;
+            } else if (thisVarCounts.individualsWithVariant[i] == 2 && thisVarCounts.individualsWithVariant[j] == 1) {
+                sumKij = sumKij + 2;
+            } else if (thisVarCounts.individualsWithVariant[i] == 1 && thisVarCounts.individualsWithVariant[j] == 2) {
+                sumKij = sumKij + 2;
+            } else if (thisVarCounts.individualsWithVariant[i] == 2 && thisVarCounts.individualsWithVariant[j] == 2) {
+            } else if (thisVarCounts.individualsWithVariant[i] == 2 && thisVarCounts.individualsWithVariant[j] == 0) {
+                sumKij = sumKij + 4;
+            } else if (thisVarCounts.individualsWithVariant[i] == 0 && thisVarCounts.individualsWithVariant[j] == 2) {
+                sumKij = sumKij + 4;
+            }
+        }
+    }
+    Dxy = (double)sumKij/(2*(numSamples*(numSamples-1)));
+    return Dxy;
+}
+
+
+
 #endif /* defined(__process_vcf__process_vcf_fst__) */

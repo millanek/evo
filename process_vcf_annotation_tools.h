@@ -20,6 +20,65 @@ inline std::string geneFromTranscript(const std::string& transcript) {
     return geneName;
 }
 
+
+class SimpleCoordsBed {
+public:
+    SimpleCoordsBed() {};
+
+    SimpleCoordsBed(std::ifstream*& bedFile, std::map<int, string>& linearToGenomeCoordMap) {
+        loadSimpleCoords(bedFile, linearToGenomeCoordMap);
+    }
+    
+private:
+    // Require: coordinates are sorted by scaffold
+    std::map<string, std::vector<std::vector<string> > > loadSimpleCoords(std::ifstream*& bedFile, std::map<int,string>& linearToGenomeCoordMap) {
+        std::map<string, std::vector<std::vector<string> > > coordsScaffoldMap;
+        std::vector<std::vector<string> > coordsInScaffold;
+        int linearPosition = 0; // Linear positions will be 0-indexed (will start at zero)
+        string line;
+        // Do the first line to find the name of the first scaffold
+        getline(*bedFile, line);
+        std::vector<string> bedVector = split(line, '\t');
+        string currentScaffold = bedVector[0];
+        int left = atoi(bedVector[1].c_str());
+        int right = atoi(bedVector[2].c_str());
+        int intervalLength = right - left;
+        coordsInScaffold.push_back(bedVector);
+        
+        for (int i = 0; i < intervalLength; i++) {
+            // Mapping will be 1-indexed, as in VCF files
+            linearToGenomeCoordMap[linearPosition+i] = currentScaffold+"\t"+numToString(left+i+1);
+        } linearPosition = linearPosition + intervalLength;
+        
+        //
+        while (getline(*bedFile, line)) {
+            std::vector<string> bedVector = split(line, '\t');
+            string scaffold = bedVector[0];
+            int left = atoi(bedVector[1].c_str());
+            int right = atoi(bedVector[2].c_str());
+            int intervalLength = right - left;
+            
+            for (int i = 0; i < intervalLength; i++) {
+                // Mapping will be 1-indexed, as in VCF files
+                int pos = linearPosition+i;
+                if (pos % 100000 == 0)
+                    std::cerr << "Loaded and mapped " << pos << " bp" << std::endl;
+                linearToGenomeCoordMap[pos] = currentScaffold+"\t"+numToString(left+i+1);
+            } linearPosition = linearPosition + intervalLength;
+            
+            if (scaffold == currentScaffold) {
+                coordsInScaffold.push_back(bedVector);
+            } else {
+                coordsScaffoldMap[currentScaffold] = coordsInScaffold;
+                coordsInScaffold.clear();
+                currentScaffold = scaffold;
+            }
+        }
+        return coordsScaffoldMap;
+    }
+};
+
+    
 class Annotation {
 public:
     Annotation() {};

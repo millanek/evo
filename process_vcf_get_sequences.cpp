@@ -33,7 +33,7 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       --by-scaffold                               output by scaffold/LG (each scaffold/LG) has its own file with sequences\n"
 "                                                   for all samples\n"
 "       --whole-genome                              output is one file with the whole genome concatenated for all samples\n"
-"       -r, --het-random                        assign het bases randomly (instead of using an ambiguity code)\n"
+"       -r, --het-random                            assign het bases randomly (instead of using an ambiguity code)\n"
 "       --split NUM                                 split output into sequences containing approx. NUM segregating sites\n"
 "                                                   each file contains sequences for all samples; this is intended for phylogenetic analyses\n"
 "                                                   incompatible with --by-scaffold\n"

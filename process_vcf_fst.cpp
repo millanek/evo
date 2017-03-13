@@ -33,6 +33,7 @@ static const char *FST_USAGE_MESSAGE =
 "                                               outputs the location of SNPs with particular Fst levels with respect to exons, introns, UTRs, non-coding regions\n\n"
 "       --regions-above=minFst                  (optional, requires -w) outputs the boundaries of regions whose Fst in windows of size set in -w is at least minFst\n"
 "                                               the output file has the suffix '_fst_above_minFst.txt'\n"
+"       --physicalWindowSize=SIZE               (optional; default 10000bp) The size of windows in bp for calculating Fst and Dxy (output in the file with 'dXY_fixedWindow.txt' suffix\n"
 "       --accessibleGenomeBED=BEDfile.bed       (optional) a bed file specifying the regions of the genome where we could call SNPs\n:"
 "                                               this is used when calculating nucleotide diversity (pi) and absolute sequence divergence (d_XY) in fixed windows\n"
 "       To calculate Fst statistics from ms simulation output:\n"
@@ -49,7 +50,7 @@ static const char *FST_USAGE_MESSAGE =
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_HELP = 1, OPT_VCF, OPT_SETS, OPT_ANNOT, OPT_MS, OPT_EIGEN, OPT_MS_SET1_SIZE, OPT_MS_SET1_SAMPLE, OPT_MS_SET2_SIZE, OPT_MS_SET2_SAMPLE, OPT_MS_PVALS, OPT_ANC_SETS, OPT_REG_ABOVE, OPT_ACC_GEN_BED  };
+enum { OPT_HELP = 1, OPT_VCF, OPT_SETS, OPT_ANNOT, OPT_MS, OPT_EIGEN, OPT_MS_SET1_SIZE, OPT_MS_SET1_SAMPLE, OPT_MS_SET2_SIZE, OPT_MS_SET2_SAMPLE, OPT_MS_PVALS, OPT_ANC_SETS, OPT_REG_ABOVE, OPT_ACC_GEN_BED, OPT_PHYS_WINDOW_SIZE  };
 
 static const char* shortopts = "hn:s:w:";
 
@@ -68,6 +69,7 @@ static const struct option longopts[] = {
     { "msPvals", required_argument, NULL, OPT_MS_PVALS },
     { "eigen",   required_argument, NULL, OPT_EIGEN },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
+    { "physicalWindowSize", required_argument, NULL, OPT_PHYS_WINDOW_SIZE },
     { "samples",   required_argument, NULL, 's' },
     { "run-name",   required_argument, NULL, 'n' },
     { "help",   no_argument, NULL, 'h' },
@@ -83,6 +85,7 @@ namespace opt
     static string accesibleGenBedFile;
     static int windowSize = 0;
     static int windowStep = 0;
+    static int physicalWindowSize = 10000;
     static double regAbove = 0;
     static string annotFile;
     static string eigensoftFile;
@@ -428,12 +431,11 @@ void getFstFromVCF() {
                         
                     }
                     std::vector<string> s = split(windowStartEnd, '\t');
-                    int fixedwindowSize = 10000;
                     if (s[0] == scaffold) {
-                        if (atoi(fields[1].c_str()) > (fixedWindowStart+fixedwindowSize)) {
-                            int accessibleInThisWindow = fixedwindowSize;
+                        if (atoi(fields[1].c_str()) > (fixedWindowStart+opt::physicalWindowSize)) {
+                            int accessibleInThisWindow = opt::physicalWindowSize;
                             if (!opt::accesibleGenBedFile.empty()) {
-                                accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+fixedwindowSize);
+                                accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+opt::physicalWindowSize);
                             }
                             double thisFixedWindowDxy = vector_average_withRegion(fixedWindowDxyVector, accessibleInThisWindow);
                             double thisFixedWindowFst = calculateFst(fixedWindowFstNumVector, fixedWindowFstDenomVector);
@@ -445,20 +447,20 @@ void getFstFromVCF() {
                             int numVariantsInThisFixedWindow1 = (int)fixedWindowPi1Vector.size() - Pi1NumZeros;
                             int Pi2NumZeros = (int)std::count(fixedWindowPi2Vector.begin(), fixedWindowPi2Vector.end(), 0);
                             int numVariantsInThisFixedWindow2 = (int)fixedWindowPi2Vector.size() - Pi2NumZeros;
-                            *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow1/accessibleInThisWindow << "\t" << (double)numVariantsInThisFixedWindow2/accessibleInThisWindow << std::endl;
+                            *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+opt::physicalWindowSize << "\t" << thisFixedWindowFst << "\t" << thisFixedWindowDxy << "\t" << thisFixedWindowPi1 << "\t" << thisFixedWindowPi2 << "\t" << accessibleInThisWindow << "\t" <<  (double)numVariantsInThisFixedWindow1/accessibleInThisWindow << "\t" << (double)numVariantsInThisFixedWindow2/accessibleInThisWindow << std::endl;
                             fixedWindowDxyVector.clear(); fixedWindowFstNumVector.clear(); fixedWindowFstDenomVector.clear();
                             fixedWindowHet1Vector.clear(); fixedWindowHet2Vector.clear(); fixedWindowPi1Vector.clear(); fixedWindowPi2Vector.clear();
                             // Handle fixed windows that do not contain any variants
                             int fixedWindowsWithoutAnyVariants = 0;
-                            while (atoi(fields[1].c_str()) > (fixedWindowStart+fixedwindowSize)) {
+                            while (atoi(fields[1].c_str()) > (fixedWindowStart+opt::physicalWindowSize)) {
                                 if (fixedWindowsWithoutAnyVariants > 0) {
-                                    int accessibleInThisWindow = fixedwindowSize;
+                                    int accessibleInThisWindow = opt::physicalWindowSize;
                                     if (!opt::accesibleGenBedFile.empty()) {
-                                        accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+fixedwindowSize);
+                                        accessibleInThisWindow = ag->getAccessibleBPinRegion(scaffold, fixedWindowStart, fixedWindowStart+opt::physicalWindowSize);
                                     }
-                                    *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+fixedwindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << "\t" << 0 << std::endl;
+                                    *fstDxyFixedWindowFile << scaffold << "\t" << fixedWindowStart << "\t" << fixedWindowStart+opt::physicalWindowSize << "\t" << "NA" << "\t" << 0 << "\t" << 0 << "\t" << 0 << "\t" << accessibleInThisWindow << "\t" << 0 << "\t" << 0 << std::endl;
                                 }
-                                fixedWindowStart= fixedWindowStart+fixedwindowSize;
+                                fixedWindowStart= fixedWindowStart+opt::physicalWindowSize;
                                 fixedWindowsWithoutAnyVariants++;
                             }
                         }
@@ -811,6 +813,7 @@ void parseFstOptions(int argc, char** argv) {
             case OPT_MS_SET2_SAMPLE: arg >> opt::msSet2FstSample; break;
             case OPT_MS_PVALS: arg >> opt::msPvalCutoff; break;
             case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
+            case OPT_PHYS_WINDOW_SIZE: arg >> opt::physicalWindowSize; break;
             case 's': arg >> opt::sampleNameFile; break;
             case 'n': arg >> opt::runName; break;
             case '?': die = true; break;
