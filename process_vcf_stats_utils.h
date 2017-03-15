@@ -148,6 +148,23 @@ inline double pearson_chi_sq_indep(int a, int b, int c, int d) {
 }
 
 
+// Pearson's chi-squared goodness-of-fit test:
+inline double pearson_chi_sq_goodness_of_fit(std::vector<double> observed, std::vector<double> expected, int df, bool lowerTail = true) {
+    assert(observed.size() == expected.size());
+    double chi_sq = 0;
+    // Sum:
+    for (int i = 0; i < (int)observed.size(); i++) {
+        chi_sq = chi_sq + (pow((observed[i]-expected[i]),2)/expected[i]);
+    }
+    
+    double p = chisq_cdf(df, chi_sq);
+    if (lowerTail)
+        p = 1-p;
+    
+    return p;
+}
+
+
 // Fisher's exact test: (a - row1,column1; b - row1,column2; c - row2,column1; d- row2,column2)
 // Probability of a specific table
 inline double fisher_exactTable(int a, int b, int c, int d) {

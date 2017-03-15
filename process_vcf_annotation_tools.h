@@ -78,6 +78,101 @@ private:
     }
 };
 
+class LinkedCoordsBed {
+public:
+    LinkedCoordsBed() {};
+    
+    LinkedCoordsBed(std::ifstream*& bedFile) {
+        elementCoordsVector = loadLinkedCoords(bedFile);
+    }
+    
+    std::vector<std::vector<std::vector<string> > > elementCoordsVector;
+    
+    
+    std::vector<std::vector<string> > getElementOuterBoundaries() {
+        std::vector<std::vector<string> > allOuterBounds;
+        for (int i = 0; i < (int)elementCoordsVector.size(); i++) {
+            std::vector<std::vector<string> > thisElement = elementCoordsVector[i];
+            //if (thisElement[0].size() < 4) {
+            //    std::cerr << "thisElement[0].size()" << thisElement.size() << std::endl;
+            //}
+            std::vector<string> elementOuterBounds;
+            elementOuterBounds.push_back(thisElement[0][0]);
+            elementOuterBounds.push_back(thisElement[0][1]);
+            elementOuterBounds.push_back(thisElement.back()[2]);
+            allOuterBounds.push_back(elementOuterBounds);
+        }
+        return allOuterBounds;
+    }
+    
+    std::vector<string> getElementNames() {
+        std::vector<string> elementNames;
+        for (int i = 0; i < (int)elementCoordsVector.size(); i++) {
+            std::vector<std::vector<string> > thisElement = elementCoordsVector[i];
+            //if (thisElement[0].size() < 4) {
+            //    std::cerr << "thisElement[0].size()" << thisElement.size() << std::endl;
+            //}
+            elementNames.push_back(thisElement[0][3]);
+        }
+        return elementNames;
+    }
+    
+    std::vector<double> getDxyPerElement(std::unordered_map<string, double>& posDxyMap) {
+        std::vector<double> elementDxyValues;
+        for (int i = 0; i < (int)elementCoordsVector.size(); i++) {
+            std::vector<std::vector<string> > thisElement = elementCoordsVector[i];
+            double elementDxyTotal = 0; int elementLengthTotal = 0;
+            for (int j = 0; j < (int)thisElement.size(); j++) {
+                std::vector<string> thisCoordVector = thisElement[j];
+                string currentScaffold = thisCoordVector[0];
+                int left = atoi(thisCoordVector[1].c_str());
+                int right = atoi(thisCoordVector[2].c_str());
+                int intervalLength = right - left;
+                for (int k = 0; k < intervalLength; k++) {
+                    string genomeLocation = currentScaffold+"\t"+numToString(left+k+1);
+                    if (posDxyMap.count(genomeLocation) == 1) {
+                        elementDxyTotal = elementDxyTotal + posDxyMap[genomeLocation];
+                    }
+                }
+                elementLengthTotal = elementLengthTotal + intervalLength;
+            }
+            elementDxyValues.push_back(elementDxyTotal/elementLengthTotal);
+        }
+        return elementDxyValues;
+    }
+    
+private:
+    // Require: coordinates are sorted by scaffold
+    std::vector<std::vector<std::vector<string> > > loadLinkedCoords(std::ifstream*& bedFile) {
+        std::vector<std::vector<std::vector<string> > > elementCoordsVector;
+        std::vector<std::vector<string> > thisElement;
+        
+        // Do the first line to find the name of the first scaffold and of the first element
+        string line;
+        getline(*bedFile, line);
+        std::vector<string> bedVector = split(line, '\t');
+        string currentElementName = bedVector[3];
+        thisElement.push_back(bedVector);
+        
+        //
+        while (getline(*bedFile, line)) {
+            std::vector<string> bedVector = split(line, '\t');
+            string element = bedVector[3];
+            if (element == currentElementName) {
+                thisElement.push_back(bedVector);
+            } else {
+                elementCoordsVector.push_back(thisElement);
+                thisElement.clear();
+                currentElementName = element;
+                thisElement.push_back(bedVector);
+            }
+        }
+        return elementCoordsVector;
+    }
+};
+
+
+
     
 class Annotation {
 public:

@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include "process_vcf_utils.h"
-
+#include "process_vcf_stats_utils.h"
 
 void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
@@ -112,6 +112,37 @@ double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant) 
     double F = (HWAa - pAa) / HWAa;
     return F;
 }
+
+double calculateChiSqPvalForInbreeding(std::vector<int>& individualsWithVariant) {
+    // Get the observed numbers of genotypes
+    int naa = 0; int nAa = 0; int nAA = 0;
+    for (std::vector<int>::size_type i = 0; i != individualsWithVariant.size(); i++) {
+        if (individualsWithVariant[i] == 0) naa++;
+        if (individualsWithVariant[i] == 1) nAa++;
+        if (individualsWithVariant[i] == 2) nAA++;
+    }
+    
+    // Get the observed proportions of alt-hom and hets
+    double pAA = (double)nAA / individualsWithVariant.size();
+    double pAa = (double)nAa / individualsWithVariant.size();
+    // Allele frequencies
+    double p = pAA + (0.5 * pAa);
+    double q = 1 - p;
+    // Get the Hardy-Weinberg prediction for expected proportion of heterozygotes:
+    double HWAa = 2*p*q;
+    
+    // Get the expected numbers of genotypes:
+    double expAA = pow(p, 2) * individualsWithVariant.size();
+    double expAa = HWAa * individualsWithVariant.size();
+    double expaa = pow(q, 2) * individualsWithVariant.size();
+    
+    // Perform the chi-Sqared test
+    std::vector<double> observed{static_cast<double>(nAA),static_cast<double>(nAa),static_cast<double>(naa)};
+    std::vector<double> expected{expAA,expAa,expaa};
+    double pVal = pearson_chi_sq_goodness_of_fit(observed, expected, 1);
+    return pVal;
+}
+
 
 
 

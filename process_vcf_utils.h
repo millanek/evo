@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <math.h>
+#include <unordered_map>
 #include "gzstream.h"
 using std::string;
 #define PROGRAM_BIN "evo"
@@ -31,7 +32,7 @@ static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column 
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), bPhased(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), chiSqPvalForInbreeding(1), bPhased(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};
     
     int overall;
     int minimumDepthInAnIndividual;
@@ -40,6 +41,7 @@ public:
     std::string MQSBpval; // Phred-scaled pvalue
     double SGB; // 
     double inbreedingCoefficient;
+    double chiSqPvalForInbreeding;
     bool bPhased;
     std::vector<int> individualsWithVariant;
     std::vector<int> depthPerIndividual;
@@ -248,6 +250,7 @@ std::vector<std::string> split(const std::string &s, char delim);
 double stringToDouble(std::string s);
 
 double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant);
+double calculateChiSqPvalForInbreeding(std::vector<int>& individualsWithVariant);
 
 // Does the same as R function table
 std::map<int, int> tabulateVector(std::vector<int>& vec);
