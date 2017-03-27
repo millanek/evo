@@ -190,7 +190,6 @@ int getCodingSeqMain(int argc, char** argv) {
                         std::cerr << "Error!!! Reference scaffold length: " << currentScaffoldReference.length() << " vcf scaffold length: " << scaffoldStrings[0].length() << std::endl;
                     }
 #endif
-                     
                     std::cerr << currentScaffoldNum << std::endl;
                     annotation = wgAnnotation.annotationMap[currentScaffoldNum]; // Get annotation for this scaffold
                     
@@ -234,7 +233,8 @@ int getCodingSeqMain(int argc, char** argv) {
                                     getStatsHaploidSeq(allSeqs, statsThisGene);
                                     print_vector_stream(statsThisGene, std::cout);
                                 } else if (opt::hetTreatment == 'b') {
-                                    getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene);
+                                    std::vector<std::vector<double> > combinedVectorForPCA;
+                                    getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA);
                                     print_vector_stream(statsThisGene, std::cout);
                                 } else {
                                     getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
@@ -283,35 +283,37 @@ int getCodingSeqMain(int argc, char** argv) {
                 }
                 
             }
-            std::string ref = fields[3];  std::string alt = fields[4];
-            if (ref.length() == 1 && alt.length() == 1) { // Only use Biallelic SNPs (or multiallelics split across multiple lines)
-                for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-                    //std::cerr << "Going through genotypes1:" << i << std::endl;
-                    //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
-                    int sampleNum = (int)i - NUM_NON_GENOTYPE_COLUMNS;
-                    scaffoldStrings[sampleNum].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
-                    if (opt::hetTreatment == 'b')
-                        scaffoldStringsH2[sampleNum].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
-                    std::vector<string> genotypeFields = split(fields[i], ':');
-                    std::vector<char> genotype;
-                    genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
-                    if (opt::hetTreatment == 'b') {
-                        // Somewhat hacky:
-                        // 1) add to the first haplotype
-                        appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, 'p');
-                        // 2) add to the second haplotype
-                        appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'b');
-                    } else {
-                        appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, opt::hetTreatment);
+            if (wgAnnotation.annotationMap.count(fields[0]) == 1) {
+                std::string ref = fields[3];  std::string alt = fields[4];
+                if (ref.length() == 1 && alt.length() == 1) { // Only use Biallelic SNPs (or multiallelics split across multiple lines)
+                    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
+                        //std::cerr << "Going through genotypes1:" << i << std::endl;
+                        //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
+                        int sampleNum = (int)i - NUM_NON_GENOTYPE_COLUMNS;
+                        scaffoldStrings[sampleNum].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
+                        if (opt::hetTreatment == 'b')
+                            scaffoldStringsH2[sampleNum].append(currentScaffoldReference.substr(inStrPos, (atoi(fields[1].c_str()) - 1)-inStrPos));
+                        std::vector<string> genotypeFields = split(fields[i], ':');
+                        std::vector<char> genotype;
+                        genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
+                        if (opt::hetTreatment == 'b') {
+                            // Somewhat hacky:
+                            // 1) add to the first haplotype
+                            appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, 'p');
+                            // 2) add to the second haplotype
+                            appendGenotypeBaseToString(scaffoldStringsH2[sampleNum], fields[3], fields[4], genotype, 'b');
+                        } else {
+                            appendGenotypeBaseToString(scaffoldStrings[sampleNum], fields[3], fields[4], genotype, opt::hetTreatment);
+                        }
                     }
+                    inStrPos = atoi(fields[1].c_str());
+                    
+    #ifdef DEBUG
+                    if (currentScaffoldReference[inStrPos-1] != fields[3][0]) {
+                        std::cerr << "Error!!! Sequence: " << currentScaffoldReference[inStrPos-1] << " vcf-ref: " << fields[3][0] << std::endl;
+                    }
+    #endif
                 }
-                inStrPos = atoi(fields[1].c_str());
-                
-#ifdef DEBUG
-                if (currentScaffoldReference[inStrPos-1] != fields[3][0]) {
-                    std::cerr << "Error!!! Sequence: " << currentScaffoldReference[inStrPos-1] << " vcf-ref: " << fields[3][0] << std::endl;
-                }
-#endif
             }
             if (processedVariantCounter % 10000 == 0) {
                 std::cerr << processedVariantCounter << " variants processed..." << std::endl;
@@ -441,9 +443,9 @@ void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<str
 // To DO:
 // 1) Get some sort of inbreeding coefficient (how often are they homozygous ('fixed' in a species) vs. heterozygous)
 // 2) Would also be good to distinguish derived vs. ancestral alleles?
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, double tStVratio) {
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio) {
     //std::cerr << "Collecting gene sequence statistics...." << std::endl;
-    clock_t begin = clock();
+    //clock_t begin = clock();
     double pN = 0; double pS = 0;
     double hetN = 0; double hetS = 0;
     assert(allSeqs.size() == allSeqsH2.size());
@@ -451,6 +453,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     int numSamples = (int)allSeqs.size();
     std::vector<string> altCodons; altCodons.resize(numSamples);
     std::vector<string> altCodonsH2; altCodonsH2.resize(numSamples);
+    initialize_matrix_double(combinedVectorForPCA, numSamples);
     
     std::map<std::vector<string>::size_type, int> haveStop;
     std::map<std::vector<string>::size_type, int> haveStopH2;
@@ -499,6 +502,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             //double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
             double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k])+pairwiseMatrices.H1p->tV_N_jk[j][k]);
+            combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + pN_jk;
             //if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 //std::cerr << "j = " << j << "; k = " << k << std::endl;
                 //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
@@ -507,6 +511,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             sumPn = sumPn + pN_jk;
             double pS_jk = pairwiseMatrices.H1p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_S_jk[j][k])+pairwiseMatrices.H1p->tV_S_jk[j][k]); sumPs = sumPs + pS_jk;
             double H2pN_jk = pairwiseMatrices.H2p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H2p->tS_N_jk[j][k])+pairwiseMatrices.H2p->tV_N_jk[j][k]); sumPn = sumPn + H2pN_jk;
+            combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + H2pN_jk;
             //std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
             //std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             double H2pS_jk = pairwiseMatrices.H2p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H2p->tS_S_jk[j][k])+pairwiseMatrices.H2p->tV_S_jk[j][k]); sumPs = sumPs + H2pS_jk;
@@ -526,6 +531,10 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             if (j != k) {
                 double H1H2pN_jk = pairwiseMatrices.H1H2p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]);
                 double H1H2pS_jk = pairwiseMatrices.H1H2p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_S_jk[j][k])+pairwiseMatrices.H1H2p->tV_S_jk[j][k]);
+                if (j < k)
+                    combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + H1H2pN_jk;
+                else
+                    combinedVectorForPCA[k][j] = combinedVectorForPCA[k][j] + H1H2pN_jk;
                 sumPn = sumPn + H1H2pN_jk;
                 sumPs = sumPs + H1H2pS_jk;
             } else {

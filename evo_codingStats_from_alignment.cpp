@@ -56,7 +56,7 @@ namespace opt
 
 int getCodingStats(int argc, char** argv) {
     parseCodingStatsOptions(argc, argv);
-    std::vector<string> allAligmentFiles; string statsFileName;
+    std::vector<string> allAligmentFiles; string statsFileName; string pcaVectorsFileName;
     
     std::vector<std::vector<std::string>> genomeWide_Dxy;
     if (opt::genomeWide_DxyMatrixFile != "") {
@@ -86,6 +86,7 @@ int getCodingStats(int argc, char** argv) {
     } else {
         std::ifstream* alignmentList = new std::ifstream(opt::alignmentListFile.c_str());
         statsFileName = stripExtension(opt::alignmentListFile) + "_stats.txt";
+        pcaVectorsFileName = stripExtension(opt::alignmentListFile) + "_pcaVectors.txt";
         std::cerr << "for the genes in: " << opt::alignmentListFile << std::endl;
         std::string line;
         while (getline(*alignmentList, line)) {
@@ -94,6 +95,7 @@ int getCodingStats(int argc, char** argv) {
     } 
       
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
+    std::ofstream* pcaVectorsFile = new std::ofstream(pcaVectorsFileName.c_str());
     if (opt::ploidy == 'd') {
         std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
         *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << std::endl;
@@ -126,9 +128,18 @@ int getCodingStats(int argc, char** argv) {
             std::vector<string> statsThisGene; statsThisGene.push_back(allAligmentFiles[i]);
             if (opt::ploidy == 'd') {
                 // std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
-                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, opt::tStVratio);
+                std::vector<std::vector<double> > combinedVectorForPCA; 
+                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, opt::tStVratio);
                 print_vector_stream(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
+                for (int i = 0; i < combinedVectorForPCA.size() - 1; i++) {
+                    for (int j = i+1; j < combinedVectorForPCA.size(); j++) {
+                        if (j == (combinedVectorForPCA.size() - 1) && i == (combinedVectorForPCA.size() - 2))
+                            *pcaVectorsFile << combinedVectorForPCA[i][j] << std::endl;
+                        else
+                            *pcaVectorsFile << combinedVectorForPCA[i][j] << '\t';
+                    }
+                }
             } else {
                 getStatsHaploidSeq(allSeqs,statsThisGene, opt::tStVratio);
                 print_vector_stream(statsThisGene, std::cout);
