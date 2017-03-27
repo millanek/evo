@@ -283,7 +283,7 @@ int getCodingSeqMain(int argc, char** argv) {
                 }
                 
             }
-            if (wgAnnotation.annotationMap.count(fields[0]) == 1) {
+            //if (wgAnnotation.annotationMap.count(fields[0]) == 1) {
                 std::string ref = fields[3];  std::string alt = fields[4];
                 if (ref.length() == 1 && alt.length() == 1) { // Only use Biallelic SNPs (or multiallelics split across multiple lines)
                     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
@@ -314,7 +314,7 @@ int getCodingSeqMain(int argc, char** argv) {
                     }
     #endif
                 }
-            }
+            //}
             if (processedVariantCounter % 10000 == 0) {
                 std::cerr << processedVariantCounter << " variants processed..." << std::endl;
                 //std::cout << "scaffoldStrings[0]:\t" << scaffoldStrings[0] << std::endl;
