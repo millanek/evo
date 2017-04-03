@@ -24,12 +24,13 @@ static const char *CODINGSTATS_USAGE_MESSAGE =
 "       -t,   --tStV RATIO                      observed genome-wide tS/tV ratio in the dataset\n"
 "       -a,   --alignment FILE.fa               a multiple alignment file (either -a or -l required)\n"
 "       -l,   --listOfFiles LIST.txt            a list with multiple alignment filenames, one per line (either -a or -l required)\n"
+"       -n,   --nonCodingNull                   the alignment(s) contain non-coding sequences - used to derive null distributions of the statistics\n"
 "       --genomeWide_dXY=MATRIX.txt             a matrix that can be used to normalise the pairwise scores to be\n"
 "                                               per-unit of sequence divergence\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hp:a:l:t:";
+static const char* shortopts = "hp:a:l:t:n";
 
 enum { OPT_DXY_MATRIX };
 
@@ -38,6 +39,7 @@ static const struct option longopts[] = {
     { "alignment",   required_argument, NULL, 'a' },
     { "tStV",   required_argument, NULL, 't' },
     { "listOfFiles",   required_argument, NULL, 'l' },
+    { "nonCodingNull",   no_argument, NULL, 'n' },
     { "genomeWide_dXY",   required_argument, NULL, OPT_DXY_MATRIX },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -49,6 +51,7 @@ namespace opt
     static string alignmentListFile = "";
     string genomeWide_DxyMatrixFile = "";
     static char ploidy = 'd';
+    static bool nonCodingNull = false;
     static double tStVratio = 0.5;      // Under equal mutation probability,
                                         //half transitions will be observed compared with transversions
 }
@@ -129,7 +132,7 @@ int getCodingStats(int argc, char** argv) {
             if (opt::ploidy == 'd') {
                 // std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
                 std::vector<std::vector<double> > combinedVectorForPCA; 
-                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, opt::tStVratio);
+                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, opt::tStVratio, opt::nonCodingNull);
                 print_vector_stream(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
                 for (int i = 0; i < combinedVectorForPCA.size() - 1; i++) {
@@ -166,6 +169,7 @@ void parseCodingStatsOptions(int argc, char** argv) {
             case 'a': arg >> opt::alignmentFile; break;
             case 'l': arg >> opt::alignmentListFile; break;
             case 't': arg >> opt::tStVratio; break;
+            case 'n': opt::nonCodingNull = true; break;
             case OPT_DXY_MATRIX: arg >> opt::genomeWide_DxyMatrixFile; break;
             case 'h':
                 std::cout << CODINGSTATS_USAGE_MESSAGE;

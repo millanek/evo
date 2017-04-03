@@ -443,7 +443,7 @@ void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<str
 // To DO:
 // 1) Get some sort of inbreeding coefficient (how often are they homozygous ('fixed' in a species) vs. heterozygous)
 // 2) Would also be good to distinguish derived vs. ancestral alleles?
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio) {
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio, bool nonCodingNull) {
     //std::cerr << "Collecting gene sequence statistics...." << std::endl;
     //clock_t begin = clock();
     double pN = 0; double pS = 0;
@@ -472,9 +472,17 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         }
         // Find the types of mutation we are dealing with
         if ((i+1)%3 == 0) {
-            for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
-                if (getAminoAcid(altCodons[j]) == "Stop") haveStop[j] = 1;
-                if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
+            if (!nonCodingNull) {
+                // If this is an alignment for a coding region:
+                // the remainder of the sequence after any stop will be excluded from the calculations for any sequence
+                for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
+                    if (getAminoAcid(altCodons[j]) == "Stop") {
+                        //std::cerr << "Stop in : i = " << i << " ; j = " << j << std::endl;
+                        haveStop[j] = 1;
+                    }
+                    if (getAminoAcid(altCodonsH2[j]) == "Stop") haveStopH2[j] = 1;
+                    
+                }
             }
             //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, *pairwiseMatrices.H1p);

@@ -20,6 +20,8 @@ static const char *SEQFROMGENOME_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       -g,   --genome FILE.fa                  a multiple alignment file (either -a or -l required)\n"
 "       -l,   --listOfFiles LIST.txt            a list with multiple alignment filenames, one per line (either -a or -l required)\n"
+"       --output-nondiv-3=prefix                (default: \"nd\")output genes whose coding sequence length is not divisible by three\n"
+"                                               the specified prefix will be added to output file names\n"
 "       --hapLabels=FILE_WITH_LABELS.txt        one per line, with as many records as there are haplotypes\n"
 "       --outFolder=FOLDER                      put the output in FOLDER (default .)\n"
 "\n\n"
@@ -27,11 +29,12 @@ static const char *SEQFROMGENOME_USAGE_MESSAGE =
 
 static const char* shortopts = "hg:l:";
 
-enum { OPT_NEW_LABELS, OPT_FOLDER };
+enum { OPT_NEW_LABELS, OPT_FOLDER, OPT_NONDIV_THREE };
 
 static const struct option longopts[] = {
     { "genome",   required_argument, NULL, 'g' },
     { "listOfFiles",   required_argument, NULL, 'l' },
+    { "output-nondiv-3", required_argument, NULL, OPT_NONDIV_THREE },
     { "newLabels", required_argument, NULL, OPT_NEW_LABELS },
     { "outFolder", required_argument, NULL, OPT_FOLDER },
     { "help",   no_argument, NULL, 'h' },
@@ -45,6 +48,7 @@ namespace opt
     static string newLabelFile = "";
     static string outFolder = "";
     static string geneFile = "";
+    static string nonDivPrefix = "nd";
 }
 
 
@@ -119,9 +123,16 @@ int SeqFromGenomes(int argc, char** argv) {
             std::vector<string> annotLineVec = split(annotation[k][0], '\t');
             string thisGeneName = annotLineVec[4];
             // std::cerr << "Gene:" << thisGeneName << std::endl;
-            std::ofstream* geneOutFiles = new std::ofstream(thisGeneName.c_str());
-            *geneOutFiles << ">" << stripExtension(allGenomeFiles[0]) << std::endl;
             string geneSequence = getReferenceForThisRegion(annotation[k], annotLineVec[3], itGenome->second);
+            int geneLengthDivisibleByThree = geneSequence.length() % 3;
+            
+            std::ofstream* geneOutFiles;
+            if (geneLengthDivisibleByThree == 0)
+                geneOutFiles = new std::ofstream(thisGeneName.c_str());
+            else
+                geneOutFiles = new std::ofstream((opt::nonDivPrefix+'_'+thisGeneName).c_str());
+            
+            *geneOutFiles << ">" << stripExtension(allGenomeFiles[0]) << std::endl;
             *geneOutFiles << geneSequence << std::endl;
             for (std::vector<std::map<std::string,string>>::size_type i = 1; i != allGenomes.size(); i++) {
                 *geneOutFiles << ">" << stripExtension(allGenomeFiles[i]) << std::endl;

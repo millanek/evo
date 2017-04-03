@@ -143,7 +143,7 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
 void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<std::string>& statsThisGene, double tStVratio = 0.5);
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio = 0.5);
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio = 0.5, bool nonCodingNull = false);
 void getStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
 
 void parseGetCodingSeqOptions(int argc, char** argv);

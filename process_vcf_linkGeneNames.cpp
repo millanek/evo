@@ -24,16 +24,19 @@ static const char *LINKGN_USAGE_MESSAGE =
 "                                               only --v1 can be used with BROADMZ1\n"
 "                                               either --v1 or --v2 or both can be used with BROADMZ2\n"
 "       --NtoN                                  include genes with 1-to-N and N-to-N relationships (for Gene Ontology analysis)\n"
+"       --separateByCopyNumber=PREFIX           create separate files for gene IDs with 1-1, 1-N, N-1, and N-N relationships\n"
+"                                               between the cichlid of interest and Zebrafish - the files will have the given PREFIX\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 static const char* shortopts = "ho:s:";
-enum { OPT_V1, OPT_V2, OPT_NtoN };
+enum { OPT_V1, OPT_V2, OPT_NtoN, OPT_SEP_BY_COPY };
 
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
     { "v1",   required_argument, NULL, OPT_V1 },
     { "v2",   required_argument, NULL, OPT_V2 },
+    { "separateByCopyNumber",   required_argument, NULL, OPT_SEP_BY_COPY },
     { "NtoN",   no_argument, NULL, OPT_NtoN },
     { "out",   no_argument, NULL, 'o' },
     { "species",   no_argument, NULL, 's' },
@@ -51,6 +54,7 @@ namespace opt
     static string v2orthologsFile = "";
     static bool NtoN = false;
     static string species = "mz";
+    static string sepByCopyNumberPrefix= "";
 }
 
 inline int getSpeciesColumn(const string& species) {
@@ -63,19 +67,19 @@ inline int getSpeciesColumn(const string& species) {
 }
 
 
-inline void attemptMappingUpdate(std::map<string,string>& cichlidDanRerMap, const std::string& thisCichlid, const std::string& thisDanRer) {
-    if (cichlidDanRerMap.count(thisCichlid) == 0) {
-        cichlidDanRerMap[thisCichlid] = thisDanRer;
+inline void attemptMappingUpdate(std::map<string,string>& cichlidHomologMap, const std::string& cichlidGene, const std::string& homologGene) {
+    if (cichlidHomologMap.count(cichlidGene) == 0) {
+        cichlidHomologMap[cichlidGene] = homologGene;
     } else {
         // Prefer zebrafish homologs as they have the best GO annotation
-        if (cichlidDanRerMap[thisCichlid].substr(0,6) == "ENSDAR") { return; }
-        if (thisDanRer.substr(0,6) == "ENSDAR") { cichlidDanRerMap[thisCichlid] = thisDanRer; }
+        if (cichlidHomologMap[cichlidGene].substr(0,6) == "ENSDAR") { return; }
+        if (homologGene.substr(0,6) == "ENSDAR") { cichlidHomologMap[cichlidGene] = homologGene; }
         // Next best option is Medaka
-        if (cichlidDanRerMap[thisCichlid].substr(0,6) == "ENSORL") { return; }
-        if (thisDanRer.substr(0,6) == "ENSORL") { cichlidDanRerMap[thisCichlid] = thisDanRer; }
+        if (cichlidHomologMap[cichlidGene].substr(0,6) == "ENSORL") { return; }
+        if (homologGene.substr(0,6) == "ENSORL") { cichlidHomologMap[cichlidGene] = homologGene; }
         // Next is stickleback:
-        if (cichlidDanRerMap[thisCichlid].substr(0,6) == "ENSGAC") { return; }
-        if (thisDanRer.substr(0,6) == "ENSGAC") { cichlidDanRerMap[thisCichlid] = thisDanRer; }
+        if (cichlidHomologMap[cichlidGene].substr(0,6) == "ENSGAC") { return; }
+        if (homologGene.substr(0,6) == "ENSGAC") { cichlidHomologMap[cichlidGene] = homologGene; }
         // Tetraodon would be added only if there wasn't any other homolo before
     }
 }
@@ -102,14 +106,13 @@ int linkGNMain(int argc, char** argv) {
     
     string line;
     int geneNum = 1;
-    bool multi = false; // If we don't want NtoN relationships, indicate that this has multiple copies in zfish
-    int copiesInCichlid = 1;
-    string thisCichlid = ""; string thisDanRer = "";
     
     // Load David Brawand's assignment of orthologs
-    // Mapping from cichlid IDs to a zebrafish ortholog (or medaka
+    // Mapping from cichlid IDs to a zebrafish homolog (or medaka
     // stickleback, tetraodon, if zebrafish not available)
-    std::map<string,string> cichlidDanRer;
+    std::map<string,string> cichlidHomolog;
+    
+    std::map<string,string> cichlidDanRerCopyNum;
     if (opt::v2orthologsFile != "") {
         std::cerr << "Reading the v2 full orthologs file:" << std::endl;
         std::ifstream* ocFile = new std::ifstream(opt::v2orthologsFile);
@@ -117,16 +120,20 @@ int linkGNMain(int argc, char** argv) {
             std::vector<string> orthVec = split(line, '\t');
             int c = getSpeciesColumn(opt::species);
             if (orthVec[c] != "NA") {
-                if (orthVec[8] != "NA") { cichlidDanRer[orthVec[c]] = orthVec[8]; } // Zebrafish
-                else if (orthVec[5] != "NA") { cichlidDanRer[orthVec[c]] = orthVec[5]; } // Medaka
-                else if (orthVec[7] != "NA") { cichlidDanRer[orthVec[c]] = orthVec[7]; } // Stickleback
-                else if (orthVec[6] != "NA") { cichlidDanRer[orthVec[c]] = orthVec[6]; } // Tetraodon
-                else { cichlidDanRer[orthVec[c]] = "novelCichlidGene"; }
+                if (orthVec[8] != "NA") { cichlidHomolog[orthVec[c]] = orthVec[8]; cichlidDanRerCopyNum[orthVec[c]] = "1-1"; } // Zebrafish
+                else if (orthVec[5] != "NA") { cichlidHomolog[orthVec[c]] = orthVec[5]; } // Medaka
+                else if (orthVec[7] != "NA") { cichlidHomolog[orthVec[c]] = orthVec[7]; } // Stickleback
+                else if (orthVec[6] != "NA") { cichlidHomolog[orthVec[c]] = orthVec[6]; } // Tetraodon
+                else { cichlidHomolog[orthVec[c]] = "novelCichlidGene"; }
             } else { continue; }
         } ocFile->close();
     }
     
+    
     if (opt::v1orthologousClustersFile != "") {
+        int copiesInCichlid = 0; int copiesInDanRer = 0;
+        string cichlidGene = ""; string homologGene = "";
+        
         std::cerr << "Reading the v1 orthologous cluster file: " << std::endl;
         std::ifstream* ocFile = new std::ifstream(opt::v1orthologousClustersFile);
         while (getline(*ocFile, line)) {
@@ -135,41 +142,104 @@ int linkGNMain(int argc, char** argv) {
             // Another line for the same cluster
             if (thisLineGeneClusterNumber == geneNum) {
                 if (thisLineGeneID.substr(0,2) == opt::species) {
-                    // First copy in the cichlid species (e.g. mz)
-                    if (thisCichlid == "") { thisCichlid = thisLineGeneID; }
-                    else { // There is more than one copy in the cichlid
-                        if (thisDanRer != "" && !multi) {
-                            attemptMappingUpdate(cichlidDanRer, thisCichlid, thisDanRer + "/" + numToString(copiesInCichlid));
-                            thisCichlid = thisLineGeneID; copiesInCichlid++;
+                    if (cichlidGene == "") {            // First copy in the cichlid species (e.g. mz)
+                        cichlidGene = thisLineGeneID;
+                    } else {                            // There is more than one copy in the cichlid
+                        if (homologGene != "") {
+                            if (copiesInDanRer <= 1 || opt::NtoN) {
+                                attemptMappingUpdate(cichlidHomolog, cichlidGene, homologGene + "/" + numToString(copiesInCichlid));
+                                if (copiesInDanRer == 1)
+                                    cichlidDanRerCopyNum[cichlidGene] = "N-1";
+                                else if (copiesInDanRer > 1)
+                                    cichlidDanRerCopyNum[cichlidGene] = "N-N";
+                            }
+                            cichlidGene = thisLineGeneID;
                         }
                     }
-                }
-                if (thisLineGeneID.substr(0,6) == "ENSDAR") {
-                    if (thisDanRer == "") { thisDanRer = thisLineGeneID; }
+                    copiesInCichlid++;
+                } else if (thisLineGeneID.substr(0,6) == "ENSDAR") {
+                    copiesInDanRer++;
+                    if (homologGene == "") { homologGene = thisLineGeneID; }
                     else {
-                        if (!opt::NtoN) multi = true; // Indicate that this gene has multiple copies in zfish
-                        else if (rand() < 0.5) thisDanRer = thisLineGeneID; // 50% chance of using this zfish copy
+                        if (rand() < 0.5) homologGene = thisLineGeneID;  // 50% chance of using this zfish copy (hacky!!!)
                     }
                 } else if (thisLineGeneID.substr(0,6) == "ENSGAC") {
-                    if (thisDanRer == "") { thisDanRer = thisLineGeneID; }
+                    if (homologGene == "") { homologGene = thisLineGeneID; }
                 } else if (thisLineGeneID.substr(0,6) == "ENSORL") {
-                    if (thisDanRer == "" || thisDanRer.substr(0,6) == "ENSGAC") { thisDanRer = thisLineGeneID; }
+                    if (homologGene == "" || homologGene.substr(0,6) == "ENSGAC") { homologGene = thisLineGeneID; }
                 } else if (thisLineGeneID.substr(0,6) == "ENSTNI") {
-                    if (thisDanRer == "") { thisDanRer = thisLineGeneID; }
+                    if (homologGene == "") { homologGene = thisLineGeneID; }
                 }
                 // std::cerr << atoi(idAndNum[1].c_str()) << "\t" << geneNum << std::endl;
             } else { // First line for a new cluster read
                 // so first add the mapping for the previous cluster
-                if (thisCichlid != "" && thisDanRer != "" && !multi) {
-                    attemptMappingUpdate(cichlidDanRer, thisCichlid,thisDanRer);
+                if (cichlidGene != "" && homologGene != "") {
+                    assert(copiesInCichlid > 0);
+                    if (copiesInDanRer == 1) {
+                        if (copiesInCichlid == 1) {
+                            cichlidDanRerCopyNum[cichlidGene] = "1-1";
+                            attemptMappingUpdate(cichlidHomolog, cichlidGene,homologGene);
+                        } else if (copiesInCichlid > 1) {
+                            cichlidDanRerCopyNum[cichlidGene] = "N-1";
+                            attemptMappingUpdate(cichlidHomolog, cichlidGene,homologGene + "/" + numToString(copiesInCichlid));
+                        }
+                    } else if (copiesInDanRer > 1) {
+                        if (copiesInCichlid == 1) {
+                            cichlidDanRerCopyNum[cichlidGene] = "1-N";
+                            if (opt::NtoN)
+                                attemptMappingUpdate(cichlidHomolog, cichlidGene,homologGene);
+                        } else if (copiesInCichlid > 1) {
+                            cichlidDanRerCopyNum[cichlidGene] = "N-N";
+                            if (opt::NtoN)
+                                attemptMappingUpdate(cichlidHomolog, cichlidGene,homologGene + "/" + numToString(copiesInCichlid));
+                        }
+                    } else {
+                        if (copiesInCichlid == 1) {
+                            attemptMappingUpdate(cichlidHomolog, cichlidGene,homologGene);
+                        } else if (copiesInCichlid > 1) {
+                            attemptMappingUpdate(cichlidHomolog, cichlidGene,homologGene + "/" + numToString(copiesInCichlid));
+                        }
+                    }
                 }
-                thisCichlid = ""; thisDanRer = ""; multi = false; copiesInCichlid = 2;
+                
+                // then start looking through the next cluster
+                cichlidGene = ""; homologGene = ""; copiesInDanRer = 0; copiesInCichlid = 0;
                 geneNum = thisLineGeneClusterNumber;
-                if (thisLineGeneID.substr(0,2) == opt::species) { thisCichlid = thisLineGeneID; }
-                if (thisLineGeneID.substr(0,6) == "ENSDAR") { thisDanRer = thisLineGeneID; }
+                if (thisLineGeneID.substr(0,2) == opt::species) {
+                    cichlidGene = thisLineGeneID;
+                } else if (thisLineGeneID.substr(0,6) == "ENSDAR") {
+                    copiesInDanRer++; homologGene = thisLineGeneID;
+                } else if (thisLineGeneID.substr(0,6) == "ENSGAC") {
+                    homologGene = thisLineGeneID;
+                } else if (thisLineGeneID.substr(0,6) == "ENSORL") {
+                    homologGene = thisLineGeneID;
+                } else if (thisLineGeneID.substr(0,6) == "ENSTNI") {
+                    homologGene = thisLineGeneID;
+                }
             }
         } ocFile->close();
     }
+    
+    if (opt::sepByCopyNumberPrefix != "") {
+        std::ofstream* OneOneFile = new std::ofstream(opt::sepByCopyNumberPrefix + "_1-1.txt");
+        std::ofstream* NOneFile = new std::ofstream(opt::sepByCopyNumberPrefix + "_N-1.txt");
+        std::ofstream* OneNFile = new std::ofstream(opt::sepByCopyNumberPrefix + "_1-N.txt");
+        std::ofstream* NNFile = new std::ofstream(opt::sepByCopyNumberPrefix + "_N-N.txt");
+        
+        for (std::map<string, string>::iterator it = cichlidDanRerCopyNum.begin(); it != cichlidDanRerCopyNum.end(); it++) {
+            if (it->second == "1-1") {
+                *OneOneFile << it->first << std::endl;
+            } else if (it->second == "N-1") {
+                *NOneFile << it->first << std::endl;
+            } else if (it->second == "1-N") {
+                *OneNFile << it->first << std::endl;
+            } else if (it->second == "N-N") {
+                *NNFile << it->first << std::endl;
+            }
+        }
+    
+    }
+    
     
     // Load gene names and descriptions from ENSEMBL
     std::map<string,string> ensGeneMap;
@@ -208,11 +278,11 @@ int linkGNMain(int argc, char** argv) {
     
     // Go through the gene prediction file and generate the final outputs
     std::ifstream* gpFile = new std::ifstream(opt::gpFile);
-    int countNovel = 1; int countUnknown = 1;
+    int countNovel = 1; int countUnknown = 1; int countNotInEnsembl = 1;
     while (getline(*gpFile, line)) {
         std::vector<string> gpVec = split(line, '\t');
-        if ( cichlidDanRer.count(gpVec[0]) == 1) {
-            std::vector<string> ensembl = split(cichlidDanRer[gpVec[0]], '/');
+        if ( cichlidHomolog.count(gpVec[0]) == 1) {
+            std::vector<string> ensembl = split(cichlidHomolog[gpVec[0]], '/');
             std::vector<string> myNameVec = split(gpVec[0], '.');
             std::string nameWdots = gpVec[0];
             gpVec[0] = myNameVec[0] + "_" + myNameVec[1] + "_" + myNameVec[2] + "_" + myNameVec[3];
@@ -243,6 +313,12 @@ int linkGNMain(int argc, char** argv) {
                 countNovel++;
                 print_vector(gpVec, *gpOutFile);
                 *refLinkFile << opt::species + ".novel." + numToString(countNovel) << "\t" << "novel gene found only in cichlids" << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << "0" << "\t0" << std::endl;
+            } else {
+                std::cout << nameWdots << "\t" << "noOrthologAssigned" << "\t" << "0" << "\t" << opt::species + ".orthologNotInEnsembl." + numToString(countNotInEnsembl) << std::endl;
+                *refLinkFile << opt::species + ".orthologNotInEnsembl." + numToString(countUnknown) << "\t" << "ortholog from Brawand data not foud in Ensembl v75" << "\t" << gpVec[0] << "\tNP_X\t77\t88\t" << "0" << "\t0" << std::endl;
+                gpVec[11] = opt::species + ".orthologNotInEnsembl." + numToString(countNotInEnsembl);
+                print_vector(gpVec, *gpOutFile);
+                //std::cerr << ensembl[0] << std::endl;
             }
             //std::cout << "hello" << std::endl;
         } else {
@@ -273,6 +349,7 @@ void linkGNOptions(int argc, char** argv) {
             case OPT_V1: arg >> opt::v1orthologousClustersFile; break;
             case OPT_V2: arg >> opt::v2orthologsFile; break;
             case OPT_NtoN: opt::NtoN = true; break;
+            case OPT_SEP_BY_COPY: arg >> opt::sepByCopyNumberPrefix; break;
             case 'h':
                 std::cout << LINKGN_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
