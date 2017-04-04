@@ -511,8 +511,8 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             //double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
-            double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k])+pairwiseMatrices.H1p->tV_N_jk[j][k]);
-            //sumN = sumN + (2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k]) + pairwiseMatrices.H1p->tV_N_jk[j][k]; sumPn = sumPn + pN_jk;
+            double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k])+pairwiseMatrices.H1p->tV_N_jk[j][k]); sumPn = sumPn + pN_jk;
+            //sumN = sumN + (2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k]) + pairwiseMatrices.H1p->tV_N_jk[j][k];
             combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + pN_jk;
             //if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 //std::cerr << "j = " << j << "; k = " << k << std::endl;
