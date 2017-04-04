@@ -1258,30 +1258,27 @@ inline void addN_S_Nd_Sd_DifferentIndividualsH1againstH2(const std::vector<strin
 inline void addN_S_Nd_Sd_SameIndividualsH1againstH2(const std::vector<string>& altCodons, const std::vector<string>& altCodonsH2, std::map<std::vector<string>::size_type, int>& haveStop, std::map<std::vector<string>::size_type, int>& haveStopH2, CDSComparisonMatrices& p) {
     int numSamples = (int)altCodons.size();
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
-        if (haveStop[j] == 1 || getAminoAcid(altCodons[j]) != "Uncrecognised codon....")
+        if (haveStop[j] == 1 || getAminoAcid(altCodons[j]) == "Uncrecognised codon....")
             continue; // only consider this individual if it did not have a premature stop codon
-        for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
-            if (haveStopH2[k] == 1 || getAminoAcid(altCodonsH2[k]) != "Uncrecognised codon....")
-                continue;
-            if (j == k) {
-                int d = getCodonDistance(altCodons[j],altCodonsH2[k]);
-                // Nd
-                double n_d_ijk = calculateNd(altCodons[j],altCodonsH2[k], d);
-                double s_d_ijk = d - n_d_ijk;
-                p.N_d_jk[j][k] = p.N_d_jk[j][k] + n_d_ijk;
-                p.S_d_jk[j][k] = p.S_d_jk[j][k] + s_d_ijk;
-                // N
-                double N_ijk = calculateN(altCodons[j],altCodonsH2[k], d, false);
-                double S_ijk = (3 - N_ijk);
-                p.N_jk[j][k] = p.N_jk[j][k] + N_ijk; p.S_jk[j][k] = p.S_jk[j][k] + S_ijk;
-                // NtS -- for incorporating tS/tV mutation probabilities
-                double N_tS = calculateNtS(altCodons[j],altCodonsH2[k], d, false);
-                p.tS_N_jk[j][k] = p.tS_N_jk[j][k] + N_tS;
-                p.tS_S_jk[j][k] = p.tS_S_jk[j][k] + (1 - N_tS);
-                p.tV_N_jk[j][k] = p.tV_N_jk[j][k] + (N_ijk - N_tS);
-                p.tV_S_jk[j][k] = p.tV_S_jk[j][k] + (2 - (N_ijk - N_tS));
-            }
-        }
+        if (haveStopH2[j] == 1 || getAminoAcid(altCodonsH2[j]) == "Uncrecognised codon....")
+            continue;
+        
+        int d = getCodonDistance(altCodons[j],altCodonsH2[j]);
+        // Nd
+        double n_d_ijk = calculateNd(altCodons[j],altCodonsH2[j], d);
+        double s_d_ijk = d - n_d_ijk;
+        p.N_d_jk[j][j] = p.N_d_jk[j][j] + n_d_ijk;
+        p.S_d_jk[j][j] = p.S_d_jk[j][j] + s_d_ijk;
+        // N
+        double N_ijk = calculateN(altCodons[j],altCodonsH2[j], d, false);
+        double S_ijk = (3 - N_ijk);
+        p.N_jk[j][j] = p.N_jk[j][j] + N_ijk; p.S_jk[j][j] = p.S_jk[j][j] + S_ijk;
+        // NtS -- for incorporating tS/tV mutation probabilities
+        double N_tS = calculateNtS(altCodons[j],altCodonsH2[j], d, false);
+        p.tS_N_jk[j][j] = p.tS_N_jk[j][j] + N_tS;
+        p.tS_S_jk[j][j] = p.tS_S_jk[j][j] + (1 - N_tS);
+        p.tV_N_jk[j][j] = p.tV_N_jk[j][j] + (N_ijk - N_tS);
+        p.tV_S_jk[j][j] = p.tV_S_jk[j][j] + (2 - (N_ijk - N_tS));
     }
 }
 

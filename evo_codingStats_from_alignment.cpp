@@ -100,8 +100,8 @@ int getCodingStats(int argc, char** argv) {
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
     std::ofstream* pcaVectorsFile = new std::ofstream(pcaVectorsFileName.c_str());
     if (opt::ploidy == 'd') {
-        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
-        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << std::endl;
+        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << "\t" << "pN-pS_stdErrAllComparisons" << std::endl;
+        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << "\t" << "pN-pS_stdErrAllComparisons" << std::endl;
     } else {
         std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;
         *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pN-pS_stdErr" << std::endl;

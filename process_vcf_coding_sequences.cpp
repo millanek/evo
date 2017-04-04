@@ -501,28 +501,33 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     }
      
     double sumPn = 0; double sumPs = 0;
+    // double sumS = 0; double sumN = 0;
     std::vector<double> pNjackknifeVector;
     std::vector<double> pSjackknifeVector;
     std::vector<double> pN_pSjackknifeVector;
+    std::vector<double> pN_pSjackknifeVector_allComparisons;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
         //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             //double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
             double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k])+pairwiseMatrices.H1p->tV_N_jk[j][k]);
+            //sumN = sumN + (2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k]) + pairwiseMatrices.H1p->tV_N_jk[j][k]; sumPn = sumPn + pN_jk;
             combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + pN_jk;
             //if (isnan(pN_jk) || N_jk[j][k] == 0) {
                 //std::cerr << "j = " << j << "; k = " << k << std::endl;
                 //std::cerr << "N_d_jk[j][k] = " << N_d_jk[j][k] << "; N_jk[j][k] = " << N_jk[j][k] << std::endl;
                 //std::cerr << "pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             //}
-            sumPn = sumPn + pN_jk;
             double pS_jk = pairwiseMatrices.H1p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_S_jk[j][k])+pairwiseMatrices.H1p->tV_S_jk[j][k]); sumPs = sumPs + pS_jk;
+            //sumS = sumS + pairwiseMatrices.H1p->tS_S_jk[j][k]+pairwiseMatrices.H1p->tV_S_jk[j][k];
             double H2pN_jk = pairwiseMatrices.H2p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H2p->tS_N_jk[j][k])+pairwiseMatrices.H2p->tV_N_jk[j][k]); sumPn = sumPn + H2pN_jk;
+            //sumN = sumN + pairwiseMatrices.H2p->tS_N_jk[j][k]+pairwiseMatrices.H2p->tV_N_jk[j][k];
             combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + H2pN_jk;
             //std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
             //std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             double H2pS_jk = pairwiseMatrices.H2p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H2p->tS_S_jk[j][k])+pairwiseMatrices.H2p->tV_S_jk[j][k]); sumPs = sumPs + H2pS_jk;
+            pN_pSjackknifeVector_allComparisons.push_back(pN_jk-pS_jk); pN_pSjackknifeVector_allComparisons.push_back(H2pN_jk-H2pS_jk);
             if ((j % 2 == 0) && (k == j+1)) {
                 pNjackknifeVector.push_back(pN_jk); pNjackknifeVector.push_back(H2pN_jk);
                 pSjackknifeVector.push_back(pS_jk); pSjackknifeVector.push_back(H2pS_jk);
@@ -537,6 +542,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
+                //std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]) << std::endl;
                 double H1H2pN_jk = pairwiseMatrices.H1H2p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]);
                 double H1H2pS_jk = pairwiseMatrices.H1H2p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_S_jk[j][k])+pairwiseMatrices.H1H2p->tV_S_jk[j][k]);
                 if (j < k)
@@ -545,7 +551,9 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                     combinedVectorForPCA[k][j] = combinedVectorForPCA[k][j] + H1H2pN_jk;
                 sumPn = sumPn + H1H2pN_jk;
                 sumPs = sumPs + H1H2pS_jk;
+                pN_pSjackknifeVector_allComparisons.push_back(H1H2pN_jk-H1H2pS_jk);
             } else {
+                //std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]) << std::endl;
                 double H1H2pN_jj = pairwiseMatrices.H1H2p->N_d_jk[j][j]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]);
                 double H1H2pS_jj = pairwiseMatrices.H1H2p->S_d_jk[j][j]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_S_jk[j][j])+pairwiseMatrices.H1H2p->tV_S_jk[j][j]);
                 sumHetPn = sumHetPn + H1H2pN_jj;
@@ -557,10 +565,11 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     double pNstdErr = jackknive_std_err(pNjackknifeVector);
     double pSstdErr = jackknive_std_err(pSjackknifeVector);
     double pNpSstdErr = jackknive_std_err(pN_pSjackknifeVector);
+    double pNpSstdErrAllComparisons = jackknive_std_err(pN_pSjackknifeVector_allComparisons);
     pN = sumPn/(2*(numSamples*(numSamples-1)));
     pS = sumPs/(2*(numSamples*(numSamples-1)));
-    hetN = sumHetPn/numSamples;
-    hetS = sumHetPs/numSamples;
+    hetN = sumHetPn/(double)numSamples;
+    hetS = sumHetPs/(double)numSamples;
     
     statsThisGene.push_back(numToString(geneLengthNt));
     statsThisGene.push_back(numToString(pN));
@@ -570,6 +579,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     statsThisGene.push_back(numToString(pNstdErr));
     statsThisGene.push_back(numToString(pSstdErr));
     statsThisGene.push_back(numToString(pNpSstdErr));
+    statsThisGene.push_back(numToString(pNpSstdErrAllComparisons));
    // clock_t end = clock();
    // double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     //std::cerr << "Time per gene: " << elapsed_secs << std::endl;
