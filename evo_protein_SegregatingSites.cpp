@@ -123,7 +123,7 @@ int ProteinSs(int argc, char** argv) {
                     if (segregating) break;
                 }
                 if (segregating) {
-                    ssPos.push_back((int)k);
+                    ssPos.push_back((int)k+1);
                     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
                         allSeqsAA[j] += allSeqs[j][k];
                     }

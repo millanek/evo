@@ -66,7 +66,7 @@ int reorderMain(int argc, char** argv) {
     std::cerr << "using ordering in: " << opt::newOrderFile << std::endl;
     
     // Open connection to read from the vcf file
-    std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
+    std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     string reorderedFileName = fileRoot + opt::runName + "_reordered.vcf";
     std::ofstream* pReordered = new std::ofstream(reorderedFileName.c_str());
     

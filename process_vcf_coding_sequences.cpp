@@ -234,7 +234,8 @@ int getCodingSeqMain(int argc, char** argv) {
                                     print_vector_stream(statsThisGene, std::cout);
                                 } else if (opt::hetTreatment == 'b') {
                                     std::vector<std::vector<double> > combinedVectorForPCA;
-                                    getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA);
+                                    pNsets* sets = nullptr;
+                                    getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, sets);
                                     print_vector_stream(statsThisGene, std::cout);
                                 } else {
                                     getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
@@ -443,7 +444,7 @@ void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<str
 // To DO:
 // 1) Get some sort of inbreeding coefficient (how often are they homozygous ('fixed' in a species) vs. heterozygous)
 // 2) Would also be good to distinguish derived vs. ancestral alleles?
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio, bool nonCodingNull) {
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, pNsets* sets, double tStVratio, bool nonCodingNull) {
     //std::cerr << "Collecting gene sequence statistics...." << std::endl;
     //clock_t begin = clock();
     double pN = 0; double pS = 0;
@@ -533,6 +534,31 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 pSjackknifeVector.push_back(pS_jk); pSjackknifeVector.push_back(H2pS_jk);
                 pN_pSjackknifeVector.push_back(pN_jk-pS_jk); pN_pSjackknifeVector.push_back(H2pN_jk-H2pS_jk);
             }
+            
+            if (sets->initialised == true) {
+                if ((sets->set1Loci.count(j) == 1 && sets->set1Loci.count(k) == 1) || (sets->set1Loci.count(k) == 1 && sets->set1Loci.count(j) == 1)) {
+                    sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
+                    sets->withinSet1pN = sets->withinSet1pN + pN_jk + H2pN_jk;
+                } else if ((sets->set2Loci.count(j) == 1 && sets->set2Loci.count(k) == 1) || (sets->set2Loci.count(k) == 1 && sets->set2Loci.count(j) == 1)) {
+                    sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
+                    sets->withinSet2pN = sets->withinSet2pN + pN_jk + H2pN_jk;
+                } else if ((sets->set1Loci.count(j) == 1 && sets->set2Loci.count(k) == 1)) {
+                    sets->set1vsSet2pN = sets->set1vsSet2pN + pN_jk + H2pN_jk;
+                    sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
+                } else if (sets->set1Loci.count(k) == 1 && sets->set2Loci.count(j) == 1) {
+                    sets->set1vsSet2pN = sets->set1vsSet2pN + pN_jk + H2pN_jk;
+                    sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
+                } else if ((sets->set1Loci.count(j) == 1 || sets->set2Loci.count(j) == 1) && sets->set3Loci.count(k) == 1) {
+                    sets->sets1and2vsSet3pN = sets->sets1and2vsSet3pN + pN_jk + H2pN_jk;
+                } else if ((sets->set1Loci.count(k) == 1 || sets->set2Loci.count(k) == 1) && sets->set3Loci.count(j) == 1) {
+                    sets->sets1and2vsSet3pN = sets->sets1and2vsSet3pN + pN_jk + H2pN_jk;
+                    //std::cerr << "j = " << j << "; (set 3): " << allSeqs[j] << std::endl;
+                    //std::cerr << "k = " << k << "; (set 1 or 2): " << allSeqs[k] << std::endl;
+                    //std::cerr << std::endl;
+                } else if ((sets->set3Loci.count(j) == 1 && sets->set3Loci.count(k) == 1) || (sets->set3Loci.count(k) == 1 && sets->set3Loci.count(j) == 1)) {
+                    sets->withinSet3pN = sets->withinSet3pN + pN_jk + H2pN_jk;
+                }
+            }
         }
     }
     
@@ -552,6 +578,25 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 sumPn = sumPn + H1H2pN_jk;
                 sumPs = sumPs + H1H2pS_jk;
                 pN_pSjackknifeVector_allComparisons.push_back(H1H2pN_jk-H1H2pS_jk);
+                
+                if (sets->initialised == true) {
+                    if ((sets->set1Loci.count(j) == 1 && sets->set1Loci.count(k) == 1) || (sets->set1Loci.count(k) == 1 && sets->set1Loci.count(j) == 1)) {
+                        sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + H1H2pN_jk;
+                        sets->withinSet1pN = sets->withinSet1pN + H1H2pN_jk;
+                    } else if ((sets->set2Loci.count(j) == 1 && sets->set2Loci.count(k) == 1) || (sets->set2Loci.count(k) == 1 && sets->set2Loci.count(j) == 1)) {
+                        sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + H1H2pN_jk;
+                        sets->withinSet2pN = sets->withinSet2pN + H1H2pN_jk;
+                    } else if ((sets->set1Loci.count(j) == 1 && sets->set2Loci.count(k) == 1) || (sets->set1Loci.count(k) == 1 && sets->set2Loci.count(j) == 1)) {
+                        sets->set1vsSet2pN = sets->set1vsSet2pN + H1H2pN_jk;
+                        sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + H1H2pN_jk;
+                    } if ((sets->set1Loci.count(j) == 1 || sets->set2Loci.count(j) == 1) && sets->set3Loci.count(k) == 1) {
+                        sets->sets1and2vsSet3pN = sets->sets1and2vsSet3pN + H1H2pN_jk;
+                    } else if ((sets->set1Loci.count(k) == 1 || sets->set2Loci.count(k) == 1) && sets->set3Loci.count(j) == 1) {
+                        sets->sets1and2vsSet3pN = sets->sets1and2vsSet3pN + H1H2pN_jk;
+                    } else if ((sets->set3Loci.count(j) == 1 && sets->set3Loci.count(k) == 1) || (sets->set3Loci.count(k) == 1 && sets->set3Loci.count(j) == 1)) {
+                        sets->withinSet3pN = sets->withinSet3pN + H1H2pN_jk;
+                    }
+                }
             } else {
                 //std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]) << std::endl;
                 double H1H2pN_jj = pairwiseMatrices.H1H2p->N_d_jk[j][j]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]);

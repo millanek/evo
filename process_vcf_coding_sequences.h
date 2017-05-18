@@ -13,6 +13,51 @@
 #include "process_vcf_annotation_tools.h"
 #include "process_vcf_stats_utils.h"
 #include <unordered_map>
+#include <unordered_set>
+
+
+class pNsets {
+public:
+    pNsets() : set1vsSet2pN(0), sets1and2vsSet3pN(0), withinSet1andSet2pN(0), withinSet1pN(0), withinSet2pN(0), withinSet3pN(0), initialised(false) {};
+    
+    pNsets(std::ifstream*& setsFile) {
+        string line;
+        string set1String; string set2String; string set3String;
+        getline(*setsFile, set1String);
+        getline(*setsFile, set2String);
+        getline(*setsFile, set3String);
+        std::vector<string> set1 = split(set1String, ',');
+        std::vector<string> set2 = split(set2String, ',');
+        std::vector<string> set3 = split(set3String, ',');
+        for (int i = 0; i < set1.size(); i++) {
+            set1Loci.insert(atoi(set1[i].c_str()));
+        }
+        for (int i = 0; i < set2.size(); i++) {
+            set2Loci.insert(atoi(set2[i].c_str()));
+        }
+        for (int i = 0; i < set3.size(); i++) {
+            set3Loci.insert(atoi(set3[i].c_str()));
+        }
+        std::cerr << "set 1: "; print_vector_stream(set1, std::cerr);
+        std::cerr << "set 2: "; print_vector_stream(set2, std::cerr);
+        std::cerr << "set 3: "; print_vector_stream(set3, std::cerr);
+        initialised = true;
+    }
+    
+    std::unordered_set<size_t> set1Loci;
+    std::unordered_set<size_t> set2Loci;
+    std::unordered_set<size_t> set3Loci;
+    
+    double withinSet1pN;
+    double withinSet2pN;
+    double withinSet3pN;
+    double withinSet1andSet2pN;
+    double set1vsSet2pN;
+    double sets1and2vsSet3pN;
+    bool initialised;
+    
+};
+
 
 class CDSComparisonMatrices {
 public:
@@ -143,7 +188,7 @@ std::string getGeneName(const std::string& geneColumn, bool& bPartial);
 bool codingSequenceErrorChecks(const std::string& geneSeq, const std::string& transcriptName, const std::vector<std::vector<std::string> >& annotation, const int k, std::ofstream*& badStartStopCodonFile);
 // Calculate some statistics about the sequences
 void getStatsHaploidSeq(const std::vector<std::string>& allSeqs, std::vector<std::string>& statsThisGene, double tStVratio = 0.5);
-void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, double tStVratio = 0.5, bool nonCodingNull = false);
+void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::vector<std::string>& allSeqsH2, std::vector<string>& statsThisGene, std::vector<std::vector<double> >& combinedVectorForPCA, pNsets* sets, double tStVratio = 0.5, bool nonCodingNull = false);
 void getStatsIUPAC(const std::vector<std::string>& allSeqs, const std::string& refSeq, const std::string& transcriptName, std::vector<std::string>& statsThisGene, std::ofstream*& prematureStopCodonFile, const std::vector<std::string>& sampleNames);
 
 void parseGetCodingSeqOptions(int argc, char** argv);

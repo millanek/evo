@@ -46,7 +46,7 @@
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r18"
+#define PACKAGE_VERSION "0.1 r19"
 
 
 static const char *VERSION_MESSAGE =

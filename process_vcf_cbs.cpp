@@ -7,6 +7,7 @@
 //
 
 #include "process_vcf_cbs.h"
+#include <deque>
 /*
  TO DO:
  High priority:
@@ -28,15 +29,21 @@ static const char *CBS_USAGE_MESSAGE =
 "       --prepare-genome                        find the coordinates of undetermined bases in the reference genome\n"
 "                                               if this option is used, INPUT_FILE.fa should be a fasta file with the reference genome\n"
 "                                               and output is written into INPUT_FILE.ns (zero indexed coordinates)\n"
-"       --cbs=UNDETERMIED.ns                    Calculate the lenghts of cbs tracts, taking into account the location of undetermined characters\n"
+"       --cbs=UNDETERMIED.bed                   Calculate the lenghts of cbs tracts, taking into account the location of undetermined characters\n"
 "                                               (Ns) in the reference genome, supplied in the UNDETERMIED.ns file (zero indexed coordinates)\n"
+"                                               or a bed file specifying the regions of the genome where we could not call SNPs (inaccessible genome)\n:"
+"       --scaffoldLengths=chrom.sizes           scaffold (or chromosome) sizes\n"
+"       --featuresOfInterest=FEATURES.bed       (optional) output separately the lengths of cbs tracts around the features in the bed file\n"
+"                                               using the middle of the feature\n"
+"       --sharedHapsGroups=GROUPS-SAMPLES.txt   outputs the average length of CBS regions the two subgroups defined in GROUPS-SAMPLES.txt\n"
+"                                               both the overall distribution and for specific features if FEATURES.bed is supplied\n"
 "       -m MIN, --min-sc-length=MIN             Only analyse genomic scaffolds of length >= MIN (default: MIN=0)\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the output\n"
 "                                               (default: sample ids from the vcf file are used)\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_CBS, OPT_PREPARE_GENOME };
+enum { OPT_CBS, OPT_PREPARE_GENOME, OPT_FEATURES, OPT_CHR_SIZES, OPT_GROUPS };
 
 static const char* shortopts = "hs:m:";
 
@@ -44,6 +51,9 @@ static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
     { "min-sc-length",   required_argument, NULL, 'm' },
     { "cbs",   required_argument, NULL, OPT_CBS },
+    { "scaffoldLengths",   required_argument, NULL, OPT_CHR_SIZES },
+    { "featuresOfInterest",   required_argument, NULL, OPT_FEATURES },
+    { "sharedHapsGroups",   required_argument, NULL, OPT_GROUPS },
     { "prepare-genome",   no_argument, NULL, OPT_PREPARE_GENOME },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -53,6 +63,9 @@ namespace opt
 {
     static string vcfFile;
     static string genomeFile;
+    static string sizesFile = "";
+    static string featuresFile = "";
+    static string groupsFile = "";
     static string undeterminedLociFile;
     static bool bPrepareGenome = false;
     static string sampleNameFile;
@@ -74,7 +87,7 @@ void findUndeterminedRegions() {
     int thisUndeterminedRegionStart;
     int thisUndeterminedRegionEnd;
     while (nextScaffoldName != "") {
-        std::cerr << "Processing " << nextScaffoldName << "..." << std::endl;
+        //std::cerr << "Processing " << nextScaffoldName << "..." << std::endl;
         string thisScaffold = nextScaffoldName;
         currentScaffoldReference = readScaffold(genomeFile, nextScaffoldName);
         *undeterminedRegionsFile << thisScaffold << "\t" << currentScaffoldReference.length() << std::endl;
@@ -133,8 +146,7 @@ bool compareVectorsByLength (std::vector<string> a,std::vector<string> b) {
 
 void calculateCbs() {
     // Open a connection to read from the vcf file
-    std::ifstream* vcfFile = new std::ifstream(opt::vcfFile.c_str());
-    std::ifstream* unlFile = new std::ifstream(opt::undeterminedLociFile.c_str());
+    std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     string vcfFileRoot = stripExtension(opt::vcfFile);
     string cbsFileName = vcfFileRoot + ".cbsTracts";
     std::ofstream* cbsFile = new std::ofstream(cbsFileName.c_str());
@@ -143,40 +155,66 @@ void calculateCbs() {
     string incompatibleSitesFileName = vcfFileRoot + ".incompatibleSites";
     std::ofstream* incompatibleSitesFile = new std::ofstream(incompatibleSitesFileName.c_str());
     
+    
+    std::ifstream* inaccessibleBed = new std::ifstream(opt::undeterminedLociFile.c_str());
+    std::cerr << "Loading the inaaccesible site annotation" << std::endl;
+    AccessibleGenome* inaccessible = new AccessibleGenome(inaccessibleBed);
+    std::cerr << "Done" << std::endl;
+    
     string line;
-    // Read the location of the undetermined loci
-    std::map<std::string, std::vector<std::string> > udlMap;
     std::map<std::string, int > scLengthMap;
-    string thisScaffold;
-    while (getline(*unlFile, line)) {
-        if (line[0] == '>') {
-            std::vector<std::string> scLvector = split(line, '\t');
-            thisScaffold = scLvector[0].substr(1,string::npos);
-            scLengthMap[thisScaffold] = atoi(scLvector[1].c_str());
-        } else {
-            udlMap[thisScaffold].push_back(line);
-        }
+    std::ifstream* chrSizesFile = new std::ifstream(opt::sizesFile.c_str());
+    while (getline(*chrSizesFile, line)) {
+        std::vector<std::string> fields = split(line, '\t');
+        string thisScaffold = fields[0];
+        string thisScaffoldlength = fields[1];
+        scLengthMap[thisScaffold] = atoi(thisScaffoldlength.c_str());
     }
     
+    std::ifstream* featuresBed;
+    BedCoordinateFeatures* featureLoci;
+    if (opt::featuresFile != "") {
+        featuresBed = new std::ifstream(opt::featuresFile.c_str());
+        featureLoci = new BedCoordinateFeatures(featuresBed);
+    }
+    
+    cbsSets* sets;
+    std::ofstream* cbsBetweenSets; std::ofstream* cbsBetweenSetsAtFeatures;
+    if (opt::groupsFile != "") {
+        std::ifstream* cbsGroupsF = new std::ifstream(opt::groupsFile);
+        sets = new cbsSets(cbsGroupsF);
+        string setsFileRoot = stripExtension(opt::groupsFile);
+        string cbsBetweenSetsFN = setsFileRoot + ".cbsTracts";
+        string cbsBetweenSetsAtFeaturesFN = setsFileRoot + ".cbsTractsAtFeatures";
+        cbsBetweenSets = new std::ofstream(cbsBetweenSetsFN.c_str());
+        if (featureLoci->initialised)
+            cbsBetweenSetsAtFeatures = new std::ofstream(cbsBetweenSetsAtFeaturesFN.c_str());
+    }
+
+    clock_t begin = clock();
     // Now go through the VCF file
     std::vector<string> sampleNames;
     std::vector<string> fields;
-    string currentScaffoldNum;
+    string currentScaffoldNum = "";
     int totalVariantNumber = 0;
     int numCombinations;
     std::map<string, std::map<string, std::vector<int> > > cbsTractLengths;
     std::map<string, std::map<string, std::vector<string> > > incompatibleSitesMap;
     std::vector<std::vector<string> > incompatibleSitesOneMatrix;
-    std::map<string, int> currentCbsLengths;
     std::vector<std::vector<string> > toPrint;
     std::vector<std::vector<string> > toPrintMin10000;
+    
+    std::deque<int> allCBSlengthsBetweenGroups;
+    std::deque<int> CBSlengthsBetweenGroupsAtFeatures;
+    
+    int numSamples;
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#') {
             
         } else if (line[0] == '#' && line[1] == 'C') {
             std::vector<std::string> fields = split(line, '\t');
-            const std::vector<std::string>::size_type numSamples = fields.size() - NUM_NON_GENOTYPE_COLUMNS;
-            // std::cerr << "Number of chromosomes: " << numChromosomes << std::endl;
+            numSamples = (int)fields.size() - NUM_NON_GENOTYPE_COLUMNS;
+            std::cerr << "Number of samples: " << numSamples << std::endl;
             
             if (opt::sampleNameFile.empty()) {
                 for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
@@ -204,82 +242,119 @@ void calculateCbs() {
                         std::vector<string> thisPair;
                         std::vector<string> thisPairMin10000;
                         int k = 0;
-                        for (int i = 0; i != sampleNames.size(); i++) {
-                            for (int j = i+1; j != sampleNames.size(); j++) {
+                        for (int i = 0; i != numSamples; i++) {
+                            for (int j = i+1; j != numSamples; j++) {
                                 std::vector<string> thisPair(numToStringVector(cbsTractLengths[sampleNames[i]+"+"+sampleNames[j]][currentScaffoldNum]));
                                 std::vector<string> thisPairMin10000(numToStringMinFilterVector(cbsTractLengths[sampleNames[i]+"+"+sampleNames[j]][currentScaffoldNum], 10000));
-                                if (currentScaffoldNum == "scaffold_0") {
-                                    thisPair.insert(thisPair.begin(), sampleNames[i]+"+"+sampleNames[j]);
-                                    thisPairMin10000.insert(thisPairMin10000.begin(), sampleNames[i]+"+"+sampleNames[j]);
-                                }
-                                toPrint[k].reserve(toPrint[k].size() + thisPair.size());
                                 toPrint[k].insert(toPrint[k].end(), thisPair.begin(), thisPair.end());
-                                toPrintMin10000[k].reserve(toPrintMin10000[k].size() + thisPairMin10000.size());
                                 toPrintMin10000[k].insert(toPrintMin10000[k].end(), thisPairMin10000.begin(), thisPairMin10000.end());
                                 k++;
                                 //*cbsFile << sampleNames[i]+"+"+sampleNames[j] << "\t";
                                 //print_vector(cbsTractLengths[sampleNames[i]+"+"+sampleNames[j]][currentScaffoldNum], *cbsFile);
                             }
                         }
-                    } else {
-                        std::cerr << "Sorting cbs tract length output... " << std::endl;
-                        std::sort(toPrint.begin(), toPrint.end(), compareVectorsByLength);
-                        std::sort(toPrintMin10000.begin(), toPrintMin10000.end(), compareVectorsByLength);
-                        print_matrix(toPrint, *cbsFile);
-                        print_matrix(toPrintMin10000, *cbsFileM10000);
-                        int i = 0;
-                        for (std::map<string, std::map<string, std::vector<string> > >::iterator it1 = incompatibleSitesMap.begin(); it1 != incompatibleSitesMap.end(); it1++) {
-                            // *incompatibleSitesFile << it1->first;
-                            for (std::map<string, std::vector<string> >::iterator it2 = it1->second.begin(); it2 != it1->second.end(); it2++) {
-                                incompatibleSitesOneMatrix[i].push_back(it1->first);
-                                incompatibleSitesOneMatrix[i].push_back(it2->first);
-                                incompatibleSitesOneMatrix[i].insert(incompatibleSitesOneMatrix[i].end(), it2->second.begin(), it2->second.end());
-                                i++;
-                                // *incompatibleSitesFile << it2->first;
-                                // print_vector(it2->second, *incompatibleSitesFile);
-                            }
-                        }
-                        std::cerr << "Sorting incompatible sites output... " << std::endl;
-                        std::sort(incompatibleSitesOneMatrix.begin(), incompatibleSitesOneMatrix.end(), compareVectorsByLength);
-                        print_matrix(incompatibleSitesOneMatrix, *incompatibleSitesFile);
-                        exit(EXIT_SUCCESS);
                     }
                 }
                 currentScaffoldNum = fields[0];
-                previousSNPpos = 1;
-                for (int i = 0; i != sampleNames.size(); i++) {
-                    for (int j = i+1; j != sampleNames.size(); j++) {
-                        currentCbsLengths[sampleNames[i]+"+"+sampleNames[j]] = 0;
-                    }
-                }
+                previousSNPpos = 0;
                 incompatibleSitesOneMatrix.resize(incompatibleSitesOneMatrix.size()+numCombinations);
                 std::cerr << "Processing " << currentScaffoldNum << std::endl;
+                if (currentScaffoldNum == "scafold_47") {
+                    std::cerr << currentScaffoldNum << "\t" << fields[0] << std::endl;
+                }
             }
-            
+              
             // Process variants
             if (info[0] != "INDEL") {  // Without indels
                 Counts counts = getThisVariantCounts(fields);
                 int thisSNPpos = atoi(fields[1].c_str());
                 // Check compatibility for all pair of samples; 0 (hom_ref) is not compatible with 2 (hom_alt)
-                for (int i = 0; i != sampleNames.size(); i++) {
-                    for (int j = i+1; j != sampleNames.size(); j++) {
+                for (int i = 0; i != numSamples; i++) {
+                    for (int j = i+1; j != numSamples; j++) {
                         string thisCombination = sampleNames[i]+"+"+sampleNames[j];
                         if ((counts.individualsWithVariant[i] == 0 && counts.individualsWithVariant[j] == 2) ||
                             (counts.individualsWithVariant[i] == 2 && counts.individualsWithVariant[j] == 0)) {
-                            cbsTractLengths[thisCombination][currentScaffoldNum].push_back(currentCbsLengths[thisCombination]);
+                            int previousIncompatiblePos;
+                            if (!incompatibleSitesMap[thisCombination][currentScaffoldNum].empty()) {
+                                previousIncompatiblePos = atoi(incompatibleSitesMap[thisCombination][currentScaffoldNum].back().c_str());
+                            } else {
+                                previousIncompatiblePos = 0;
+                            }
+                            int numInaccessibleBP = 0;
+                            //numInaccessibleBP = inaccessible->getAccessibleBPinRegion(currentScaffoldNum, previousIncompatiblePos, thisSNPpos);
                             incompatibleSitesMap[thisCombination][currentScaffoldNum].push_back(fields[1]);
-                            currentCbsLengths[thisCombination] = 0;
+                            int thisCBSlength = (thisSNPpos - previousIncompatiblePos) - numInaccessibleBP;
+                            cbsTractLengths[thisCombination][currentScaffoldNum].push_back(thisCBSlength);
+                            
+                            if (sets->initialised) {
+                            if ((sets->set1Loci.count(i) == 1 && sets->set2Loci.count(j) == 1) || (sets->set1Loci.count(j) == 1 && sets->set2Loci.count(i) == 1)) {
+                                allCBSlengthsBetweenGroups.push_back(thisCBSlength);
+                                
+                                if (featureLoci->initialised) {
+                                    int overlapWithFeature = featureLoci->getNumBPinRegion(currentScaffoldNum, previousIncompatiblePos, thisSNPpos);
+                                    if (overlapWithFeature > 0) {
+                                        //std::cerr << "currentScaffoldNum, previousIncompatiblePos, thisSNPpos, thisCombination, overlapWithFeature: " << currentScaffoldNum << ", " << previousIncompatiblePos << ", " << thisSNPpos << ", " << thisCombination << ", " << overlapWithFeature << std::endl;
+                                        CBSlengthsBetweenGroupsAtFeatures.push_back(thisCBSlength);
+                                    std::vector<std::vector <string> > thisFeatures = featureLoci->getFeaturesinRegion(currentScaffoldNum, previousIncompatiblePos, thisSNPpos);
+                                    print_matrix(thisFeatures, std::cerr);
+                                }}
+                                
+                            }}
                         } else {
-                            currentCbsLengths[thisCombination] += (thisSNPpos - previousSNPpos);
+                            // Just carry on until hitting an incompatible site
                         }
-                    }
+                    } 
                 }
                 previousSNPpos = thisSNPpos;
             }
-            if (totalVariantNumber % 10000 == 0)
-                std::cerr << totalVariantNumber << " variants processed..." << std::endl;
+            if (totalVariantNumber % 10000 == 0) {
+                std::cerr << totalVariantNumber << " variants processed...; pos: " << previousSNPpos << std::endl;
+                clock_t end = clock();
+                double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+                std::cerr << "Elapsed time 10000 vars: " << elapsed_secs << std::endl;
+                std::cerr << "allCBSlengthsBetweenGroups.size(): " << allCBSlengthsBetweenGroups.size() << "; mean length: " << vector_average(allCBSlengthsBetweenGroups) << std::endl;
+                std::cerr << "CBSlengthsBetweenGroupsAtFeatures.size(): " << CBSlengthsBetweenGroupsAtFeatures.size() << "; mean length: " << vector_average(CBSlengthsBetweenGroupsAtFeatures) << std::endl;
+                std::cerr << std::endl;
+            }
         }
     }
+    
+    // Finishing touches:
+    std::cerr << "Sorting cbs tract length output... " << std::endl;
+    std::sort(toPrint.begin(), toPrint.end(), compareVectorsByLength);
+    std::sort(toPrintMin10000.begin(), toPrintMin10000.end(), compareVectorsByLength);
+    print_matrix(toPrint, *cbsFile);
+    print_matrix(toPrintMin10000, *cbsFileM10000);
+    int i = 0;
+    for (std::map<string, std::map<string, std::vector<string> > >::iterator it1 = incompatibleSitesMap.begin(); it1 != incompatibleSitesMap.end(); it1++) {
+        // *incompatibleSitesFile << it1->first;
+        for (std::map<string, std::vector<string> >::iterator it2 = it1->second.begin(); it2 != it1->second.end(); it2++) {
+            incompatibleSitesOneMatrix[i].push_back(it1->first);
+            incompatibleSitesOneMatrix[i].push_back(it2->first);
+            incompatibleSitesOneMatrix[i].insert(incompatibleSitesOneMatrix[i].end(), it2->second.begin(), it2->second.end());
+            i++;
+            // *incompatibleSitesFile << it2->first;
+            // print_vector(it2->second, *incompatibleSitesFile);
+        }
+    }
+   // std::cerr << "Sorting incompatible sites output... " << std::endl;
+   // std::sort(incompatibleSitesOneMatrix.begin(), incompatibleSitesOneMatrix.end(), compareVectorsByLength);
+    print_matrix(incompatibleSitesOneMatrix, *incompatibleSitesFile);
+    
+    
+    // output for sets and specific features
+    if (sets->initialised) {
+        if (allCBSlengthsBetweenGroups.size() < 1000000) {
+            print_vector(allCBSlengthsBetweenGroups, *cbsBetweenSets, '\n');
+        } else {
+            print_vector(allCBSlengthsBetweenGroups, *cbsBetweenSets, '\n');
+        }
+        if (featureLoci->initialised) {
+            print_vector(CBSlengthsBetweenGroupsAtFeatures, *cbsBetweenSetsAtFeatures, '\n');
+        }
+    }
+    exit(EXIT_SUCCESS);
+
    
 }
 
@@ -313,6 +388,9 @@ void parseCbsOptions(int argc, char** argv) {
             case 's': arg >> opt::sampleNameFile; break;
             case 'm': arg >> opt::minScLength; break;
             case OPT_CBS: arg >> opt::undeterminedLociFile; break;
+            case OPT_FEATURES: arg >> opt::featuresFile; break;
+            case OPT_CHR_SIZES: arg >> opt::sizesFile; break;
+            case OPT_GROUPS: arg >> opt::groupsFile; break;
             case OPT_PREPARE_GENOME: opt::bPrepareGenome = true; break;
             case 'h':
                 std::cout << CBS_USAGE_MESSAGE;

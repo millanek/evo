@@ -25,6 +25,8 @@ static const char *CODINGSTATS_USAGE_MESSAGE =
 "       -a,   --alignment FILE.fa               a multiple alignment file (either -a or -l required)\n"
 "       -l,   --listOfFiles LIST.txt            a list with multiple alignment filenames, one per line (either -a or -l required)\n"
 "       -n,   --nonCodingNull                   the alignment(s) contain non-coding sequences - used to derive null distributions of the statistics\n"
+"       --pNofGroups=GROUPS-SAMPLES.txt         outputs the average pN betwen the first two subgroups defined in GROUPS-SAMPLES.txt and\n"
+"                                               between the two subgroups joined and the third group\n"
 "       --genomeWide_dXY=MATRIX.txt             a matrix that can be used to normalise the pairwise scores to be\n"
 "                                               per-unit of sequence divergence\n"
 "\n\n"
@@ -32,7 +34,7 @@ static const char *CODINGSTATS_USAGE_MESSAGE =
 
 static const char* shortopts = "hp:a:l:t:n";
 
-enum { OPT_DXY_MATRIX };
+enum { OPT_DXY_MATRIX, OPT_PN_GROUPS };
 
 static const struct option longopts[] = {
     { "ploidy",   required_argument, NULL, 'p' },
@@ -40,6 +42,7 @@ static const struct option longopts[] = {
     { "tStV",   required_argument, NULL, 't' },
     { "listOfFiles",   required_argument, NULL, 'l' },
     { "nonCodingNull",   no_argument, NULL, 'n' },
+    { "pNofGroups", required_argument, NULL, OPT_PN_GROUPS },
     { "genomeWide_dXY",   required_argument, NULL, OPT_DXY_MATRIX },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -49,6 +52,7 @@ namespace opt
 {
     static string alignmentFile = "";
     static string alignmentListFile = "";
+    static string pNgroupsFile = "";
     string genomeWide_DxyMatrixFile = "";
     static char ploidy = 'd';
     static bool nonCodingNull = false;
@@ -69,6 +73,13 @@ int getCodingStats(int argc, char** argv) {
             std::vector<string> thisIndDxyVec = split(line, '\t');
             genomeWide_Dxy.push_back(thisIndDxyVec);
         }
+    }
+    
+    pNsets* sets;
+    if (opt::pNgroupsFile != "") {
+        std::ifstream* pNgroupsF = new std::ifstream(opt::pNgroupsFile);
+        sets = new pNsets(pNgroupsF);
+        
     }
     
     std::cerr << "Calculating gene coding statistics" << std::endl;
@@ -100,8 +111,13 @@ int getCodingStats(int argc, char** argv) {
     std::ofstream* statsFile = new std::ofstream(statsFileName.c_str());
     std::ofstream* pcaVectorsFile = new std::ofstream(pcaVectorsFileName.c_str());
     if (opt::ploidy == 'd') {
-        std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << "\t" << "pNpSstdErrAllComparisons" << std::endl;
-        *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << "\t" << "pNpSstdErrAllComparisons" << std::endl;
+        if (opt::pNgroupsFile != "") {
+            std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << "\t" << "pNpSstdErrAllComparisons" << "\t" << "withinSet1pN" << "\t" << "withinSet2pN" << "\t" << "withinSet3pN"<< "\t" << "pNset1vsSet2" << "\t" << "pNset1andSet2vsSet3" << "\t" << "pNwithinSet1andSet2" << std::endl;
+            *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << "\t" << "pNpSstdErrAllComparisons" << "\t" << "withinSet1pN" << "\t" << "withinSet2pN" << "\t" << "withinSet3pN"<< "\t" << "pNset1vsSet2" << "\t" << "pNset1andSet2vsSet3" << "\t" << "pNwithinSet1andSet2" << std::endl;
+        } else {
+            std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << "\t" << "pNpSstdErrAllComparisons" << std::endl;
+            *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "hetN" << "\t" << "hetS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << "\t" << "pNpSstdErrAllComparisons" << std::endl;
+        }
     } else {
         std::cout << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << std::endl;
         *statsFile << "transcript" << "\t" << "ntLengh" << "\t" << "pN" << "\t" << "pS" << "\t" << "pNstdErr" << "\t" << "pSstdErr" << "\t" << "pNpSstdErr" << std::endl;
@@ -110,6 +126,7 @@ int getCodingStats(int argc, char** argv) {
     for (std::vector<std::string>::size_type i = 0; i != allAligmentFiles.size(); i++) {
         std::ifstream* alignment = new std::ifstream(allAligmentFiles[i].c_str());
         std::vector<string> allSeqs; std::vector<string> allSeqsH2;
+        std::vector<string> sampleNames;
         std::string line; int lineNum = 1;
         while (getline(*alignment, line)) {
             if (lineNum % 2 == 1) assert(line[0] == '>');
@@ -132,7 +149,22 @@ int getCodingStats(int argc, char** argv) {
             if (opt::ploidy == 'd') {
                 // std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
                 std::vector<std::vector<double> > combinedVectorForPCA; 
-                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, opt::tStVratio, opt::nonCodingNull);
+                getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, sets, opt::tStVratio, opt::nonCodingNull);
+                if (opt::pNgroupsFile != "") {
+                    int ns1 = (int)sets->set1Loci.size(); int ns2 = (int)sets->set2Loci.size(); int ns3 = (int)sets->set3Loci.size();
+                    statsThisGene.push_back(numToString(sets->withinSet1pN/(2*ns1*(ns1-1))));
+                    statsThisGene.push_back(numToString(sets->withinSet2pN/(2*ns2*(ns2-1))));
+                    statsThisGene.push_back(numToString(sets->withinSet3pN/(2*ns3*(ns3-1))));
+                    statsThisGene.push_back(numToString(sets->set1vsSet2pN/(2*ns1*ns2)));
+                    statsThisGene.push_back(numToString(sets->sets1and2vsSet3pN/(2*(ns1+ns2)*ns3)));
+                    statsThisGene.push_back(numToString(sets->withinSet1andSet2pN/(2*(ns1+ns2)*(ns1+ns2-1))));
+                    sets->withinSet1pN = 0;
+                    sets->withinSet2pN = 0;
+                    sets->withinSet3pN = 0;
+                    sets->set1vsSet2pN = 0;
+                    sets->sets1and2vsSet3pN = 0;
+                    sets->withinSet1andSet2pN = 0;
+                }
                 print_vector_stream(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
                 for (int i = 0; i < combinedVectorForPCA.size() - 1; i++) {
@@ -149,8 +181,8 @@ int getCodingStats(int argc, char** argv) {
                 print_vector(statsThisGene, *statsFile);
             }
         } else{
-            std::cout << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
-            *statsFile << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
+            std::cout << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
+            *statsFile << allAligmentFiles[i] << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << "\t" << "NA" << std::endl;
         }
     }
     return 0;
@@ -171,6 +203,7 @@ void parseCodingStatsOptions(int argc, char** argv) {
             case 't': arg >> opt::tStVratio; break;
             case 'n': opt::nonCodingNull = true; break;
             case OPT_DXY_MATRIX: arg >> opt::genomeWide_DxyMatrixFile; break;
+            case OPT_PN_GROUPS: arg >> opt::pNgroupsFile; break;
             case 'h':
                 std::cout << CODINGSTATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

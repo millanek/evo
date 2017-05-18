@@ -350,99 +350,199 @@ std::string getIndividualSequenceForThisRegion(const std::vector<std::string>& t
 std::string getReferenceForThisRegion(const std::vector<std::string>& thisRegionAnnotation, const std::string& strand, const std::string& currentScaffoldReference);
 
 
-class AccessibleGenome {
+
+
+
+class BedCoordinateFeatures {
+public:
+    BedCoordinateFeatures() : initialised(false) {};
+    
+    BedCoordinateFeatures(std::ifstream*& bedFile, bool debug = false) {
+        BedFeatureMap = loadBedFeatureMap(bedFile, debug);
+        initialised = true;
+    }
+    bool initialised;
+
+    
+    // Count how much of a genomic interval is covered by the bed features (returns the number of basepairs)
+    // Left coordinates of features are 0-indexed (bed file)
+    // Query is 1-indexed
+    // query:              -----------------------
+    // feature: 1)  ---                                   (f[1] <= start)
+    //          2)                                  ---   (f[0] >= end)
+    //          3)     ------                             (f[0] < start && f[1] <= end)
+    //          4)              --------                  (f[0] >=start && f[1] <= end)
+    //          5)                             -------    (f[0] >=start && f[1] > end)
+    //          6)       -----------------------------    (f[0] < start && f[1] > end)
+    int getNumBPinRegion(const string& scaffold, const int start, const int end) {
+        assert(start < end);
+        try {
+            std::vector<std::vector<int> > featuresThisSc = BedFeatureMap.at(scaffold);
+            /*for (std::map<std::string, std::vector<std::vector<int> > >::iterator i = accessibleGenomeMap.begin(); i != accessibleGenomeMap.end(); i++) {
+             std::cerr << "There is scaffold: " << i->first << " in the map" << std::endl;
+             } */
+            
+            
+            // Binary search to find the first feature whose end coordinate is greater
+            // or equal to the start of the region in question
+            std::vector<int>::iterator itStart = lower_bound(featuresThisSc[1].begin(),featuresThisSc[1].end(),start);
+            int numBP = 0;
+            if (itStart != featuresThisSc[1].end()) {  // if (start < f[1])    ---  excludind case 1)
+                std::vector<int>::size_type index = std::distance(featuresThisSc[1].begin(), itStart);
+                
+                // Sum the lengths
+                while (featuresThisSc[0][index] <= end && index < featuresThisSc[0].size()) { // if (f[0] >= end)   ---    ecluding case 2)
+                    //std::cerr << "There are " << featuresThisSc[0].size() << " intervals" << std::endl;
+                    //std::cerr << "Starts: " << std::endl;
+                    //print_vector(featuresThisSc[0], std::cerr);
+                    //std::cerr << "Ends: " << std::endl;
+                    //print_vector(featuresThisSc[1], std::cerr);
+                    // Now we know the overlap is > 0
+                    //std::cerr << "start, end, featuresThisSc[0][index], featuresThisSc[1][index]: " << start << ", " << end << ", " << featuresThisSc[0][index] << ", " << featuresThisSc[1][index] << std::endl;
+                    
+                    if (featuresThisSc[0][index] < start && featuresThisSc[1][index] <= end)
+                        numBP = numBP + (featuresThisSc[1][index] - start) + 1;
+                    else if (featuresThisSc[0][index] >= start && featuresThisSc[1][index] <= end)
+                        numBP = numBP + (featuresThisSc[1][index] - featuresThisSc[0][index]);
+                    else if (featuresThisSc[0][index] >= start && featuresThisSc[1][index] > end)
+                        numBP = numBP + (end - featuresThisSc[0][index]);
+                    else if (featuresThisSc[0][index] < start && featuresThisSc[1][index] > end)
+                        numBP = numBP + (end - start) + 1;
+                    index++;
+                }
+            }
+            return numBP;
+        } catch (const std::out_of_range& oor) {
+            //std::cerr << "No features on scaffold: " << scaffold << std::endl;
+            return 0;
+        }
+    }
+    
+    std::vector<std::vector <string> > getFeaturesinRegion(const string& scaffold, const int start, const int end) {
+        std::vector<std::vector <string> > allFeatures;
+        try {
+            std::vector<std::vector<int> > featuresThisSc = BedFeatureMap.at(scaffold);
+            //std::cerr << "There are " << aGThisSc[0].size() << " accessible intervals" << std::endl;
+            /*for (std::map<std::string, std::vector<std::vector<int> > >::iterator i = accessibleGenomeMap.begin(); i != accessibleGenomeMap.end(); i++) {
+             std::cerr << "There is scaffold: " << i->first << " in the map" << std::endl;
+             } */
+            
+            
+            // Binary search to find the first feature whose end coordinate is greater
+            // or equal to the start of the region in question
+            std::vector<int>::iterator itStart = lower_bound(featuresThisSc[1].begin(),featuresThisSc[1].end(),start);
+            std::vector<int>::size_type index = std::distance(featuresThisSc[1].begin(), itStart);
+            // Now check that the start coordinate of the feature is within
+            
+            // Sum the lengths
+            while (featuresThisSc[0][index] <= end) {
+                std::vector <string> feature;
+                feature.push_back(scaffold); feature.push_back(numToString(featuresThisSc[0][index]));
+                feature.push_back(numToString(featuresThisSc[1][index]));
+                index++;
+            }
+            return allFeatures;
+        } catch (const std::out_of_range& oor) {
+            std::cerr << "No features on scaffold: " << scaffold << std::endl;
+            return allFeatures;
+        }
+    }
+    
+    
+    
+    // In the bed file, the left coordinate is zero indexed
+    // bp is a 1-indexed coordinate
+    bool findIfBPinBedFile(const string& scaffold, const int bp) {
+        try {
+            std::vector<std::vector<int> > featuresThisSc = BedFeatureMap.at(scaffold);
+            
+            // Binary search to find the first element in the accessible genome annotation whose end coordinate is greater
+            // or equal to the basepair in question
+            std::vector<int>::iterator itStart = lower_bound(featuresThisSc[1].begin(),featuresThisSc[1].end(),bp);
+            std::vector<int>::size_type index = std::distance(featuresThisSc[1].begin(), itStart);
+            
+            // Then if the start coordinate is less than the coordinate of the basepair, the bp is covered by the bed file features
+            if (featuresThisSc[0][index] < bp) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (const std::out_of_range& oor) {
+            return false;
+        }
+    }
+    
+protected:
+    std::map<std::string, std::vector<std::vector<int> > > BedFeatureMap;
+    
+    // Load up the file specifying the genomic coordinates (the bed file needs to be sorted by chromosome)
+    std::map<string, std::vector<std::vector<int> > > loadBedFeatureMap(std::ifstream*& bedFile, bool debug) {
+        std::map<string, std::vector<std::vector<int> > > BedFeatureMap;
+        std::vector<std::vector<int> > BedFeaturesThisScaffold;
+        std::vector<int> featureStarts;
+        std::vector<int> featureEnds;
+        string line;
+        string previousScaffold = "";
+        //std::cerr << "Loading scaffold: " << currentScaffold << std::endl;
+        while (getline(*bedFile, line)) {
+            std::vector<string> currentFeature = split(line, '\t');
+            if (currentFeature[0] != previousScaffold && previousScaffold != "") {
+                if (debug) {
+                    std::cerr << "Loading scaffold: " << previousScaffold << std::endl;
+                    std::cerr << "Starts: " << std::endl;
+                    print_vector(featureStarts, std::cerr);
+                    std::cerr << "Ends: " << std::endl;
+                    print_vector(featureEnds, std::cerr);
+                }
+                BedFeaturesThisScaffold.push_back(featureStarts);
+                BedFeaturesThisScaffold.push_back(featureEnds);
+                BedFeatureMap[previousScaffold] = BedFeaturesThisScaffold;
+                BedFeaturesThisScaffold.clear(); featureStarts.clear(); featureEnds.clear();
+                // std::cerr << "Loading scaffold: " << currentScaffold << std::endl;
+            }
+            featureStarts.push_back(atoi(currentFeature[1].c_str()));
+            featureEnds.push_back(atoi(currentFeature[2].c_str()));
+            // std::cerr << "Loading scaffold: " << currentFeature[0] << "\t" << currentScaffold << std::endl;
+            previousScaffold = currentFeature[0];
+            //std::cerr << "Loading scaffold: " << currentFeature[0] << "\t" << currentScaffold << std::endl;
+        }
+        // Final line / final scaffold
+        BedFeaturesThisScaffold.push_back(featureStarts);
+        BedFeaturesThisScaffold.push_back(featureEnds);
+        BedFeatureMap[previousScaffold] = BedFeaturesThisScaffold;
+        return BedFeatureMap;
+    }
+    
+};
+
+
+
+class AccessibleGenome : public BedCoordinateFeatures {
 public:
     AccessibleGenome() {};
     
     AccessibleGenome(std::ifstream*& bedFile) {
-        accessibleGenomeMap = loadAccessibleGenomeMap(bedFile);
+        BedFeatureMap = loadBedFeatureMap(bedFile, false);
     }
-    std::map<std::string, std::vector<std::vector<int> > > accessibleGenomeMap;
     
     int getAccessibleBPinRegion(const string& scaffold, const int start, const int end) {
-        
-        std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
-        //std::cerr << "There are " << aGThisSc[0].size() << " accessible intervals" << std::endl;
-        /*for (std::map<std::string, std::vector<std::vector<int> > >::iterator i = accessibleGenomeMap.begin(); i != accessibleGenomeMap.end(); i++) {
-            std::cerr << "There is scaffold: " << i->first << " in the map" << std::endl;
-        } */
-        int numBP = 0;
-        
-        // Binary search to find the first element in the accessible genome annotation whose end coordinate is greater
-        // or equal to the start of the region in question
-        std::vector<int>::iterator itStart = lower_bound(aGThisSc[1].begin(),aGThisSc[1].end(),start);
-        std::vector<int>::size_type index = std::distance(aGThisSc[1].begin(), itStart);
-        // Add the first element:
-        numBP = numBP + (aGThisSc[1][index] - start) + 1; index++;
-        // Sum the lengths
-        while (aGThisSc[0][index] <= end) {
-            if (aGThisSc[1][index] < end)
-                numBP = numBP + (aGThisSc[1][index] - aGThisSc[0][index]);
-            else
-                numBP = numBP + (end - aGThisSc[0][index]);
-            index++;
-        }
-        return numBP;
+        return getNumBPinRegion(scaffold, start, end);
     }
     
+    // Accessible genome is a bed file (left coordinate is zero indexed)
+    // bp is a 1-indexed coordinate
     bool findIfBPaccessible(const string& scaffold, const int bp) {
-        std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
-        
-        // Binary search to find the first element in the accessible genome annotation whose end coordinate is greater
-        // or equal to the basepair in question
-        std::vector<int>::iterator itStart = lower_bound(aGThisSc[1].begin(),aGThisSc[1].end(),bp);
-        std::vector<int>::size_type index = std::distance(aGThisSc[1].begin(), itStart);
-        
-        
-        if (aGThisSc[0][index] <= bp) {
-            return false;
-        } else {
-            return true;
-        }
+        return findIfBPinBedFile(scaffold,bp);
     }
     
     string getAccessibleSeqForScaffold(const string& scaffold, const string& fullString) {
-        std::vector<std::vector<int> > aGThisSc = accessibleGenomeMap[scaffold];
+        std::vector<std::vector<int> > aGThisSc = BedFeatureMap[scaffold];
         
         string accessibleString; accessibleString.reserve(fullString.length()); accessibleString = "";
         for (std::vector<int>::size_type i = 0; i < aGThisSc[0].size(); i++) {
             accessibleString.append(fullString.substr(aGThisSc[0][i],aGThisSc[1][i]- aGThisSc[0][i]));
         }
         return accessibleString;
-    }
-    
-private:
-    // Load up the file specifying the accessible genome (needs to be sorted by chromosome)
-    std::map<string, std::vector<std::vector<int> > > loadAccessibleGenomeMap(std::ifstream*& bedFile) {
-        std::map<string, std::vector<std::vector<int> > > accessibleGenomeMap;
-        std::vector<std::vector<int> > accessibleGenomeThisScaffold;
-        std::vector<int> featureStarts;
-        std::vector<int> featureEnds;
-        string line;
-        getline(*bedFile, line);
-        std::vector<string> currentFeature = split(line, '\t');
-        string currentScaffold = currentFeature[0];
-        //std::cerr << "Loading scaffold: " << currentScaffold << std::endl;
-        while (getline(*bedFile, line)) {
-            featureStarts.push_back(atoi(currentFeature[1].c_str()));
-            featureEnds.push_back(atoi(currentFeature[2].c_str()));
-           // std::cerr << "Loading scaffold: " << currentFeature[0] << "\t" << currentScaffold << std::endl;
-            if (currentFeature[0] != currentScaffold) {
-                accessibleGenomeThisScaffold.push_back(featureStarts);
-                accessibleGenomeThisScaffold.push_back(featureEnds);
-                accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
-                accessibleGenomeThisScaffold.clear(); featureStarts.clear(); featureEnds.clear();
-                currentScaffold = currentFeature[0];
-          //      std::cerr << "Loading scaffold: " << currentScaffold << std::endl;
-            }
-            currentFeature = split(line, '\t');
-            //std::cerr << "Loading scaffold: " << currentFeature[0] << "\t" << currentScaffold << std::endl;
-        }
-        // Final line / final scaffold
-        accessibleGenomeThisScaffold.push_back(featureStarts);
-        accessibleGenomeThisScaffold.push_back(featureEnds);
-        accessibleGenomeMap[currentScaffold] = accessibleGenomeThisScaffold;
-        return accessibleGenomeMap;
     }
 
 };
