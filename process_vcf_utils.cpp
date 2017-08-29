@@ -25,17 +25,21 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 // Initialize a matrix 
-void initialize_matrix_double(std::vector<std::vector<double> >& m, int m_size) {
-    for (int i = 0; i < m_size; i++) { 
-        std::vector<double> v(m_size,0);
+void initialize_matrix_double(std::vector<std::vector<double> >& m, int m_rows, int m_columns) {
+    if (m_columns == 0)
+        m_columns = m_rows;
+    for (int i = 0; i < m_columns; i++) {
+        std::vector<double> v(m_rows,0);
         m.push_back(v);
     }       
 }
 
 // Initialize a matrix 
-void initialize_matrix_int(std::vector<std::vector<int> >& m, int m_size) {
-    for (int i = 0; i < m_size; i++) { 
-        std::vector<int> v(m_size,0);
+void initialize_matrix_int(std::vector<std::vector<int> >& m, int m_rows, int m_columns) {
+    if (m_columns == 0)
+        m_columns = m_rows;
+    for (int i = 0; i < m_columns; i++) {
+        std::vector<int> v(m_rows,0);
         m.push_back(v);
     }       
 }
@@ -351,6 +355,34 @@ ThreeSetCounts getThreeSetVariantCounts(const std::vector<std::string>& fields, 
     
     return thisVariantCounts;
 }
+
+ManySetCountsGeneric getGenericSetVariantCounts(const std::vector<std::string>& fields, GenericSampleSets& setLoci) {
+    ManySetCountsGeneric counts(setLoci);
+    counts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
+    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
+        if (fields[i][0] == '1') {
+            counts.overall++;
+            counts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
+            for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
+                if (std::find(it->second.begin(), it->second.end(), i-NUM_NON_GENOTYPE_COLUMNS) != it->second.end()) { counts.allSetCounts[it->first].setAltCount++; }
+            }
+        }
+        if (fields[i][2] == '1') {
+            counts.overall++;
+            counts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
+            for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
+                if (std::find(it->second.begin(), it->second.end(), i-NUM_NON_GENOTYPE_COLUMNS) != it->second.end()) { counts.allSetCounts[it->first].setAltCount++; }
+            }
+        }
+    }
+    for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
+        counts.allSetCounts[it->first].setRefCount = (int)(it->second.size() * 2) - counts.allSetCounts[it->first].setAltCount;
+        counts.allSetCounts[it->first].setAltAF = (double)counts.allSetCounts[it->first].setAltCount/(it->second.size() * 2);
+    }
+    
+    return counts;
+}
+
 
 
 FourSetCounts getFourSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& set4_loci, const std::string& AA) {

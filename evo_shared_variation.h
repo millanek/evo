@@ -1,5 +1,5 @@
 //
-//  process_vcf_fixed_search.h
+//  evo_shared_variation.h
 //  vcf_process
 //
 //  Created by Milan Malinsky on 25/09/2013.
@@ -11,8 +11,8 @@
 
 #include "process_vcf_utils.h"
 
-int fixedSearchMain(int argc, char** argv);
-void parseFixedSearchOptions(int argc, char** argv);
+int sharedVarMain(int argc, char** argv);
+void parseSharedVarOptions(int argc, char** argv);
 
 
 std::vector<size_t> locateSet(std::vector<std::string>& sample_names, const std::vector<std::string>& set);

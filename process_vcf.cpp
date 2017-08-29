@@ -18,7 +18,7 @@
 #include "process_vcf_sequenom.h"
 #include "process_vcf_use_map.h"
 #include "process_vcf_coding_sequences.h"
-#include "process_vcf_fixed_search.h"
+#include "evo_shared_variation.h"
 #include "process_vcf_search_sex.h"
 #include "process_vcf_mt_sequences.h"
 #include "process_vcf_stats_testing.h"
@@ -83,7 +83,7 @@ static const char *USAGE_MESSAGE =
 "           map                 Use a genetic map to link scaffolds in an assembly\n"
 "           merge               Merge two VCF files containing the same variants but different samples\n"
 "           reorder             Shuffle columns in a vcf file\n"
-"           fixed-search        Search for fixed (and nearly fixed) variants between two (arbitrary) sets of samples\n"
+"           sharedVariation     search for sharing of heterozygous sites (or variation shared between groups)\n"
 "           fst                 Calculating Fst values from VCF, ms simulations, or summarising eigensoft output\n"
 "           DNAtoProtein        Translate multiple aligments of gene sequences from DNA into protein\n"
 "           ProteinSs           Output segregating sites from a (protein) multiple alignment\n"
@@ -150,8 +150,8 @@ int main(int argc, char **argv) {
             sequenomMain(argc - 1, argv + 1);
         else if(command == "map")
             mapMain(argc - 1, argv + 1);
-        else if(command == "fixed-search")
-            fixedSearchMain(argc - 1, argv + 1);
+        else if(command == "sharedVariation")
+            sharedVarMain(argc - 1, argv + 1);
         else if(command == "sex-search")
             sexSearchMain(argc - 1, argv + 1);
         else if(command == "smallRNA")

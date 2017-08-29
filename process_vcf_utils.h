@@ -30,6 +30,20 @@ using std::string;
 // VCF format constant
 static const int NUM_NON_GENOTYPE_COLUMNS=9;  // 8 mendatory columns + 1 column with definition of the genotype columns
 
+std::vector<std::string> split(const std::string &s, char delim);
+// Find which fields in the VCF file corresponds to samples listed in a given set
+std::vector<size_t> locateSet(std::vector<std::string>& sample_names, const std::vector<std::string>& set);
+size_t locateOneSample(std::vector<std::string>& sample_names, const std::string toFind);
+
+// Converting numbers (int, double, size_t, and char) to string
+template <typename T> std::string numToString(T i) {
+    std::string ret;
+    std::stringstream out;
+    out << i;
+    ret = out.str();
+    return ret;
+}
+
 class Counts {
 public:
     Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), chiSqPvalForInbreeding(1), bPhased(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};
@@ -75,6 +89,80 @@ public:
     std::vector<int> set3individualsWithVariant;
 };
 
+
+class GenericSampleSets {
+public:
+    GenericSampleSets(): initialised(false) {};
+    
+    GenericSampleSets(std::ifstream*& setFile, std::vector<string>& sampleNames, bool debug = false) {
+        sets = loadSets(setFile, sampleNames, debug);
+        initialised = true;
+    }
+    
+    bool initialised;
+    std::vector<string> allSetNames;
+    std::map<string, std::vector<size_t> > sets;
+private:
+    std::map<string, std::vector<size_t> > loadSets(std::ifstream*& setFile, std::vector<string>& sampleNames, bool debug) {
+        std::map<string, std::vector<size_t> > setNameLoci;
+        string line;
+        int setNum = 0;
+        while (getline(*setFile, line)) {
+            setNum++;
+            string setName; string lociString;
+            std::vector<string> nameLociString = split(line, '\t');
+            assert(nameLociString.size() <= 2);
+            if (nameLociString.size() == 2) {
+                setName = nameLociString[0];
+                lociString = nameLociString[1];
+            }
+            if (nameLociString.size() == 1) {
+                setName = numToString(setNum);
+                lociString = nameLociString[0];
+            }
+            
+            std::vector<string> lociStringSplit = split(lociString, ',');
+            std::sort(lociStringSplit.begin(),lociStringSplit.end());
+            std::vector<size_t> setLoci = locateSet(sampleNames, lociStringSplit);
+            setNameLoci[setName] = setLoci;
+            allSetNames.push_back(setName);
+        }
+        return setNameLoci;
+    }
+    
+};
+
+class SetCountGeneric {
+public:
+    SetCountGeneric() : setRefCount(0), setAltCount(0), setAltAF(0), setDaAF(0) {};
+    
+    int setRefCount; int setAltCount;
+    double setAltAF; double setDaAF; 
+    std::vector<int> setindividualsWithVariant;
+    
+    bool isPolymorhic() {
+        if (setAltAF != 0 && setAltAF != 1)
+            return true;
+        else
+            return false;
+    }
+};
+
+class ManySetCountsGeneric {
+public:
+    ManySetCountsGeneric (GenericSampleSets& setLoci) {
+        for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
+            SetCountGeneric sc;
+            allSetCounts[it->first] = sc;
+        }
+        numSets = (int)setLoci.sets.size();
+    }
+    // some general stats about the variant;
+    std::vector<int> individualsWithVariant; int overall;
+    // stats about the set
+    int numSets; std::map<string, SetCountGeneric> allSetCounts;
+};
+ManySetCountsGeneric getGenericSetVariantCounts(const std::vector<std::string>& fields, GenericSampleSets& setLoci);
 
 class FourSetCounts {
 public:
@@ -151,14 +239,7 @@ public:
     std::vector<int> homsWithYellow;
 };
 
-// Converting numbers (int, double, size_t, and char) to string
-template <typename T> std::string numToString(T i) {
-    std::string ret;
-    std::stringstream out;
-    out << i;
-    ret = out.str();
-    return ret;
-}
+
 
 // Print an arbitrary matrix (vector of vectors)
 template <class T> void print_matrix(T matrix, std::ostream& outFile) {
@@ -244,9 +325,6 @@ inline double convertToDouble(std::string const& s)
 }
 
 
-
-std::vector<std::string> split(const std::string &s, char delim);
-
 double stringToDouble(std::string s);
 
 double calculateInbreedingCoefficient(std::vector<int>& individualsWithVariant);
@@ -255,8 +333,8 @@ double calculateChiSqPvalForInbreeding(std::vector<int>& individualsWithVariant)
 // Does the same as R function table
 std::map<int, int> tabulateVector(std::vector<int>& vec);
 
-void initialize_matrix_double(std::vector<std::vector<double> >& m, int m_size);
-void initialize_matrix_int(std::vector<std::vector<int> >& m, int m_size);
+void initialize_matrix_double(std::vector<std::vector<double> >& m, int m_rows, int m_columns = 0);
+void initialize_matrix_int(std::vector<std::vector<int> >& m, int m_rows, int m_columns = 0);
 
 std::vector<size_t> complementIndices(const size_t fullVectorSize, const std::vector<size_t>& originalIndices);
 
@@ -295,9 +373,6 @@ std::ostream* createWriter(const std::string& filename, std::ios_base::openmode 
 void print80bpPerLineStdOut(std::ostream& outFile, std::string toPrint);
 void print80bpPerLineFile(std::ofstream*& outFile, string toPrint);
 
-// Find which fields in the VCF file corresponds to samples listed in a given set
-std::vector<size_t> locateSet(std::vector<std::string>& sample_names, const std::vector<std::string>& set);
-size_t locateOneSample(std::vector<std::string>& sample_names, const std::string toFind);
 
 // Reading in genome files
 std::map<std::string,std::string> readMultiFastaToMap(const std::string& fileName);
