@@ -119,7 +119,7 @@ int statsMain(int argc, char** argv) {
         while (getline(*inFile, line)) {
             std::vector<std::string> fields = split(line, '\t');
             string sc = fields[0];
-            int len = atoi(fields[0].c_str());
+            int len = atoi(fields[1].c_str());
             for (int i=0; i < len; i=i+10000 ) {
                 int numAccessibleBP = ag->getAccessibleBPinRegion(sc, i, i+10000);
                 std::cout << sc << "\t" << i << "\t" << i+10000 << "\t" << numAccessibleBP << std::endl;
