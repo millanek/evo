@@ -281,7 +281,7 @@ void parseStatsOptions(int argc, char** argv) {
         die = true;
     }
     
-    if (!opt::bDiffs && !opt::bDoubleton && !opt::countHets && !opt::countPrivateVars) {
+    if (!opt::bDiffs && !opt::bDoubleton && !opt::countHets && !opt::countPrivateVars && opt::accesibleGenBedFile.empty()) {
         std::cerr << "Which statistics should the program calculate?\n";
         die = true;
     }
