@@ -11,6 +11,7 @@
 #include "process_vcf_stats.h"
 #include "process_vcf_stats_functions.h"
 #include "process_vcf_print_routines.h"
+#include "process_vcf_annotation_tools.h"
 
 #define SUBPROGRAM "stats"
 
@@ -36,9 +37,13 @@ static const char *STATS_USAGE_MESSAGE =
 "       --diff-matrix-allH                          Generate a half-matrix measuring pairwise differences between all haplotypes\n"
 "       The program can also output 100 bootstrap replicates of the distance matrices unsing a block 'case resampling' scheme:\n"
 "       --block-bootstrap=BLOCKSIZE (default 100)  Generate 100 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
+"\n"
+"       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
+"                                                   the program will calculate the number of accessible bases from this\n"
+"                                                   if this option is given, instead of a VCF file, we should input a file specifying lengths of scaffolds/chromosomes\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS };
+enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS, OPT_ACC_GEN_BED };
 
 static const char* shortopts = "h";
 
@@ -53,6 +58,7 @@ static const struct option longopts[] = {
     { "diff-matrix-allH", no_argument,    NULL, OPT_DIFF_MATRIX_ALLH },
     { "block-bootstrap", required_argument,    NULL, OPT_BLOCK_BOOTSTRAP },
     { "private-variants", no_argument,    NULL, OPT_PRIVATE_VARS },
+    { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
     { NULL, 0, NULL, 0 }
 };
 
@@ -70,7 +76,7 @@ namespace opt
     static bool bDoubleton = false;
     static bool bDiffH1 = false;
     static bool bDiffAllH = false;
-    
+    static string accesibleGenBedFile;
     static int bootstrapBlockSize = 0;
 }
 
@@ -79,6 +85,7 @@ int statsMain(int argc, char** argv) {
     string fileName = opt::vcfFile;
     string fileRoot = stripExtension(fileName);
     std::ifstream* popFile;
+    std::ifstream* accessibleGenomeBed;
     
     // Data structures to hold individual and population identifiers
     std::vector<std::string> sampleNames; std::vector<string> populationLabels;
@@ -100,6 +107,26 @@ int statsMain(int argc, char** argv) {
     std::vector<std::vector<int> > doubletons; std::vector<std::vector<double> > diffMatrixHetsVsHomDiff;
     std::vector<std::vector<double> > diffMatrix; std::vector<std::vector<double> > diffMatrixMe;
     std::vector<std::vector<double> > diffMatrixH1; std::vector<std::vector<double> > diffMatrixAllH;
+    
+    AccessibleGenome* ag;
+    if (!opt::accesibleGenBedFile.empty()) {
+        accessibleGenomeBed = new std::ifstream(opt::accesibleGenBedFile);
+        std::cerr << "Loading the accessible genome annotation" << std::endl;
+        ag = new AccessibleGenome(accessibleGenomeBed);
+        std::cerr << "Done" << std::endl;
+        std::istream* inFile = createReader(fileName.c_str());
+        string line;
+        while (getline(*inFile, line)) {
+            std::vector<std::string> fields = split(line, '\t');
+            string sc = fields[0];
+            int len = atoi(fields[0].c_str());
+            for (int i=0; i < len; i=i+10000 ) {
+                int numAccessibleBP = ag->getAccessibleBPinRegion(sc, i, i+10000);
+                std::cout << sc << "\t" << i << "\t" << i+10000 << "\t" << numAccessibleBP << std::endl;
+            }
+        }
+        return 0;
+    }
     
     std::cerr << "Calculating statistics from: " << fileName << std::endl;
     if (opt::countHets) {
@@ -233,6 +260,7 @@ void parseStatsOptions(int argc, char** argv) {
             case OPT_DIFF_MATRIX_ALLH: opt::bDiffAllH = true; break;
             case OPT_BLOCK_BOOTSTRAP: arg >> opt::bootstrapBlockSize; break;
             case OPT_PRIVATE_VARS: opt::countPrivateVars = true; break;
+            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;  
             case 'h':
                 std::cout << STATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

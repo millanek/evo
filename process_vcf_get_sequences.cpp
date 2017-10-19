@@ -44,7 +44,7 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "                                                   (default: sample ids from the vcf file are used)\n"
 "       --incl-Pn=Mz_coords.PNsequence.NoIndels.fa  Also include an outgroup sequence (for now works only with --split)\n"
 
-"       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n:"
+"       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
