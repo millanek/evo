@@ -35,6 +35,9 @@ static const char *STATS_USAGE_MESSAGE =
 "                                                   Useful when you want to calculate statistics on an already filtered file\n"
 "       --diff-matrix-h1                            Generate a half-matrix measuring pairwise differences between haplotypes1\n"
 "       --diff-matrix-allH                          Generate a half-matrix measuring pairwise differences between all haplotypes\n"
+"       You can add an extra option specifying the number of accessible bp; the diff_me_matrix will be defined in d_XY\n"
+"       this number can be pre-computed using the --accessibleGenomeBED option\n"
+"       --numAccessibleBP=NUM                       Number of accessible bp in the region\n"
 "       The program can also output 100 bootstrap replicates of the distance matrices unsing a block 'case resampling' scheme:\n"
 "       --block-bootstrap=BLOCKSIZE (default 100)  Generate 100 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
 "\n"
@@ -43,7 +46,7 @@ static const char *STATS_USAGE_MESSAGE =
 "                                                   if this option is given, instead of a VCF file, we should input a file specifying lengths of scaffolds/chromosomes\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS, OPT_ACC_GEN_BED };
+enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS, OPT_ACC_GEN_BED, OPT_NUM_ACCESSIBLE };
 
 static const char* shortopts = "h";
 
@@ -59,6 +62,7 @@ static const struct option longopts[] = {
     { "block-bootstrap", required_argument,    NULL, OPT_BLOCK_BOOTSTRAP },
     { "private-variants", no_argument,    NULL, OPT_PRIVATE_VARS },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
+    { "numAccessibleBP", required_argument, NULL, OPT_NUM_ACCESSIBLE },
     { NULL, 0, NULL, 0 }
 };
 
@@ -78,6 +82,7 @@ namespace opt
     static bool bDiffAllH = false;
     static string accesibleGenBedFile;
     static int bootstrapBlockSize = 0;
+    static int numAccessibleBP = -1;
 }
 
 int statsMain(int argc, char** argv) {
@@ -216,6 +221,14 @@ int statsMain(int argc, char** argv) {
         }
     }
     
+    if (opt::numAccessibleBP > -1) {
+        for (int i = 0; i < diffMatrixMe.size(); i++) {
+            for (int j = 0; j < diffMatrixMe[i].size(); j++) {
+                diffMatrixMe[i][j] =  (double)diffMatrixMe[i][j]/opt::numAccessibleBP;
+            }    
+        }
+    }
+    
     // Printing doubletons
 //    if (opt::bDoubleton)
 //        print_doubleton_distribution(fileRoot, pop_unique, doubletons);
@@ -260,7 +273,8 @@ void parseStatsOptions(int argc, char** argv) {
             case OPT_DIFF_MATRIX_ALLH: opt::bDiffAllH = true; break;
             case OPT_BLOCK_BOOTSTRAP: arg >> opt::bootstrapBlockSize; break;
             case OPT_PRIVATE_VARS: opt::countPrivateVars = true; break;
-            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;  
+            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
+            case OPT_NUM_ACCESSIBLE: arg >> opt::numAccessibleBP; break;
             case 'h':
                 std::cout << STATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
