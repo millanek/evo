@@ -44,9 +44,10 @@ static const char *STATS_USAGE_MESSAGE =
 "       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
 "                                                   the program will calculate the number of accessible bases from this\n"
 "                                                   if this option is given, instead of a VCF file, we should input a file specifying lengths of scaffolds/chromosomes\n"
+"       --accessibleGenBedWindow=NUMbp              the size of the windows for which the number of accessible bases should be calculated\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS, OPT_ACC_GEN_BED, OPT_NUM_ACCESSIBLE };
+enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS, OPT_ACC_GEN_BED, OPT_ACC_GEN_BED_WINDOW, OPT_NUM_ACCESSIBLE };
 
 static const char* shortopts = "h";
 
@@ -63,6 +64,7 @@ static const struct option longopts[] = {
     { "private-variants", no_argument,    NULL, OPT_PRIVATE_VARS },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
     { "numAccessibleBP", required_argument, NULL, OPT_NUM_ACCESSIBLE },
+    {"accessibleGenBedWindow", required_argument, NULL, OPT_ACC_GEN_BED_WINDOW },
     { NULL, 0, NULL, 0 }
 };
 
@@ -81,8 +83,10 @@ namespace opt
     static bool bDiffH1 = false;
     static bool bDiffAllH = false;
     static string accesibleGenBedFile;
+    static int accessibleGenBedWindow = 10000;
     static int bootstrapBlockSize = 0;
     static int numAccessibleBP = -1;
+    
 }
 
 int statsMain(int argc, char** argv) {
@@ -125,9 +129,9 @@ int statsMain(int argc, char** argv) {
             std::vector<std::string> fields = split(line, '\t');
             string sc = fields[0];
             int len = atoi(fields[1].c_str());
-            for (int i=0; i < len; i=i+10000 ) {
-                int numAccessibleBP = ag->getAccessibleBPinRegion(sc, i, i+10000);
-                std::cout << sc << "\t" << i << "\t" << i+10000 << "\t" << numAccessibleBP << std::endl;
+            for (int i=0; i < len; i=i+opt::accessibleGenBedWindow ) {
+                int numAccessibleBP = ag->getAccessibleBPinRegion(sc, i, i+opt::accessibleGenBedWindow);
+                std::cout << sc << "\t" << i << "\t" << i+opt::accessibleGenBedWindow << "\t" << numAccessibleBP << std::endl;
             }
         }
         return 0;
@@ -275,6 +279,7 @@ void parseStatsOptions(int argc, char** argv) {
             case OPT_PRIVATE_VARS: opt::countPrivateVars = true; break;
             case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
             case OPT_NUM_ACCESSIBLE: arg >> opt::numAccessibleBP; break;
+            case OPT_ACC_GEN_BED_WINDOW: arg >> opt::accessibleGenBedWindow; break;
             case 'h':
                 std::cout << STATS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
