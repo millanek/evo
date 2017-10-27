@@ -61,6 +61,7 @@ public:
     std::vector<int> depthPerIndividual;
     std::vector<int> genotypeQualitiesPerIndividual;
     std::vector<int> haplotypesWithVariant;
+    std::vector<bool> missingGenotypesPerIndividual;
     bool bAnyMissingGenotypes;
 };
 

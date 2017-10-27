@@ -177,38 +177,50 @@ void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult
 
 
 // Increment the diff (half)matrix, recording the differences 
-void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, FilterResult& result) {
+void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, std::vector<std::vector<int> >& pairwise_missingness, FilterResult& result) {
     for (std::vector<std::vector<int> >::size_type i = 0; i < diffs.size(); i++) {
+        const int ind_i = result.counts.individualsWithVariant[i];
+        const bool ind_i_missing = result.counts.missingGenotypesPerIndividual[i];
         for (int j = 0; j <= i; j++) {
-            const int ind_i = result.counts.individualsWithVariant[i];
-            const int ind_j = result.counts.individualsWithVariant[j];
             double diff_measure_Richard; double diff_measure_Me;
-            
-            
-            if (j < i) {
-                if (ind_i == 1 && ind_j == 1) { // a pair of individuals are both heterozygous for a variant
-                    diff_measure_Richard = DIFF_WEIGHT_BOTH_HETS_RICHARD;
-                    diff_measure_Me = DIFF_WEIGHT_BOTH_HETS_ME;
-                    diffs_Hets_vs_Homs[i][j]++;  // Cases where both are heterozygous are added in the bottom left corner
-                } else if ((ind_i == 2 && ind_j == 0) || (ind_i == 0 && ind_j == 2)) { // one is hom for reference allele the other is hom for alternative allele
-                    diff_measure_Richard = DIFF_WEIGHT_HOM_DIFFERENCE_RICHARD;
-                    diff_measure_Me = DIFF_WEIGHT_HOM_DIFFERENCE_ME;
-                    diffs_Hets_vs_Homs[j][i]++;  // Homozygous differences are added in the top right corner
-                }
-                // one is homozygous the other is heterozygous for alternative allele
-                else if ((ind_i == 2 && ind_j == 1) || (ind_i == 1 && ind_j == 2) || (ind_i == 0 && ind_j == 1) || (ind_i == 1 && ind_j == 0)) {
-                    diff_measure_Richard = DIFF_WEIGHT_ONE_HOM_ONE_HET;
-                    diff_measure_Me = DIFF_WEIGHT_ONE_HOM_ONE_HET;
-                } else {
-                    diff_measure_Richard = 0;
+            if (ind_i_missing) {
+                diff_measure_Me = 0;
+                diff_measure_Richard = 0;
+                pairwise_missingness[i][j]++;
+            } else {
+                const bool ind_j_missing = result.counts.missingGenotypesPerIndividual[j];
+                if (ind_j_missing) {
                     diff_measure_Me = 0;
-                }   
-                diffs[i][j] = diffs[i][j] + diff_measure_Richard;
-                diffs_me[i][j] = diffs_me[i][j] + diff_measure_Me;
-            } else if (j == i) { // Fill in the diagonal, the number of hets
-                if (ind_i == 1) {
-                    diffs[i][j]++;
-                    diffs_me[i][j]++;
+                    diff_measure_Richard = 0;
+                    pairwise_missingness[i][j]++;
+                } else {
+                    const int ind_j = result.counts.individualsWithVariant[j];
+                    if (j < i) {
+                        if (ind_i == 1 && ind_j == 1) { // a pair of individuals are both heterozygous for a variant
+                            diff_measure_Richard = DIFF_WEIGHT_BOTH_HETS_RICHARD;
+                            diff_measure_Me = DIFF_WEIGHT_BOTH_HETS_ME;
+                            diffs_Hets_vs_Homs[i][j]++;  // Cases where both are heterozygous are added in the bottom left corner
+                        } else if ((ind_i == 2 && ind_j == 0) || (ind_i == 0 && ind_j == 2)) { // one is hom for reference allele the other is hom for alternative allele
+                            diff_measure_Richard = DIFF_WEIGHT_HOM_DIFFERENCE_RICHARD;
+                            diff_measure_Me = DIFF_WEIGHT_HOM_DIFFERENCE_ME;
+                            diffs_Hets_vs_Homs[j][i]++;  // Homozygous differences are added in the top right corner
+                        }
+                        // one is homozygous the other is heterozygous for alternative allele
+                        else if ((ind_i == 2 && ind_j == 1) || (ind_i == 1 && ind_j == 2) || (ind_i == 0 && ind_j == 1) || (ind_i == 1 && ind_j == 0)) {
+                            diff_measure_Richard = DIFF_WEIGHT_ONE_HOM_ONE_HET;
+                            diff_measure_Me = DIFF_WEIGHT_ONE_HOM_ONE_HET;
+                        } else {
+                            diff_measure_Richard = 0;
+                            diff_measure_Me = 0;
+                        }   
+                        diffs[i][j] = diffs[i][j] + diff_measure_Richard;
+                        diffs_me[i][j] = diffs_me[i][j] + diff_measure_Me;
+                    } else if (j == i) { // Fill in the diagonal, the number of hets
+                        if (ind_i == 1) {
+                            diffs[i][j]++;
+                            diffs_me[i][j]++;
+                        }
+                    }
                 }
             }
         }

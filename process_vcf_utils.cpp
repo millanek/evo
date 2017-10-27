@@ -152,8 +152,10 @@ double calculateChiSqPvalForInbreeding(std::vector<int>& individualsWithVariant)
 
 Counts getThisVariantCountsSimple(const std::vector<std::string>& fields) {
     Counts thisVariantCounts;
-    thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
-    thisVariantCounts.haplotypesWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS)*2,0);
+    int numSamples = (int)fields.size()-NUM_NON_GENOTYPE_COLUMNS;
+    thisVariantCounts.individualsWithVariant.assign(numSamples,0);
+    thisVariantCounts.missingGenotypesPerIndividual.assign(numSamples,false);
+    thisVariantCounts.haplotypesWithVariant.assign(numSamples*2,0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
     // Find the position of DP (per sample read depth) in the genotypeData vector below
     std::vector<std::string> format = split(fields[8], ':');
@@ -165,6 +167,7 @@ Counts getThisVariantCountsSimple(const std::vector<std::string>& fields) {
         char v1 = fields[i][0]; char v2 = fields[i][2];
         if (v1 == '.' || v2 == '.') {
             thisVariantCounts.bAnyMissingGenotypes = true;
+            thisVariantCounts.missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
         }
         if (thisVariantCounts.bPhased == false) {
             if ((v1 == '0' && v2 == '1') || (v1 == '1' && v2 == '0')) {
@@ -225,6 +228,7 @@ Counts getThisVariantCounts(const std::vector<std::string>& fields) {
         char v1 = fields[i][0]; char v2 = fields[i][2];
         if (v1 == '.' || v2 == '.') {
             thisVariantCounts.bAnyMissingGenotypes = true;
+            thisVariantCounts.missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
         }
         if (thisVariantCounts.bPhased == false) {
             if ((v1 == '0' && v2 == '1') || (v1 == '1' && v2 == '0')) {

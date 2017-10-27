@@ -26,7 +26,7 @@ void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult
 void privateVars_analysis(std::vector<int>& privateVarCounts, const FilterResult& result, const std::vector<std::vector<size_t> >& populationsIndices, const std::vector<std::vector<size_t> >& populationsIndicesComplements);
 
 // Increment the diff (half)matrix, recording the differences 
-void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, FilterResult& result);
+void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, std::vector<std::vector<int> >& pairwise_missingness, FilterResult& result);
 
 // Increment the diff (half)matrix, using haplotypes
 void diffs_between_H1(std::vector<std::vector<double> >& H1diffs, FilterResult& result);

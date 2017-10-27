@@ -21,7 +21,7 @@ void print_privateFixedVarsSummary(const string& fileRoot, const std::vector<std
  
 
 // Printing pairwise difference statistics
-void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::string>& header, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrix, const std::vector<std::vector<double> >& diffMatrixMe, const std::vector<std::vector<double> >& diffMatrixHetsVsHomDiff);
+void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::string>& header, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrix, const std::vector<std::vector<double> >& diffMatrixMe, const std::vector<std::vector<double> >& diffMatrixHetsVsHomDiff, const std::vector<std::vector<int> >& pairwiseMissingness);
 
 void print_H1_pairwise_diff_stats(const string& fileRoot, std::vector<std::string>& header, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrixH1);
 void print_AllH_pairwise_diff_stats(const string& fileRoot, const std::vector<std::string>& samples, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrixAllH);

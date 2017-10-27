@@ -116,6 +116,7 @@ int statsMain(int argc, char** argv) {
     std::vector<std::vector<int> > doubletons; std::vector<std::vector<double> > diffMatrixHetsVsHomDiff;
     std::vector<std::vector<double> > diffMatrix; std::vector<std::vector<double> > diffMatrixMe;
     std::vector<std::vector<double> > diffMatrixH1; std::vector<std::vector<double> > diffMatrixAllH;
+    std::vector<std::vector<int> > pairwiseMissingness;
     
     AccessibleGenome* ag;
     if (!opt::accesibleGenBedFile.empty()) {
@@ -173,6 +174,7 @@ int statsMain(int argc, char** argv) {
             initialize_matrix_double(diffMatrix, numSamples); initialize_matrix_double(diffMatrixMe, numSamples);
             initialize_matrix_double(diffMatrixHetsVsHomDiff, numSamples);
             initialize_matrix_double(diffMatrixH1, numSamples); initialize_matrix_double(diffMatrixAllH, numSamples);
+            initialize_matrix_int(pairwiseMissingness, numSamples);
             privateVarCounts.assign(populationLabels.size(), 0); hetCounts.assign(numSamples, 0); hetsSharedWithOthers.assign(numSamples, 0);
             if (!populationsStrings.empty()) {
                 for (int i = 0; i != (int)populationsStrings.size(); i++) {
@@ -209,9 +211,6 @@ int statsMain(int argc, char** argv) {
                 if (opt::bDoubleton) {
                 //    doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);
                 }
-                if (opt::bDiffs) {
-                    diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,result);
-                }
                 if (opt::bDiffH1) {
                     diffs_between_H1(diffMatrixH1, result);
                 }
@@ -219,6 +218,10 @@ int statsMain(int argc, char** argv) {
                     diffs_between_AllH(diffMatrixAllH, result);
                 }
             }
+            if (opt::bDiffs) {
+                diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,pairwiseMissingness,result);
+            }
+            
             if (totalVariantNumber % 100000 == 0)
                 std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
             
@@ -248,7 +251,7 @@ int statsMain(int argc, char** argv) {
     // Printing pairwise difference statistics
     if (opt::bDiffs) {
         finalize_diffs_Hets_vs_Homs_proportions(diffMatrixHetsVsHomDiff);
-        print_pairwise_diff_stats(fileRoot, sampleNames, totalVariantNumber, diffMatrix, diffMatrixMe, diffMatrixHetsVsHomDiff);
+        print_pairwise_diff_stats(fileRoot, sampleNames, totalVariantNumber, diffMatrix, diffMatrixMe, diffMatrixHetsVsHomDiff,pairwiseMissingness);
     }
     if (opt::bDiffH1) {
         print_H1_pairwise_diff_stats(fileRoot, sampleNames, totalVariantNumber, diffMatrixH1);

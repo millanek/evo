@@ -71,33 +71,41 @@ void print_privateFixedVarsSummary(const string& fileRoot, const std::vector<std
 
 
 // Printing pairwise difference statistics
-void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::string>& header, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrix, const std::vector<std::vector<double> >& diffMatrixMe, const std::vector<std::vector<double> >& diffMatrixHetsVsHomDiff) {
+void print_pairwise_diff_stats(const string& fileRoot, const std::vector<std::string>& header, const int totalVariantNumber, const std::vector<std::vector<double> >& diffMatrix, const std::vector<std::vector<double> >& diffMatrixMe, const std::vector<std::vector<double> >& diffMatrixHetsVsHomDiff, const std::vector<std::vector<int> >& pairwiseMissingness) {
     std::ios_base::openmode mode_out = std::ios_base::out;
     string diffFileName = fileRoot + ".diff_matrix.txt";
     string diffMeFileName = fileRoot + ".diff_me_matrix.txt";
     string hetHomFileName = fileRoot + ".hets_over_homs_matrix.txt";
+    string pairwiseMisFileName = fileRoot + ".parwiseMissingness.txt";
     std::ofstream* pDiffOutFile = new std::ofstream(diffFileName.c_str(), mode_out);
     std::ofstream* pDiffMeOutFile = new std::ofstream(diffMeFileName.c_str(), mode_out);
     std::ofstream* pHetHomOutFile = new std::ofstream(hetHomFileName.c_str(), mode_out);
+    std::ofstream* pPairMisOutFile = new std::ofstream(pairwiseMisFileName.c_str(), mode_out);
     *pDiffOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
     *pDiffOutFile << "# Total number of segragating variant sites in this sample:" << totalVariantNumber << std::endl;
     *pDiffOutFile << "# Richard's scoring scheme" << std::endl;
     *pDiffMeOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
     *pDiffMeOutFile << "# Total number of segragating variant sites in this sample: " << totalVariantNumber << std::endl;
-    *pDiffMeOutFile << "# Homozygous difference = 2, one homozygous, another heterozygous = 1:" << totalVariantNumber << std::endl;
+    *pDiffMeOutFile << "# Homozygous difference = 2, one homozygous, another heterozygous = 1" << std::endl;
     *pHetHomOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
     *pHetHomOutFile << "# number of sites both individuals hets/number of sites individuals have a homozygous difference; i.e. num(1/0::1/0)/num(1/1::0/0)" << std::endl;
     *pHetHomOutFile << "# For a free mixing population, we expect this number ~2; for fully separated species ~0" << std::endl;
+    *pPairMisOutFile << "# Input file:" << fileRoot << ".vcf" << std::endl;
+    *pPairMisOutFile << "# Total number of segragating variant sites in this sample: " << totalVariantNumber << std::endl;
+    *pPairMisOutFile << "# Pairwise missingness:" << std::endl;
+    
     
     // print headers
     print_vector(header,*pDiffOutFile);
     print_vector(header,*pDiffMeOutFile);
     print_vector(header,*pHetHomOutFile);
+    print_vector(header,*pPairMisOutFile);
     
     // print statistics
     print_matrix<const std::vector<std::vector<double> >&>(diffMatrix, *pDiffOutFile);
     print_matrix<const std::vector<std::vector<double> >&>(diffMatrixMe, *pDiffMeOutFile);
     print_matrix<const std::vector<std::vector<double> >&>(diffMatrixHetsVsHomDiff, *pHetHomOutFile);
+    print_matrix<const std::vector<std::vector<int> >&>(pairwiseMissingness, *pPairMisOutFile);
     
 }
 
