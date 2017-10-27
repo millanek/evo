@@ -341,6 +341,7 @@ std::vector<size_t> complementIndices(const size_t fullVectorSize, const std::ve
 
 // Remove a single file extension from the filename
 std::string stripExtension(const std::string& filename);
+std::string stripPath(const std::string& filename);
 
 Counts getThisVariantCounts(const std::vector<std::string>& fields);
 Counts getThisVariantCountsSimple(const std::vector<std::string>& fields);

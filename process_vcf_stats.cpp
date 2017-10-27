@@ -236,6 +236,8 @@ int statsMain(int argc, char** argv) {
         }
     }
     
+    string fileNoPath = stripPath(fileRoot);
+    
     // Printing doubletons
 //    if (opt::bDoubleton)
 //        print_doubleton_distribution(fileRoot, pop_unique, doubletons);
@@ -251,7 +253,7 @@ int statsMain(int argc, char** argv) {
     // Printing pairwise difference statistics
     if (opt::bDiffs) {
         finalize_diffs_Hets_vs_Homs_proportions(diffMatrixHetsVsHomDiff);
-        print_pairwise_diff_stats(fileRoot, sampleNames, totalVariantNumber, diffMatrix, diffMatrixMe, diffMatrixHetsVsHomDiff,pairwiseMissingness);
+        print_pairwise_diff_stats(fileNoPath, sampleNames, totalVariantNumber, diffMatrix, diffMatrixMe, diffMatrixHetsVsHomDiff,pairwiseMissingness);
     }
     if (opt::bDiffH1) {
         print_H1_pairwise_diff_stats(fileRoot, sampleNames, totalVariantNumber, diffMatrixH1);

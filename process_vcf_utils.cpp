@@ -45,6 +45,17 @@ void initialize_matrix_int(std::vector<std::vector<int> >& m, int m_rows, int m_
 }
 
 // Remove a single file extension from the filename
+std::string stripPath(const std::string& filename)
+{
+    size_t slashPos = filename.find_last_of('/');
+    if(slashPos == std::string::npos)
+        return filename; // no path
+    else
+        return filename.substr(slashPos+1);
+}
+
+
+// Remove a single file extension from the filename
 std::string stripExtension(const std::string& filename)
 {
     size_t suffixPos = filename.find_last_of('.');
