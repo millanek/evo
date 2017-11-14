@@ -46,7 +46,7 @@ template <typename T> std::string numToString(T i) {
 
 class Counts {
 public:
-    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), chiSqPvalForInbreeding(1), bPhased(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};
+    Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), chiSqPvalForInbreeding(1), bPhased(false), bIsMultiallelic(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};
     
     int overall;
     int minimumDepthInAnIndividual;
@@ -63,6 +63,7 @@ public:
     std::vector<int> haplotypesWithVariant;
     std::vector<bool> missingGenotypesPerIndividual;
     bool bAnyMissingGenotypes;
+    bool bIsMultiallelic;
 };
 
 class SingleSetCounts {

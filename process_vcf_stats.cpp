@@ -219,7 +219,10 @@ int statsMain(int argc, char** argv) {
                 }
             }
             if (opt::bDiffs) {
-                diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,pairwiseMissingness,result);
+                if (!result.counts.bIsMultiallelic)
+                    diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,pairwiseMissingness,result);
+                else
+                    diffs_between_individuals_with_multialleleics(diffMatrixMe,pairwiseMissingness,result);
             }
             
             if (totalVariantNumber % 100000 == 0)

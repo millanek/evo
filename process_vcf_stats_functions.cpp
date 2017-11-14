@@ -227,6 +227,46 @@ void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vec
     }
 }
 
+// Increment the diff (half)matrix, recording the differences
+void diffs_between_individuals_with_multialleleics(std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<int> >& pairwise_missingness, FilterResult& result) {
+    for (std::vector<std::vector<int> >::size_type i = 0; i < diffs_me.size(); i++) {
+        const int ind_i = result.counts.haplotypesWithVariant[2*i];
+        const int ind_i2 = result.counts.haplotypesWithVariant[2*i+1];
+        const bool ind_i_missing = result.counts.missingGenotypesPerIndividual[i];
+        for (int j = 0; j <= i; j++) {
+            double diff_measure_Me;
+            if (ind_i_missing) {
+                diff_measure_Me = 0;
+                pairwise_missingness[i][j]++;
+            } else {
+                const bool ind_j_missing = result.counts.missingGenotypesPerIndividual[j];
+                if (ind_j_missing) {
+                    diff_measure_Me = 0;
+                    pairwise_missingness[i][j]++;
+                } else {
+                    const int ind_j = result.counts.individualsWithVariant[2*j];
+                    const int ind_j2 = result.counts.individualsWithVariant[2*j+1];
+                    if (j < i) {
+                        int totalD = 0; const int numComparisons = 4;
+                        if (ind_i != ind_j) totalD++;
+                        if (ind_i != ind_j2) totalD++;
+                        if (ind_i2 != ind_j) totalD++;
+                        if (ind_i2 != ind_j2) totalD++;
+                        diff_measure_Me = (double)totalD/numComparisons;
+                        diffs_me[i][j] = diffs_me[i][j] + diff_measure_Me;
+                    } else if (j == i) { // Fill in the diagonal, the number of hets
+                        if (ind_i != ind_i2) {
+                            diffs_me[i][j]++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
 void diffs_between_H1(std::vector<std::vector<double> >& H1diffs, FilterResult& result) {
     for (std::vector<std::vector<int> >::size_type i = 0; i < H1diffs.size(); i++) {
         for (int j = 0; j < i; j++) {
