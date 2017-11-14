@@ -177,7 +177,7 @@ void doubleton_analysis(std::vector<std::vector<int> >& doubletons, FilterResult
 
 
 // Increment the diff (half)matrix, recording the differences 
-void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, std::vector<std::vector<int> >& pairwise_missingness, FilterResult& result) {
+void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<double> >& diffs_me_bootstrap, std::vector<std::vector<double> >& diffs_Hets_vs_Homs, std::vector<std::vector<int> >& pairwise_missingness, std::vector<std::vector<int> >& pairwise_missingness_bootstrap, FilterResult& result) {
     for (std::vector<std::vector<int> >::size_type i = 0; i < diffs.size(); i++) {
         const int ind_i = result.counts.individualsWithVariant[i];
         const bool ind_i_missing = result.counts.missingGenotypesPerIndividual[i];
@@ -187,12 +187,14 @@ void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vec
                 diff_measure_Me = 0;
                 diff_measure_Richard = 0;
                 pairwise_missingness[i][j]++;
+                pairwise_missingness_bootstrap[i][j]++;
             } else {
                 const bool ind_j_missing = result.counts.missingGenotypesPerIndividual[j];
                 if (ind_j_missing) {
                     diff_measure_Me = 0;
                     diff_measure_Richard = 0;
                     pairwise_missingness[i][j]++;
+                    pairwise_missingness_bootstrap[i][j]++;
                 } else {
                     const int ind_j = result.counts.individualsWithVariant[j];
                     if (j < i) {
@@ -215,10 +217,12 @@ void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vec
                         }   
                         diffs[i][j] = diffs[i][j] + diff_measure_Richard;
                         diffs_me[i][j] = diffs_me[i][j] + diff_measure_Me;
+                        diffs_me_bootstrap[i][j] = diffs_me_bootstrap[i][j] + diff_measure_Me;
                     } else if (j == i) { // Fill in the diagonal, the number of hets
                         if (ind_i == 1) {
                             diffs[i][j]++;
                             diffs_me[i][j]++;
+                            diffs_me_bootstrap[i][j]++;
                         }
                     }
                 }
@@ -228,7 +232,7 @@ void diffs_between_individuals(std::vector<std::vector<double> >& diffs,std::vec
 }
 
 // Increment the diff (half)matrix, recording the differences
-void diffs_between_individuals_with_multialleleics(std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<int> >& pairwise_missingness, FilterResult& result) {
+void diffs_between_individuals_with_multialleleics(std::vector<std::vector<double> >& diffs_me, std::vector<std::vector<int> >& pairwise_missingness, std::vector<std::vector<double> >& diffs_me_bootstrap, std::vector<std::vector<int> >& pairwise_missingness_bootstrap, FilterResult& result) {
     for (std::vector<std::vector<int> >::size_type i = 0; i < diffs_me.size(); i++) {
         const int ind_i = result.counts.haplotypesWithVariant[2*i];
         const int ind_i2 = result.counts.haplotypesWithVariant[2*i+1];
@@ -238,11 +242,13 @@ void diffs_between_individuals_with_multialleleics(std::vector<std::vector<doubl
             if (ind_i_missing) {
                 diff_measure_Me = 0;
                 pairwise_missingness[i][j]++;
+                pairwise_missingness_bootstrap[i][j]++;
             } else {
                 const bool ind_j_missing = result.counts.missingGenotypesPerIndividual[j];
                 if (ind_j_missing) {
                     diff_measure_Me = 0;
                     pairwise_missingness[i][j]++;
+                    pairwise_missingness_bootstrap[i][j]++;
                 } else {
                     const int ind_j = result.counts.individualsWithVariant[2*j];
                     const int ind_j2 = result.counts.individualsWithVariant[2*j+1];
@@ -254,9 +260,11 @@ void diffs_between_individuals_with_multialleleics(std::vector<std::vector<doubl
                         if (ind_i2 != ind_j2) totalD++;
                         diff_measure_Me = (double)totalD/numComparisons;
                         diffs_me[i][j] = diffs_me[i][j] + diff_measure_Me;
+                        diffs_me_bootstrap[i][j] = diffs_me_bootstrap[i][j] + diff_measure_Me;
                     } else if (j == i) { // Fill in the diagonal, the number of hets
                         if (ind_i != ind_i2) {
                             diffs_me[i][j]++;
+                            diffs_me_bootstrap[i][j]++;
                         }
                     }
                 }

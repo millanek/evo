@@ -39,7 +39,7 @@ static const char *STATS_USAGE_MESSAGE =
 "       this number can be pre-computed using the --accessibleGenomeBED option\n"
 "       --numAccessibleBP=NUM                       Number of accessible bp in the region\n"
 "       The program can also output 100 bootstrap replicates of the distance matrices unsing a block 'case resampling' scheme:\n"
-"       --block-bootstrap=BLOCKSIZE (default 100)  Generate 100 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
+"       --block-bootstrap=BLOCKSIZE (default 1000)  Generate 1000 distance matrices resampling with replacement in blocks of BLOCKSIZE variants\n"
 "\n"
 "       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
 "                                                   the program will calculate the number of accessible bases from this\n"
@@ -84,7 +84,7 @@ namespace opt
     static bool bDiffAllH = false;
     static string accesibleGenBedFile;
     static int accessibleGenBedWindow = 10000;
-    static int bootstrapBlockSize = 0;
+    static int bootstrapBlockSize = 1000;
     static int numAccessibleBP = -1;
     
 }
@@ -117,6 +117,9 @@ int statsMain(int argc, char** argv) {
     std::vector<std::vector<double> > diffMatrix; std::vector<std::vector<double> > diffMatrixMe;
     std::vector<std::vector<double> > diffMatrixH1; std::vector<std::vector<double> > diffMatrixAllH;
     std::vector<std::vector<int> > pairwiseMissingness;
+    std::vector<std::vector<double> > thisBootstrapBlock; std::vector<std::vector<int> > thisBootstrapBlockMissingness;
+    std::vector<std::vector<std::vector<double> > > bootstrapBlockDiffMe;
+    std::vector<std::vector<std::vector<int> > > bootstrapBlockMissingnessMe;
     
     AccessibleGenome* ag;
     if (!opt::accesibleGenBedFile.empty()) {
@@ -174,7 +177,9 @@ int statsMain(int argc, char** argv) {
             initialize_matrix_double(diffMatrix, numSamples); initialize_matrix_double(diffMatrixMe, numSamples);
             initialize_matrix_double(diffMatrixHetsVsHomDiff, numSamples);
             initialize_matrix_double(diffMatrixH1, numSamples); initialize_matrix_double(diffMatrixAllH, numSamples);
+            initialize_matrix_double(thisBootstrapBlock, numSamples);
             initialize_matrix_int(pairwiseMissingness, numSamples);
+            initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
             privateVarCounts.assign(populationLabels.size(), 0); hetCounts.assign(numSamples, 0); hetsSharedWithOthers.assign(numSamples, 0);
             if (!populationsStrings.empty()) {
                 for (int i = 0; i != (int)populationsStrings.size(); i++) {
@@ -220,9 +225,16 @@ int statsMain(int argc, char** argv) {
             }
             if (opt::bDiffs) {
                 if (!result.counts.bIsMultiallelic)
-                    diffs_between_individuals(diffMatrix,diffMatrixMe,diffMatrixHetsVsHomDiff,pairwiseMissingness,result);
+                    diffs_between_individuals(diffMatrix,diffMatrixMe,thisBootstrapBlock,diffMatrixHetsVsHomDiff,pairwiseMissingness,result);
                 else
-                    diffs_between_individuals_with_multialleleics(diffMatrixMe,pairwiseMissingness,result);
+                    diffs_between_individuals_with_multialleleics(diffMatrixMe,pairwiseMissingness,thisBootstrapBlock,thisBootstrapBlockMissingness,result);
+            }
+            
+            if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
+                bootstrapBlockDiffMe.push_back(thisBootstrapBlock);
+                bootstrapBlockMissingnessMe.push_back(thisBootstrapBlockMissingness);
+                initialize_matrix_double(thisBootstrapBlock, numSamples);
+                initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
             }
             
             if (totalVariantNumber % 100000 == 0)
