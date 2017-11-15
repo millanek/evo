@@ -253,12 +253,12 @@ void diffs_between_individuals_with_multialleleics(std::vector<std::vector<doubl
                     const int ind_j = result.counts.individualsWithVariant[2*j];
                     const int ind_j2 = result.counts.individualsWithVariant[2*j+1];
                     if (j < i) {
-                        int totalD = 0; const int numComparisons = 4;
+                        double totalD = 0; const double numComparisons = 4;
                         if (ind_i != ind_j) totalD++;
                         if (ind_i != ind_j2) totalD++;
                         if (ind_i2 != ind_j) totalD++;
                         if (ind_i2 != ind_j2) totalD++;
-                        diff_measure_Me = (double)totalD/numComparisons;
+                        diff_measure_Me = totalD/numComparisons;
                         diffs_me[i][j] = diffs_me[i][j] + diff_measure_Me;
                         diffs_me_bootstrap[i][j] = diffs_me_bootstrap[i][j] + diff_measure_Me;
                     } else if (j == i) { // Fill in the diagonal, the number of hets

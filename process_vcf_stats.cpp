@@ -224,10 +224,11 @@ int statsMain(int argc, char** argv) {
                 }
             }
             if (opt::bDiffs) {
-                if (!result.counts.bIsMultiallelic)
-                    diffs_between_individuals(diffMatrix,diffMatrixMe,thisBootstrapBlock,diffMatrixHetsVsHomDiff,pairwiseMissingness,result);
-                else
+                if (!result.counts.bIsMultiallelic) {
+                    diffs_between_individuals(diffMatrix,diffMatrixMe,thisBootstrapBlock,diffMatrixHetsVsHomDiff,pairwiseMissingness,thisBootstrapBlockMissingness,result);
+                } else {
                     diffs_between_individuals_with_multialleleics(diffMatrixMe,pairwiseMissingness,thisBootstrapBlock,thisBootstrapBlockMissingness,result);
+                }
             }
             
             if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
@@ -248,6 +249,13 @@ int statsMain(int argc, char** argv) {
             for (int j = 0; j < diffMatrixMe[i].size(); j++) {
                 diffMatrixMe[i][j] =  (double)diffMatrixMe[i][j]/opt::numAccessibleBP;
             }    
+        }
+    }
+    
+    // Bootstrap:
+    if (OPT_BLOCK_BOOTSTRAP) {
+        for (int i = 0; i < (int)bootstrapBlockDiffMe.size(); i++) {
+            // Sample blocks for bootstrap
         }
     }
     
