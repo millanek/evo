@@ -86,7 +86,7 @@ namespace opt
     static int accessibleGenBedWindow = 10000;
     static int bootstrapBlockSize = 1000;
     static int numAccessibleBP = -1;
-    static int n_bootstrap_replicates = 100
+    static int n_bootstrap_replicates = 100;
 }
 
 int statsMain(int argc, char** argv) {
