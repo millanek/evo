@@ -234,13 +234,16 @@ int statsMain(int argc, char** argv) {
                 }
             }
             
-            if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
-                bootstrapBlockDiffMe[bootstrapBlockNum] = thisBootstrapBlock;
-                bootstrapBlockMissingnessMe[bootstrapBlockNum] = thisBootstrapBlockMissingness;
-                initialize_matrix_double(thisBootstrapBlock, numSamples);
-                initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
+            if (OPT_BLOCK_BOOTSTRAP) {
+                if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
+                    bootstrapBlockDiffMe[bootstrapBlockNum] = thisBootstrapBlock;
+                    bootstrapBlockMissingnessMe[bootstrapBlockNum] = thisBootstrapBlockMissingness;
+                    initialize_matrix_double(thisBootstrapBlock, numSamples);
+                    initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
+                    bootstrapBlockNum++;
+                }
             }
-            
+                
             if (totalVariantNumber % 100000 == 0)
                 std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
             
