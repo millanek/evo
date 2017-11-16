@@ -190,7 +190,7 @@ Counts getThisVariantCountsSimple(const std::vector<std::string>& fields) {
         string lastAlt = altAlleles.back();
         if (lastAlt == "*") {
             alleleAsMissing = numAltAlleles;
-            if (numAltAlleles - 1 > 1) {
+            if ((numAltAlleles - 1) > 1) {
                 thisVariantCounts.bIsMultiallelic = true;
             }
         } else {

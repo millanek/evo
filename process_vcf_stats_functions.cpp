@@ -250,8 +250,8 @@ void diffs_between_individuals_with_multialleleics(std::vector<std::vector<doubl
                     pairwise_missingness[i][j]++;
                     pairwise_missingness_bootstrap[i][j]++;
                 } else {
-                    const int ind_j = result.counts.individualsWithVariant[2*j];
-                    const int ind_j2 = result.counts.individualsWithVariant[2*j+1];
+                    const int ind_j = result.counts.haplotypesWithVariant[2*j];
+                    const int ind_j2 = result.counts.haplotypesWithVariant[2*j+1];
                     if (j < i) {
                         double totalD = 0; const double numComparisons = 4;
                         if (ind_i != ind_j) totalD++;
