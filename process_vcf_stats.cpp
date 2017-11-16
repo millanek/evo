@@ -6,6 +6,7 @@
 //  Copyright (c) 2013 University of Cambridge. All rights reserved.
 //
 
+#include <unordered_map>
 #include <iostream>
 #include "process_vcf_utils.h"
 #include "process_vcf_stats.h"
@@ -48,6 +49,9 @@ static const char *STATS_USAGE_MESSAGE =
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MATRIX_H1, OPT_DIFF_MATRIX_ALLH, OPT_BLOCK_BOOTSTRAP, OPT_PRIVATE_VARS, OPT_ACC_GEN_BED, OPT_ACC_GEN_BED_WINDOW, OPT_NUM_ACCESSIBLE };
+
+typedef std::vector<std::vector<double> > double_matrix;
+typedef std::vector<std::vector<int> > int_matrix;
 
 static const char* shortopts = "h";
 
@@ -113,13 +117,12 @@ int statsMain(int argc, char** argv) {
     
     // Data structures to hold the results
     std::vector<int> hetCounts; std::vector<int> hetsSharedWithOthers; std::vector<int> privateVarCounts;
-    std::vector<std::vector<int> > doubletons; std::vector<std::vector<double> > diffMatrixHetsVsHomDiff;
-    std::vector<std::vector<double> > diffMatrix; std::vector<std::vector<double> > diffMatrixMe;
-    std::vector<std::vector<double> > diffMatrixH1; std::vector<std::vector<double> > diffMatrixAllH;
-    std::vector<std::vector<int> > pairwiseMissingness;
-    std::vector<std::vector<double> > thisBootstrapBlock; std::vector<std::vector<int> > thisBootstrapBlockMissingness;
-    std::vector<std::vector<std::vector<double> > > bootstrapBlockDiffMe;
-    std::vector<std::vector<std::vector<int> > > bootstrapBlockMissingnessMe;
+    int_matrix doubletons; double_matrix diffMatrixHetsVsHomDiff;
+    double_matrix diffMatrix; double_matrix diffMatrixMe; double_matrix diffMatrixH1; double_matrix diffMatrixAllH;
+    int_matrix pairwiseMissingness;
+    double_matrix thisBootstrapBlock; int_matrix thisBootstrapBlockMissingness;
+    std::unordered_map<int, double_matrix>  bootstrapBlockDiffMe;
+    std::unordered_map<int , int_matrix >  bootstrapBlockMissingnessMe;
     
     AccessibleGenome* ag;
     if (!opt::accesibleGenBedFile.empty()) {
@@ -159,7 +162,7 @@ int statsMain(int argc, char** argv) {
     // Start reading from the vcf file
     std::istream* inFile = createReader(fileName.c_str());
     int numSamples; int numChromosomes; int totalVariantNumber = 0;
-    string line;
+    string line; int bootstrapBlockNum = 0;
     while (getline(*inFile, line)) {
         if (line[0] == '#' && line[1] == '#')
             continue;
@@ -232,8 +235,8 @@ int statsMain(int argc, char** argv) {
             }
             
             if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
-                bootstrapBlockDiffMe.push_back(thisBootstrapBlock);
-                bootstrapBlockMissingnessMe.push_back(thisBootstrapBlockMissingness);
+                bootstrapBlockDiffMe[bootstrapBlockNum] = thisBootstrapBlock;
+                bootstrapBlockMissingnessMe[bootstrapBlockNum] = thisBootstrapBlockMissingness;
                 initialize_matrix_double(thisBootstrapBlock, numSamples);
                 initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
             }
