@@ -86,7 +86,7 @@ namespace opt
     static int accessibleGenBedWindow = 10000;
     static int bootstrapBlockSize = 1000;
     static int numAccessibleBP = -1;
-    
+    static int n_bootstrap_replicates = 100
 }
 
 int statsMain(int argc, char** argv) {
@@ -254,8 +254,35 @@ int statsMain(int argc, char** argv) {
     
     // Bootstrap:
     if (OPT_BLOCK_BOOTSTRAP) {
-        for (int i = 0; i < (int)bootstrapBlockDiffMe.size(); i++) {
-            // Sample blocks for bootstrap
+        for (int n = 0; n < opt::n_bootstrap_replicates; n++) {
+            string bootFileName = fileRoot + "boot." + numToString(n) + ".txt";
+            std::ofstream* pBootOutFile = new std::ofstream(bootFileName.c_str());
+            std::vector<std::vector<double> > bootReplicateMatrix; initialize_matrix_double(bootReplicateMatrix, numSamples);
+            std::vector<std::vector<double> > bootReplicateMatrixMissingness; initialize_matrix_double(bootReplicateMatrixMissingness, numSamples);
+            for (int b = 0; b < (int)bootstrapBlockDiffMe.size(); b++) {
+                int block = rand() % bootstrapBlockDiffMe.size();
+                for (int i = 0; i < (int)diffMatrixMe.size(); i++) {
+                    for (int j = 0; j < (int)diffMatrixMe.size(); j++) {
+                        bootReplicateMatrix[i][j] = bootReplicateMatrix[i][j] + bootstrapBlockDiffMe[block][i][j];
+                        bootReplicateMatrixMissingness[i][j] = bootReplicateMatrixMissingness[i][j] + bootstrapBlockMissingnessMe[block][i][j];
+                    }
+                }
+            }
+            
+            // Normalise the bootstrap diff matrix based on pairwise missingness
+            std::vector<std::vector<double> > proportionUsed; initialize_matrix_double(proportionUsed, numSamples);
+            std::vector<std::vector<double> > normalisedBootstrap; initialize_matrix_double(normalisedBootstrap, numSamples);
+            int totalSitesBootstrap = (int)bootstrapBlockDiffMe.size() * opt::bootstrapBlockSize;
+            for (int i = 0; i < (int)diffMatrixMe.size(); i++) {
+                for (int j = 0; j < (int)diffMatrixMe.size(); j++) {
+                    proportionUsed[i][j] = 1 - (bootReplicateMatrixMissingness[i][j]/totalSitesBootstrap);
+                    normalisedBootstrap[i][j] = bootReplicateMatrix[i][j]/proportionUsed[i][j];
+                }
+            }
+            
+            print_vector(sampleNames,*pBootOutFile);
+            print_matrix<const std::vector<std::vector<double> >&>(normalisedBootstrap, *pBootOutFile);
+            pBootOutFile->close();
         }
     }
     
