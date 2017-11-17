@@ -7,6 +7,7 @@
 //
 
 #include <unordered_map>
+#include <array>
 #include <iostream>
 #include "process_vcf_utils.h"
 #include "process_vcf_stats.h"
@@ -52,8 +53,9 @@ enum { OPT_INDIV, OPT_POP, OPT_DOUBLETON, OPT_HETS, OPT_DIFF_MATRIX, OPT_DIFF_MA
 
 typedef std::vector<std::vector<double> > double_matrix;
 typedef std::vector<std::vector<int> > int_matrix;
-
 static const char* shortopts = "h";
+
+
 
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
@@ -238,6 +240,7 @@ int statsMain(int argc, char** argv) {
                 if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
                     bootstrapBlockDiffMe[bootstrapBlockNum] = thisBootstrapBlock;
                     bootstrapBlockMissingnessMe[bootstrapBlockNum] = thisBootstrapBlockMissingness;
+                    thisBootstrapBlock.clear(); thisBootstrapBlockMissingness.clear();
                     initialize_matrix_double(thisBootstrapBlock, numSamples);
                     initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
                     bootstrapBlockNum++;
