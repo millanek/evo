@@ -91,6 +91,7 @@ namespace opt
     static string accesibleGenBedFile;
     static int accessibleGenBedWindow = 10000;
     static int bootstrapBlockSize = 1000;
+    static bool bDoBootstrap = false;
     static int numAccessibleBP = -1;
     static int n_bootstrap_replicates = 100;
 }
@@ -236,7 +237,7 @@ int statsMain(int argc, char** argv) {
                 }
             }
             
-            if (OPT_BLOCK_BOOTSTRAP) {
+            if (opt::bDoBootstrap) {
                 if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
                     bootstrapBlockDiffMe[bootstrapBlockNum] = thisBootstrapBlock;
                     bootstrapBlockMissingnessMe[bootstrapBlockNum] = thisBootstrapBlockMissingness;
@@ -263,7 +264,7 @@ int statsMain(int argc, char** argv) {
     }
     
     // Bootstrap:
-    if (OPT_BLOCK_BOOTSTRAP) {
+    if (opt::bDoBootstrap) {
         for (int n = 0; n < opt::n_bootstrap_replicates; n++) {
             string bootFileName = fileRoot + "boot." + numToString(n) + ".txt";
             std::ofstream* pBootOutFile = new std::ofstream(bootFileName.c_str());
@@ -340,7 +341,7 @@ void parseStatsOptions(int argc, char** argv) {
             case OPT_HETS: opt::countHets = true; break;
             case OPT_DIFF_MATRIX_H1: opt::bDiffH1 = true; break;
             case OPT_DIFF_MATRIX_ALLH: opt::bDiffAllH = true; break;
-            case OPT_BLOCK_BOOTSTRAP: arg >> opt::bootstrapBlockSize; break;
+            case OPT_BLOCK_BOOTSTRAP: arg >> opt::bootstrapBlockSize; opt::bDoBootstrap = true; break;
             case OPT_PRIVATE_VARS: opt::countPrivateVars = true; break;
             case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
             case OPT_NUM_ACCESSIBLE: arg >> opt::numAccessibleBP; break;
