@@ -44,6 +44,14 @@ template <typename T> std::string numToString(T i) {
     return ret;
 }
 
+
+template <typename T> void reset_matrix_to_zero(std::vector<std::vector<T> >& m) {
+    for (int i = 0; i < m.size(); i++) {
+        std::fill(m[i].begin(), m[i].end(), 0);
+    }
+}
+
+
 class Counts {
 public:
     Counts() : overall(0), minimumDepthInAnIndividual(std::numeric_limits<int>::max()), overallDepth(0), inbreedingCoefficient(0), chiSqPvalForInbreeding(1), bPhased(false), bIsMultiallelic(false), bAnyMissingGenotypes(false), SGB(std::numeric_limits<double>::max()) {};

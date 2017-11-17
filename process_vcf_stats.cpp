@@ -240,9 +240,10 @@ int statsMain(int argc, char** argv) {
                 if (totalVariantNumber % opt::bootstrapBlockSize == 0) {
                     bootstrapBlockDiffMe[bootstrapBlockNum] = thisBootstrapBlock;
                     bootstrapBlockMissingnessMe[bootstrapBlockNum] = thisBootstrapBlockMissingness;
-                    thisBootstrapBlock.clear(); thisBootstrapBlockMissingness.clear();
-                    initialize_matrix_double(thisBootstrapBlock, numSamples);
-                    initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
+                    reset_matrix_to_zero(thisBootstrapBlock); reset_matrix_to_zero(thisBootstrapBlockMissingness);
+                    //thisBootstrapBlock.clear(); thisBootstrapBlockMissingness.clear();
+                    //initialize_matrix_double(thisBootstrapBlock, numSamples);
+                    //initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
                     bootstrapBlockNum++;
                 }
             }
