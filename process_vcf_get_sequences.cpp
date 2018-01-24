@@ -299,7 +299,7 @@ int getSeqMain(int argc, char** argv) {
                             }
                             appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
                             if (opt::bSVD) {
-                                assert((int)scaffoldStrings[0].length() == processedVariantCounter);
+                                assert((int)scaffoldStrings[0].length() == processedVariantCounter + 1);
                             }
                         }
                     }
