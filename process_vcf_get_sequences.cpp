@@ -303,7 +303,7 @@ int getSeqMain(int argc, char** argv) {
                             if (opt::bSVD) {
                                 std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
                                 std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
-                                //assert((int)scaffoldStrings[0].length() == processedVariantCounter);
+                                assert((int)scaffoldStrings[0].length() == processedVariantCounter);
                             }
                         }
                     }
