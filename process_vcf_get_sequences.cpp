@@ -300,13 +300,13 @@ int getSeqMain(int argc, char** argv) {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
                             appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
-                            if (opt::bSVD) {
-                                std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
-                                std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
-                                assert((int)scaffoldStrings[0].length() == processedVariantCounter);
-                            }
                         }
                     }
+                }
+                if (opt::bSVD) {
+                    std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
+                    std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
+                    assert((int)scaffoldStrings[0].length() == processedVariantCounter);
                 }
                 inStrPos = atoi(fields[1].c_str());
 
