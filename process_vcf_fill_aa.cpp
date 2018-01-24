@@ -139,7 +139,7 @@ int fillAaMain(int argc, char** argv) {
             }
             if (totalVariantNumber % 100000 == 0) {
                 double totalAAfilled = aaRefCount + aaAltCount + aaDashCount + aaDiffCount + aaNcount;
-                std::cerr << totalVariantNumber << " variants processed. AA=Ref:" << aaRefCount << "("<< aaRefCount/totalAAfilled <<"%); AA=Alt:" << aaAltCount << "("<< 100*(aaAltCount/totalAAfilled) <<"%); AA='-':" << aaDashCount << "("<< 100*(aaDashCount/totalAAfilled) << "%); AA=?(Neither Ref nor Alt):" << aaDiffCount << "("<< 100*(aaDiffCount/totalAAfilled) <<"%); AA=N:" << aaNcount << "("<< 100*(aaNcount/totalAAfilled) << "%)" << std::endl;
+                std::cerr << totalVariantNumber << " variants processed. AA=Ref:" << aaRefCount << "("<< 100*(aaRefCount/totalAAfilled) <<"%); AA=Alt:" << aaAltCount << "("<< 100*(aaAltCount/totalAAfilled) <<"%); AA='-':" << aaDashCount << "("<< 100*(aaDashCount/totalAAfilled) << "%); AA=?(Neither Ref nor Alt):" << aaDiffCount << "("<< 100*(aaDiffCount/totalAAfilled) <<"%); AA=N:" << aaNcount << "("<< 100*(aaNcount/totalAAfilled) << "%)" << std::endl;
             }
         }
     }

@@ -26,7 +26,7 @@
 #define DEBUG 1
 
 static const char *GETSEQ_USAGE_MESSAGE =
-"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] VCF_FILE GENOME_SEQUENCE.fa ANNOTATION.gffExtract\n"
+"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] VCF_FILE GENOME_SEQUENCE.fa\n"
 "Obtain full genome sequences from a VCF file (e.g. for multiple alignment and phylogenetic analyses), output to STD_OUT\n"
 "\n"
 "       -h, --help                                  display this help and exit\n"
@@ -68,7 +68,7 @@ static const struct option longopts[] = {
 namespace opt
 {
     static string vcfFile;
-    static string genomeFile;
+    static string genomeFile = "";
     static string outgroupFile;
     static bool bLDhat = false;
     static bool bByScaffold = false;
@@ -155,17 +155,18 @@ int getSeqMain(int argc, char** argv) {
             std::vector<std::string> info = split(fields[7], ';');
             if (fields[0] != currentScaffoldNum) {
                 if (currentScaffoldNum != "") {
-                    for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                        scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
-                    }
-                    
-                    
-#ifdef DEBUG
-                    if (scaffoldStrings[0].length() != currentScaffoldReference.length()) {
-                        std::cerr << "Error!!! Reference scaffold/LG length: " << currentScaffoldReference.length() << " vcf scaffold length: " << scaffoldStrings[0].length() << std::endl;
-                    }
+                    if (opt::genomeFile != "") {
+                        for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                            scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
+                        }
+                        
+                        
+    #ifdef DEBUG
+                        if (scaffoldStrings[0].length() != currentScaffoldReference.length()) {
+                            std::cerr << "Error!!! Reference scaffold/LG length: " << currentScaffoldReference.length() << " vcf scaffold length: " << scaffoldStrings[0].length() << std::endl;
+                        }
 #endif
-                    
+                    }
                     
                     std::ofstream* scaffoldFile;
                     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
@@ -230,6 +231,7 @@ int getSeqMain(int argc, char** argv) {
                         std::cerr << "Starting to read " << thisScaffoldName << std::endl;
                         std::cerr << "No variants in " << thisScaffoldName << std::endl;
                         std::cerr << "currentScaffoldNum " << currentScaffoldNum << std::endl;
+                        
                         currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
                         if (opt::bWholeGenome) {
                             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
@@ -250,7 +252,9 @@ int getSeqMain(int argc, char** argv) {
                 inStrPos = 0;
                              
                 std::cerr << "Starting to read " << thisScaffoldName << std::endl;
-                currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
+                if (opt::genomeFile != "") {
+                    currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
+                }
                 thisScaffoldName.erase(0,1);
                 std::cerr << "Finished reading" << std::endl;
                 std::cerr << "Generating sequences with variants from the VCF file..." << std::endl;
@@ -563,7 +567,7 @@ void parseGetSeqOptions(int argc, char** argv) {
                 exit(EXIT_SUCCESS);
         }
     }
-    if (argc - optind < 2) {
+    if (argc - optind < 1) {
         std::cerr << "missing arguments\n";
         die = true;
     } 
@@ -595,6 +599,8 @@ void parseGetSeqOptions(int argc, char** argv) {
     
     // Parse the input filenames
     opt::vcfFile = argv[optind++];
-    opt::genomeFile = argv[optind++];
+    if( argc - optind == 2) {
+        opt::genomeFile = argv[optind++];
+    }
 }
 
