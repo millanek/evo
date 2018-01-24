@@ -219,8 +219,10 @@ int getSeqMain(int argc, char** argv) {
                             }
                         } else if (opt::bWholeGenome) {
                             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                                print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
-                                scaffoldStrings[i] = "";
+                                if (!opt::bSVD) {
+                                    print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
+                                    scaffoldStrings[i] = "";
+                                }
 
                             }
                         }
