@@ -293,8 +293,10 @@ int getSeqMain(int argc, char** argv) {
                 inStrPos = atoi(fields[1].c_str());
 
         #ifdef DEBUG
+                if (opt::genomeFile != "") {
                 if (currentScaffoldReference[inStrPos-1] != fields[3][0]) {
                 //    std::cerr << "Error!!! Sequence: " << currentScaffoldReference[inStrPos-1] << " vcf-ref: " << fields[3][0] << std::endl;
+                }
                 }
         #endif
             }
