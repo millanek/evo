@@ -272,7 +272,6 @@ int getSeqMain(int argc, char** argv) {
                 std::cerr << "Generating sequences with variants from the VCF file..." << std::endl;
             }
             if (info[0] != "INDEL") {
-                usedVariantCounter++;
                 for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
                     //std::cerr << "Going through genotypes1:" << i << std::endl;
                     //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
@@ -296,6 +295,7 @@ int getSeqMain(int argc, char** argv) {
                         // if two consecutive variants have the same coordinate)
                         // for now we just ignore the additional variant
                         if (lengthToAppend >= 0) {
+                            usedVariantCounter++;
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
