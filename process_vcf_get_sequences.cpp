@@ -314,8 +314,10 @@ int getSeqMain(int argc, char** argv) {
     }
     
     // Also the final scaffold
+    if (opt::genomeFile != "") {
     for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
         scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
+    }
     }
     std::ofstream* scaffoldFile;
     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
