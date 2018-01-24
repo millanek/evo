@@ -272,30 +272,30 @@ int getSeqMain(int argc, char** argv) {
                 std::cerr << "Generating sequences with variants from the VCF file..." << std::endl;
             }
             if (info[0] != "INDEL") {
-                for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-                    //std::cerr << "Going through genotypes1:" << i << std::endl;
-                    //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
-                    std::vector<string> genotypeFields = split(fields[i], ':');
-                    std::vector<char> genotype; genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
-                    if (opt::bLDhat) {
-                        for (int j = 0; j != ((atoi(fields[1].c_str()) - 1)-inStrPos); j++) {
-                            scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");
-                        }
-                        if (genotype[0] == '0' && genotype[1] == '0')
-                            scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");
-                        else if (genotype[0] == '1' && genotype[1] == '1')
-                            scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("1");
-                        else {
-                            string ambiguityBase = getAmbiguityCode(fields[3], fields[4]);
-                            scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("2");
-                        }
-                    } else {
-                        int lengthToAppend = (atoi(fields[1].c_str()) - 1) - (int)inStrPos;
-                        // make sure the length is non-negative (can happen
-                        // if two consecutive variants have the same coordinate)
-                        // for now we just ignore the additional variant
-                        if (lengthToAppend >= 0) {
-                            usedVariantCounter++;
+                int lengthToAppend = (atoi(fields[1].c_str()) - 1) - (int)inStrPos;
+                // make sure the length is non-negative (can happen
+                // if two consecutive variants have the same coordinate)
+                // for now we just ignore the additional variant
+                if (lengthToAppend >= 0) {
+                    usedVariantCounter++;
+                    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
+                        //std::cerr << "Going through genotypes1:" << i << std::endl;
+                        //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
+                        std::vector<string> genotypeFields = split(fields[i], ':');
+                        std::vector<char> genotype; genotype.push_back(genotypeFields[0][0]); genotype.push_back(genotypeFields[0][2]);
+                        if (opt::bLDhat) {
+                            for (int j = 0; j != ((atoi(fields[1].c_str()) - 1)-inStrPos); j++) {
+                                scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");
+                            }
+                            if (genotype[0] == '0' && genotype[1] == '0')
+                                scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("0");
+                            else if (genotype[0] == '1' && genotype[1] == '1')
+                                scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("1");
+                            else {
+                                string ambiguityBase = getAmbiguityCode(fields[3], fields[4]);
+                                scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("2");
+                            }
+                        } else {
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
