@@ -283,7 +283,9 @@ int getSeqMain(int argc, char** argv) {
                         // if two consecutive variants have the same coordinate)
                         // for now we just ignore the additional variant
                         if (lengthToAppend >= 0) {
-                            scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
+                            if (opt::genomeFile != "") {
+                                scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
+                            }
                             appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
                         }
                     }
