@@ -43,12 +43,12 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       -s SAMPLES.txt, --samples=SAMPLES.txt       supply a file of sample identifiers to be used for the output\n"
 "                                                   (default: sample ids from the vcf file are used)\n"
 "       --incl-Pn=Mz_coords.PNsequence.NoIndels.fa  Also include an outgroup sequence (for now works only with --split)\n"
-
 "       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
+"       --makeSVDinput                              Generates input for SVDquartets to STD_OUT\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED };
+enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD };
 
 static const char* shortopts = "hpws:cr";
 
@@ -61,6 +61,7 @@ static const struct option longopts[] = {
     { "split",   required_argument, NULL, OPT_SPLIT },
     { "incl-Pn",   required_argument, NULL, OPT_PN },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
+    { "makeSVDinput", required_argument, NULL, OPT_SVD },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -76,6 +77,7 @@ namespace opt
     static string sampleNameFile;
     static int splitNum = 0;
     static bool bHetRandom = false;
+    static bool bSVD = false;
     static string accesibleGenBedFile;
 
 }
@@ -227,6 +229,7 @@ int getSeqMain(int argc, char** argv) {
                     processedVariantCounter = 1;
                     currentScaffoldNum = fields[0];
                     
+                    if (opt::genomeFile != "") {
                     while (currentScaffoldNum != thisScaffoldName) {
                         std::cerr << "Starting to read " << thisScaffoldName << std::endl;
                         std::cerr << "No variants in " << thisScaffoldName << std::endl;
@@ -241,6 +244,7 @@ int getSeqMain(int argc, char** argv) {
                         std::cerr << "Finished reading" << std::endl;
                         thisScaffoldName.erase(0,1);
                         
+                    }
                     }
                 } else {
                     getline(*genomeFile, thisScaffoldName);
@@ -364,7 +368,9 @@ int getSeqMain(int argc, char** argv) {
         } else if (opt::bWholeGenome) {
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 std::cout << sampleNames[i] << "\t" << scaffoldStrings[i] << std::endl;
-                print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
+                if (!opt::bSVD) {
+                    print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
+                }
                 scaffoldStrings[i] = "";
                 
             }
@@ -568,7 +574,8 @@ void parseGetSeqOptions(int argc, char** argv) {
             case OPT_SPLIT: arg >> opt::splitNum; break;
             case OPT_WG: opt::bWholeGenome = true; break;
             case OPT_PN: arg >> opt::outgroupFile; break;
-            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;    
+            case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
+            case OPT_SVD: opt::bSVD = true; break;
             case 'h':
                 std::cout << GETSEQ_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
