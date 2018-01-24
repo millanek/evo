@@ -174,7 +174,10 @@ int getSeqMain(int argc, char** argv) {
                     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
                     
                     
-                    std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << " Writing output files..." << std::endl;
+                    std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << std::endl;
+                    if (!opt::bSVD) {
+                        std::cerr << " Writing output files..." << std::endl;
+                    }
                     fullScaffoldLengths[currentScaffoldNum] = (int)scaffoldStrings[0].length();
                     
                     // if requested, reduce the strings to accessible sequence only - this should still include the "right" number of variants because variants can appear only in the accessible sequence
@@ -228,25 +231,27 @@ int getSeqMain(int argc, char** argv) {
                         }
                     }
                     splits.clear();
-                    processedVariantCounter = 1;
+                    if (!opt::bSVD) {
+                        processedVariantCounter = 1;
+                    }
                     currentScaffoldNum = fields[0];
                     
                     if (opt::genomeFile != "") {
-                    while (currentScaffoldNum != thisScaffoldName) {
-                        std::cerr << "Starting to read " << thisScaffoldName << std::endl;
-                        std::cerr << "No variants in " << thisScaffoldName << std::endl;
-                        std::cerr << "currentScaffoldNum " << currentScaffoldNum << std::endl;
-                        
-                        currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
-                        if (opt::bWholeGenome) {
-                            for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                                print80bpPerLine(wgFiles, i, currentScaffoldReference);
+                        while (currentScaffoldNum != thisScaffoldName) {
+                            std::cerr << "Starting to read " << thisScaffoldName << std::endl;
+                            std::cerr << "No variants in " << thisScaffoldName << std::endl;
+                            std::cerr << "currentScaffoldNum " << currentScaffoldNum << std::endl;
+                            
+                            currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
+                            if (opt::bWholeGenome) {
+                                for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                                    print80bpPerLine(wgFiles, i, currentScaffoldReference);
+                                }
                             }
+                            std::cerr << "Finished reading" << std::endl;
+                            thisScaffoldName.erase(0,1);
+                            
                         }
-                        std::cerr << "Finished reading" << std::endl;
-                        thisScaffoldName.erase(0,1);
-                        
-                    }
                     }
                 } else {
                     getline(*genomeFile, thisScaffoldName);
@@ -293,6 +298,9 @@ int getSeqMain(int argc, char** argv) {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
                             appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
+                            if (opt::bSVD) {
+                                assert((int)scaffoldStrings[0].length() == processedVariantCounter);
+                            }
                         }
                     }
                 }
@@ -321,9 +329,9 @@ int getSeqMain(int argc, char** argv) {
     
     // Also the final scaffold
     if (opt::genomeFile != "") {
-    for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-        scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
-    }
+        for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+            scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
+        }
     }
     std::ofstream* scaffoldFile;
     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
