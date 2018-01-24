@@ -363,6 +363,7 @@ int getSeqMain(int argc, char** argv) {
             }
         } else if (opt::bWholeGenome) {
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                std::cout << sampleNames[i] << "\t" << scaffoldStrings[i] << std::endl;
                 print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
                 scaffoldStrings[i] = "";
                 
