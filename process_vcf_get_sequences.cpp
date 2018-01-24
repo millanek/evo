@@ -114,6 +114,7 @@ int getSeqMain(int argc, char** argv) {
     string thisScaffoldName;
     std::vector<string> scaffoldStrings;
     unsigned int processedVariantCounter = 0;
+    unsigned int usedVariantCounter = 0;
     std::vector<string::size_type> splits;
     
     AccessibleGenome* ag;
@@ -271,6 +272,7 @@ int getSeqMain(int argc, char** argv) {
                 std::cerr << "Generating sequences with variants from the VCF file..." << std::endl;
             }
             if (info[0] != "INDEL") {
+                usedVariantCounter++;
                 for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
                     //std::cerr << "Going through genotypes1:" << i << std::endl;
                     //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
@@ -299,7 +301,7 @@ int getSeqMain(int argc, char** argv) {
                             }
                             appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
                             if (opt::bSVD) {
-                                std::cerr << "processedVariantCounter: " << processedVariantCounter << std::endl;
+                                std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
                                 std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
                                 //assert((int)scaffoldStrings[0].length() == processedVariantCounter);
                             }
