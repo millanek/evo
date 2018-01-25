@@ -401,6 +401,11 @@ int getSeqMain(int argc, char** argv) {
                 scaffoldStrings[i] = "";
             }
         } else if (opt::bWholeGenome) {
+            std::cout << "#NEXUS" << std::endl;
+            std::cout << "begin data;" << std::endl;
+            std::cout << "dimensions ntax=" << numSamples << " nchar=" << scaffoldStrings[0].length() << std::endl;
+            std::cout << "format datatype=standard missing=." << std::endl;
+            std::cout << "matrix" << std::endl;
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 
                 string editedSn = sampleNames[i];
@@ -417,6 +422,8 @@ int getSeqMain(int argc, char** argv) {
                 scaffoldStrings[i] = "";
                 
             }
+            std::cout << ";" << std::endl;
+            std::cout << "end;" << std::endl;
         }
     }
     
