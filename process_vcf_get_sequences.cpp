@@ -278,7 +278,6 @@ int getSeqMain(int argc, char** argv) {
                 // if two consecutive variants have the same coordinate)
                 // for now we just ignore the additional variant
                 if (lengthToAppend >= 0) {
-                    usedVariantCounter++;
                     std::vector<int> appendVectorInt(numSamples,0);
                     std::vector<std::string> appendVector(numSamples,"0");
                     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
@@ -314,6 +313,7 @@ int getSeqMain(int argc, char** argv) {
                                 for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                                     scaffoldStrings[i].append(appendVector[i]);
                                 }
+                                usedVariantCounter++;
                             }
                         }
                     }
