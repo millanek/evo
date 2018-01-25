@@ -148,9 +148,11 @@ int getSeqMain(int argc, char** argv) {
                     sampleNames.push_back(fields[i]);
                 else 
                     sampleNames = readSampleNamesFromTextFile(opt::sampleNameFile);
-                if (opt::bWholeGenome) {
-                    wgFiles[i-NUM_NON_GENOTYPE_COLUMNS].open(sampleNames[i-NUM_NON_GENOTYPE_COLUMNS].c_str());
-                    wgFiles[i-NUM_NON_GENOTYPE_COLUMNS] << ">" << sampleNames[i-NUM_NON_GENOTYPE_COLUMNS] << std::endl;
+                if (!opt::bSVD) {
+                    if (opt::bWholeGenome) {
+                        wgFiles[i-NUM_NON_GENOTYPE_COLUMNS].open(sampleNames[i-NUM_NON_GENOTYPE_COLUMNS].c_str());
+                        wgFiles[i-NUM_NON_GENOTYPE_COLUMNS] << ">" << sampleNames[i-NUM_NON_GENOTYPE_COLUMNS] << std::endl;
+                    }
                 }
             }
         } else {
