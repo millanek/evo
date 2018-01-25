@@ -307,8 +307,10 @@ int getSeqMain(int argc, char** argv) {
                     if((int)scaffoldStrings[0].length() != usedVariantCounter) {
                         std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
                         std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
+                        std::cerr << "scaffoldStrings[1].length(): " << scaffoldStrings[1].length() << std::endl;
                         std::cerr << fields[3] << " " << fields[4] << std::endl;
                         std::cerr << "scaffoldStrings[0]: " << scaffoldStrings[0] << std::endl;
+                        std::cerr << "scaffoldStrings[1]: " << scaffoldStrings[1] << std::endl;
                     }
                     assert((int)scaffoldStrings[0].length() == usedVariantCounter);
                 }
