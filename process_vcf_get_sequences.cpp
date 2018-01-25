@@ -302,7 +302,7 @@ int getSeqMain(int argc, char** argv) {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
                             if (opt::bSVD) {
-                                appendVector[i- NUM_NON_GENOTYPE_COLUMNS] = returnGenotypeBaseZeroOne(fields[3], fields[4], genotype, opt::hetTreatment);
+                                appendVector[i- NUM_NON_GENOTYPE_COLUMNS] = returnGenotypeBaseZeroOne(genotype, opt::hetTreatment);
                                 appendVectorInt[i- NUM_NON_GENOTYPE_COLUMNS] = (int)stringToDouble(appendVector[i- NUM_NON_GENOTYPE_COLUMNS].c_str());
                             } else {
                                 appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);

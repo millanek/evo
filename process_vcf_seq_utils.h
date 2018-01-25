@@ -47,7 +47,7 @@ inline void appendGenotypeBaseToString(std::string& toExtend, const std::string&
 }
 
 
-inline std::string returnGenotypeBaseZeroOne(const std::string& ref, const std::string& alt, const std::vector<char>& genotype, char hetTreatment) {
+inline std::string returnGenotypeBaseZeroOne(const std::vector<char>& genotype, char hetTreatment) {
     if (genotype[0] == '0' && genotype[1] == '0')
         return "0";
     else if (genotype[0] == '1' && genotype[1] == '1')
