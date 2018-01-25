@@ -33,7 +33,8 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       --by-scaffold                               output by scaffold/LG (each scaffold/LG) has its own file with sequences\n"
 "                                                   for all samples\n"
 "       --whole-genome                              output is one file with the whole genome concatenated for all samples\n"
-"       -r, --het-random                            assign het bases randomly (instead of using an ambiguity code)\n"
+"       -H,   --het-treatment <r|p|b|i>             r: assign het bases randomly (default); p: use the phase information in a VCF outputting\n"
+"                                                   haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
 "       --split NUM                                 split output into sequences containing approx. NUM segregating sites\n"
 "                                                   each file contains sequences for all samples; this is intended for phylogenetic analyses\n"
 "                                                   incompatible with --by-scaffold\n"
@@ -55,7 +56,7 @@ static const char* shortopts = "hpws:cr";
 static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
     { "by-scaffold",   no_argument, NULL, OPT_BY_SCAFFOLD },
-    { "het-random",   no_argument, NULL, 'r' },
+    { "het-treatment",   no_argument, NULL, 'H' },
     { "whole-genome",   no_argument, NULL, OPT_WG },
     { "LDhat",   no_argument, NULL, OPT_LDHAT },
     { "split",   required_argument, NULL, OPT_SPLIT },
@@ -76,7 +77,7 @@ namespace opt
     static bool bWholeGenome = false; // Print the whole genome into one file
     static string sampleNameFile;
     static int splitNum = 0;
-    static bool bHetRandom = false;
+    static char hetTreatment = 'r';
     static bool bSVD = false;
     static string accesibleGenBedFile;
 
@@ -299,7 +300,7 @@ int getSeqMain(int argc, char** argv) {
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
-                            appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::bHetRandom);
+                            appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
                         }
                     }
                 }
@@ -588,7 +589,7 @@ void parseGetSeqOptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 's': arg >> opt::sampleNameFile; break;
-            case 'r': opt::bHetRandom = true; break;
+            case 'H': arg >> opt::hetTreatment; break;
             case OPT_LDHAT: opt::bLDhat = true; break;
             case OPT_BY_SCAFFOLD: opt::bByScaffold = true; break;
             case OPT_SPLIT: arg >> opt::splitNum; break;
@@ -608,6 +609,11 @@ void parseGetSeqOptions(int argc, char** argv) {
     else if (argc - optind > 2)
     {
         std::cerr << "too many arguments\n";
+        die = true;
+    }
+    
+    if (opt::hetTreatment != 'r' && opt::hetTreatment != 'p' && opt::hetTreatment != 'b' && opt::hetTreatment != 'i') {
+        std::cerr << "The -H (--het-treatment) option can only have the values 'r', 'p', 'b', or 'i'\n";
         die = true;
     }
     
