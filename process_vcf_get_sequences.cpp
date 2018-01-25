@@ -310,7 +310,7 @@ int getSeqMain(int argc, char** argv) {
                             }
                         }
                         if (opt::bSVD) {
-                            if(vector_sum(appendVector) > 0) {
+                            if(vector_sum(appendVectorInt) > 0) {
                                 for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                                     scaffoldStrings[i].append(appendVector[i]);
                                 }
