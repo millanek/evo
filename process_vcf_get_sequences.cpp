@@ -308,13 +308,13 @@ int getSeqMain(int argc, char** argv) {
                                 appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
                             }
                         }
-                        if (opt::bSVD) {
-                            if(vector_sum(appendVectorInt) > 0) {
-                                for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                                    scaffoldStrings[i].append(appendVector[i]);
-                                }
-                                usedVariantCounter++;
+                    }
+                    if (opt::bSVD) {
+                        if(vector_sum(appendVectorInt) > 0) {
+                            for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                                scaffoldStrings[i].append(appendVector[i]);
                             }
+                            usedVariantCounter++;
                         }
                     }
                 }
