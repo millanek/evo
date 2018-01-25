@@ -402,7 +402,15 @@ int getSeqMain(int argc, char** argv) {
             }
         } else if (opt::bWholeGenome) {
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                std::cout << sampleNames[i] << "\t" << scaffoldStrings[i] << std::endl;
+                
+                string editedSn = sampleNames[i];
+                int snLength = (int)sampleNames[i].length();
+                if (snLength < 32) {
+                    for (int p = snLength; p <= 32; p++) {
+                        editedSn = editedSn + " ";
+                    }
+                }
+                std::cout << editedSn.substr(0,32) << "\t" << scaffoldStrings[i] << std::endl;
                 if (!opt::bSVD) {
                     print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
                 }
