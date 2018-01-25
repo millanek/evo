@@ -304,9 +304,11 @@ int getSeqMain(int argc, char** argv) {
                     }
                 }
                 if (opt::bSVD) {
-                    std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
-                    std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
-                    assert((int)scaffoldStrings[0].length() == processedVariantCounter);
+                    if((int)scaffoldStrings[0].length() != processedVariantCounter) {
+                        std::cerr << "usedVariantCounter: " << usedVariantCounter << std::endl;
+                        std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
+                        std::cerr << fields[3] << " " << fields[4] << std::endl;
+                    }
                 }
                 inStrPos = atoi(fields[1].c_str());
 
