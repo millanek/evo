@@ -279,6 +279,8 @@ int getSeqMain(int argc, char** argv) {
                 // for now we just ignore the additional variant
                 if (lengthToAppend >= 0) {
                     usedVariantCounter++;
+                    std::vector<int> appendVectorInt(numSamples,0);
+                    std::vector<std::string> appendVector(numSamples,"0");
                     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
                         //std::cerr << "Going through genotypes1:" << i << std::endl;
                         //std::cerr << scaffoldStrings.size() << " " << inStrPos << " " << fields[1] << " " << currentScaffoldReference.size() << std::endl;
@@ -300,7 +302,19 @@ int getSeqMain(int argc, char** argv) {
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
-                            appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
+                            if (opt::bSVD) {
+                                appendVectorInt[i- NUM_NON_GENOTYPE_COLUMNS] =  atoi(returnGenotypeBaseZeroOne(fields[3], fields[4], genotype, opt::hetTreatment).c_str());
+                                appendVector[i- NUM_NON_GENOTYPE_COLUMNS] =  returnGenotypeBaseZeroOne(fields[3], fields[4], genotype, opt::hetTreatment);
+                            } else {
+                                appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
+                            }
+                        }
+                        if (opt::bSVD) {
+                            if(vector_sum(appendVector) > 0) {
+                                for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                                    scaffoldStrings[i].append(appendVector[i]);
+                                }
+                            }
                         }
                     }
                 }

@@ -47,6 +47,36 @@ inline void appendGenotypeBaseToString(std::string& toExtend, const std::string&
 }
 
 
+inline std::string returnGenotypeBaseZeroOne(const std::string& ref, const std::string& alt, const std::vector<char>& genotype, char hetTreatment) {
+    if (genotype[0] == '0' && genotype[1] == '0')
+        return "0";
+    else if (genotype[0] == '1' && genotype[1] == '1')
+        return "1";
+    else {
+        if (hetTreatment == 'r') {
+            double rn = ((double) rand() / RAND_MAX);
+            if (rn <= 0.5) {
+                return "0";
+            } else {
+                return "1";
+            }
+        } else if(hetTreatment == 'p') {
+            if (genotype[0] == '0')
+                return "0";
+            if (genotype[0] == '1')
+                return "1";
+        } else if (hetTreatment == 'b') {
+            if (genotype[1] == '0')
+                return "0";
+            if (genotype[1] == '1')
+                return "1";
+        } else {
+            exit(1);
+        }
+    }
+}
+
+
 // Read a scaffold from a reference genome fasta file into a single string +
 // put the name of the next scaffold into the "nextScaffoldName" variable
 inline std::string readScaffold(std::ifstream*& genomeFile, std::string& nextScaffoldName) {
