@@ -304,8 +304,9 @@ int getSeqMain(int argc, char** argv) {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                             }
                             if (opt::bSVD) {
-                                appendVector[i- NUM_NON_GENOTYPE_COLUMNS] = returnGenotypeBaseZeroOne(genotype, opt::hetTreatment);
-                                appendVectorInt[i- NUM_NON_GENOTYPE_COLUMNS] = (int)stringToDouble(appendVector[i- NUM_NON_GENOTYPE_COLUMNS].c_str());
+                                std::vector<std::string> genotypeAndZeroOne = returnGenotypeBaseAndZeroOne(fields[3], fields[4], genotype, opt::hetTreatment);
+                                appendVector[i- NUM_NON_GENOTYPE_COLUMNS] = genotypeAndZeroOne[0];
+                                appendVectorInt[i- NUM_NON_GENOTYPE_COLUMNS] = (int)stringToDouble(genotypeAndZeroOne[1].c_str());
                             } else {
                                 appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
                             }

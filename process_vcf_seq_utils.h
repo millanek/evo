@@ -46,6 +46,48 @@ inline void appendGenotypeBaseToString(std::string& toExtend, const std::string&
     }
 }
 
+inline std::vector<std::string> returnGenotypeBaseAndZeroOne(const std::string& ref, const std::string& alt, const std::vector<char>& genotype, char hetTreatment) {
+    std::vector<std::string> baseZeroOne;
+    if (genotype[0] == '0' && genotype[1] == '0') {
+        baseZeroOne.push_back(ref); baseZeroOne.push_back("0");
+        return baseZeroOne;
+    } else if (genotype[0] == '1' && genotype[1] == '1') {
+        baseZeroOne.push_back(alt); baseZeroOne.push_back("1");
+        return baseZeroOne;
+    } else {
+        if (hetTreatment == 'r') {
+            double rn = ((double) rand() / RAND_MAX);
+            if (rn <= 0.5) {
+                baseZeroOne.push_back(ref); baseZeroOne.push_back("0");
+                return baseZeroOne;
+            } else {
+                baseZeroOne.push_back(alt); baseZeroOne.push_back("1");
+                return baseZeroOne;
+            }
+        } else if(hetTreatment == 'p') {
+            if (genotype[0] == '0') {
+                baseZeroOne.push_back(ref); baseZeroOne.push_back("0");
+                return baseZeroOne;
+            } else if (genotype[0] == '1') {
+                baseZeroOne.push_back(alt); baseZeroOne.push_back("1");
+                return baseZeroOne;
+            }
+        } else if (hetTreatment == 'b') {
+            if (genotype[1] == '0') {
+                baseZeroOne.push_back(ref); baseZeroOne.push_back("0");
+                return baseZeroOne;
+            } else if (genotype[1] == '1') {
+                baseZeroOne.push_back(alt); baseZeroOne.push_back("1");
+                return baseZeroOne;
+            }
+        } else {
+            exit(1);
+        }
+    }
+}
+
+
+
 
 inline std::string returnGenotypeBaseZeroOne(const std::vector<char>& genotype, char hetTreatment) {
     if (genotype[0] == '0' && genotype[1] == '0')
