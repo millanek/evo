@@ -54,6 +54,9 @@ inline std::vector<std::string> returnGenotypeBaseAndZeroOne(const std::string& 
     } else if (genotype[0] == '1' && genotype[1] == '1') {
         baseZeroOne.push_back(alt); baseZeroOne.push_back("1");
         return baseZeroOne;
+    } else if (genotype[0] == '.' && genotype[1] == '.') { // Missing data
+        baseZeroOne.push_back("."); baseZeroOne.push_back("0");
+        return baseZeroOne;
     } else {
         if (hetTreatment == 'r') {
             double rn = ((double) rand() / RAND_MAX);
