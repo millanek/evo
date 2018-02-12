@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 
-void parsePermuteCodonsOptions(int argc, char** argv)
+void parsePermuteCodonsOptions(int argc, char** argv);
+int permuteCodons(int argc, char** argv);
 
 #endif /* evo_permute_codons_h */

@@ -40,6 +40,7 @@
 #include "evo_fullAnnotationExtract.h"
 #include "evo_diversity_subsampling.h"
 #include "remove_lowercase.h"
+#include "evo_permute_codons.h"
 
 
 //#define TESTING 1
@@ -87,6 +88,7 @@ static const char *USAGE_MESSAGE =
 "           fst                 Calculating Fst values from VCF, ms simulations, or summarising eigensoft output\n"
 "           DNAtoProtein        Translate multiple aligments of gene sequences from DNA into protein\n"
 "           ProteinSs           Output segregating sites from a (protein) multiple alignment\n"
+"           permuteCodons       Generates new alignment files with a random permutation of codons for NULL coding distribution\n"
 "           smallRNA            Generate a distribution showing read lengths and the starting nucleotide for a smallRNA library\n"
 "           multi-fasta         A utility tool for dealing with a multi-fasta file (e.g. join all sequences)\n"
 "           statsTest           Testing statistical routines in development\n"
@@ -176,6 +178,8 @@ int main(int argc, char **argv) {
             ProteinSs(argc - 1, argv + 1);
         else if (command == "RegionsDxy")
             subsamplingDxy(argc - 1, argv + 1);
+        else if (command == "permuteCodons")
+            permuteCodons(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
