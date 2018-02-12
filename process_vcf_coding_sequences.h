@@ -54,7 +54,7 @@ public:
     double withinSet1andSet2pN;
     double set1vsSet2pN;
     double sets1and2vsSet3pN;
-    bool initialised;
+    bool initialised = false;
     
 };
 

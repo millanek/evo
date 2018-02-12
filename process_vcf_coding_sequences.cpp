@@ -485,15 +485,15 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                     
                 }
             }
-            std::cerr << "Now going to loop through codons: i = " << i << std::endl;
+            //std::cerr << "Now going to loop through codons: i = " << i << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodons,haveStop, *pairwiseMatrices.H1p);
-            std::cerr << "Added pairwise among H1:" << std::endl;
+            //std::cerr << "Added pairwise among H1:" << std::endl;
             addAllPairwiseN_S_Nd_Sd_DifferentIndividuals(altCodonsH2,haveStopH2, *pairwiseMatrices.H2p);
-            std::cerr << "Added pairwise among H2: " << std::endl;
+            //std::cerr << "Added pairwise among H2: " << std::endl;
             addN_S_Nd_Sd_DifferentIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, *pairwiseMatrices.H1H2p);
-            std::cerr << "Added pairwise beween H1 and H2:" << std::endl;
+            //std::cerr << "Added pairwise beween H1 and H2:" << std::endl;
             addN_S_Nd_Sd_SameIndividualsH1againstH2(altCodons, altCodonsH2, haveStop, haveStopH2, *pairwiseMatrices.H1H2p);
-            std::cerr << "Added heterozygosity beween H1 and H2:" << std::endl;
+            //std::cerr << "Added heterozygosity beween H1 and H2:" << std::endl;
             
             for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
                 altCodons[j] = ""; altCodonsH2[j] = "";
