@@ -18,7 +18,7 @@
 
 class pNsets {
 public:
-    pNsets() : set1vsSet2pN(0), sets1and2vsSet3pN(0), withinSet1andSet2pN(0), withinSet1pN(0), withinSet2pN(0), withinSet3pN(0), initialised(false) {};
+    pNsets() : set1vsSet2pN(0), sets1and2vsSet3pN(0), withinSet1andSet2pN(0), withinSet1pN(0), withinSet2pN(0), withinSet3pN(0), initialised() {};
     
     pNsets(std::ifstream*& setsFile) {
         string line;
@@ -54,7 +54,7 @@ public:
     double withinSet1andSet2pN;
     double set1vsSet2pN;
     double sets1and2vsSet3pN;
-    bool initialised = false;
+    bool initialised;
     
 };
 
