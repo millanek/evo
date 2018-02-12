@@ -564,7 +564,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     double sumHetPn = 0; double sumHetPs = 0;
     // Add the between H1 and H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples; j++) {
-        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+        //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
                 //std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]) << std::endl;
