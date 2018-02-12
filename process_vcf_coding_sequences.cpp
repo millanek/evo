@@ -532,7 +532,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 pSjackknifeVector.push_back(pS_jk); pSjackknifeVector.push_back(H2pS_jk);
                 pN_pSjackknifeVector.push_back(pN_jk-pS_jk); pN_pSjackknifeVector.push_back(H2pN_jk-H2pS_jk);
             }
-            
+            std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
             if (sets->initialised == true) {
                 if ((sets->set1Loci.count(j) == 1 && sets->set1Loci.count(k) == 1) || (sets->set1Loci.count(k) == 1 && sets->set1Loci.count(j) == 1)) {
                     sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
