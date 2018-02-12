@@ -534,6 +534,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             }
             std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
             if (sets->initialised == true) {
+                std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
                 if ((sets->set1Loci.count(j) == 1 && sets->set1Loci.count(k) == 1) || (sets->set1Loci.count(k) == 1 && sets->set1Loci.count(j) == 1)) {
                     sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
                     sets->withinSet1pN = sets->withinSet1pN + pN_jk + H2pN_jk;
