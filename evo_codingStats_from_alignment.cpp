@@ -76,13 +76,14 @@ int getCodingStats(int argc, char** argv) {
     }
     
     pNsets* sets;
-    if (sets->initialised == true) {
-        std::cerr << "Sets are initialised" << std::endl;
-    }
     if (opt::pNgroupsFile != "") {
         std::ifstream* pNgroupsF = new std::ifstream(opt::pNgroupsFile);
         sets = new pNsets(pNgroupsF);
-        
+    } else {
+        sets = new pNsets();
+    }
+    if (sets->initialised == true) {
+        std::cerr << "Sets are initialised" << std::endl;
     }
     
     std::cerr << "Calculating gene coding statistics" << std::endl;
