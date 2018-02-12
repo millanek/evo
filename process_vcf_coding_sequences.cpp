@@ -509,7 +509,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     std::vector<double> pN_pSjackknifeVector_allComparisons;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
-        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+        //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             //double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
             double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k])+pairwiseMatrices.H1p->tV_N_jk[j][k]); sumPn = sumPn + pN_jk;
@@ -532,9 +532,9 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                 pSjackknifeVector.push_back(pS_jk); pSjackknifeVector.push_back(H2pS_jk);
                 pN_pSjackknifeVector.push_back(pN_jk-pS_jk); pN_pSjackknifeVector.push_back(H2pN_jk-H2pS_jk);
             }
-            std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+          //  std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
             if (sets->initialised == true) {
-                std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+            //    std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
                 if ((sets->set1Loci.count(j) == 1 && sets->set1Loci.count(k) == 1) || (sets->set1Loci.count(k) == 1 && sets->set1Loci.count(j) == 1)) {
                     sets->withinSet1andSet2pN = sets->withinSet1andSet2pN + pN_jk + H2pN_jk;
                     sets->withinSet1pN = sets->withinSet1pN + pN_jk + H2pN_jk;
@@ -597,7 +597,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
                     }
                 }
             } else {
-                std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]) << std::endl;
+               // std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]) << std::endl;
                 double H1H2pN_jj = pairwiseMatrices.H1H2p->N_d_jk[j][j]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][j])+pairwiseMatrices.H1H2p->tV_N_jk[j][j]);
                 double H1H2pS_jj = pairwiseMatrices.H1H2p->S_d_jk[j][j]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_S_jk[j][j])+pairwiseMatrices.H1H2p->tV_S_jk[j][j]);
                 sumHetPn = sumHetPn + H1H2pN_jj;
