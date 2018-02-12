@@ -509,7 +509,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
     std::vector<double> pN_pSjackknifeVector_allComparisons;
     // Add the within H1 and within H2 comparisons
     for (std::vector<std::string>::size_type j = 0; j != numSamples - 1; j++) {
-        //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
+        std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = j+1; k != numSamples; k++) {
             //double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/pairwiseMatrices.H1p->N_jk[j][k];
             double pN_jk = pairwiseMatrices.H1p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1p->tS_N_jk[j][k])+pairwiseMatrices.H1p->tV_N_jk[j][k]); sumPn = sumPn + pN_jk;
@@ -525,8 +525,8 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
             double H2pN_jk = pairwiseMatrices.H2p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H2p->tS_N_jk[j][k])+pairwiseMatrices.H2p->tV_N_jk[j][k]); sumPn = sumPn + H2pN_jk;
             //sumN = sumN + pairwiseMatrices.H2p->tS_N_jk[j][k]+pairwiseMatrices.H2p->tV_N_jk[j][k];
             combinedVectorForPCA[j][k] = combinedVectorForPCA[j][k] + H2pN_jk;
-            //std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
-            //std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
+            std::cerr << "H2N_d_jk[j][k] = " << H2N_d_jk[j][k] << "; H2N_jk[j][k] = " << H2N_jk[j][k] << std::endl;
+            std::cerr << "H2pN_jk = " << N_d_jk[j][k] << "; sumPn = " << sumPn << std::endl;
             double H2pS_jk = pairwiseMatrices.H2p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H2p->tS_S_jk[j][k])+pairwiseMatrices.H2p->tV_S_jk[j][k]); sumPs = sumPs + H2pS_jk;
             pN_pSjackknifeVector_allComparisons.push_back(pN_jk-pS_jk); pN_pSjackknifeVector_allComparisons.push_back(H2pN_jk-H2pS_jk);
             if ((j % 2 == 0) && (k == j+1)) {
@@ -568,7 +568,7 @@ void getStatsBothPhasedHaps(const std::vector<std::string>& allSeqs, const std::
         //std::cerr << "j = " << j << "; sumPn: " << sumPn << "; sumPs:" << sumPs << std::endl;
         for (std::vector<std::string>::size_type k = 0; k != numSamples; k++) {
             if (j != k) {
-                //std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]) << std::endl;
+                std::cerr << ((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]) << std::endl;
                 double H1H2pN_jk = pairwiseMatrices.H1H2p->N_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_N_jk[j][k])+pairwiseMatrices.H1H2p->tV_N_jk[j][k]);
                 double H1H2pS_jk = pairwiseMatrices.H1H2p->S_d_jk[j][k]/((2*tStVratio*pairwiseMatrices.H1H2p->tS_S_jk[j][k])+pairwiseMatrices.H1H2p->tV_S_jk[j][k]);
                 if (j < k)
