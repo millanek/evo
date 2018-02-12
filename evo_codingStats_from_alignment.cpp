@@ -126,7 +126,6 @@ int getCodingStats(int argc, char** argv) {
     for (std::vector<std::string>::size_type i = 0; i != allAligmentFiles.size(); i++) {
         std::ifstream* alignment = new std::ifstream(allAligmentFiles[i].c_str());
         std::vector<string> allSeqs; std::vector<string> allSeqsH2;
-        std::vector<string> sampleNames;
         std::string line; int lineNum = 1;
         while (getline(*alignment, line)) {
             if (lineNum % 2 == 1) assert(line[0] == '>');

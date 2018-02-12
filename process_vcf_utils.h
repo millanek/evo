@@ -20,6 +20,7 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <math.h>
+#include <random>
 #include <unordered_map>
 #include "gzstream.h"
 using std::string;
