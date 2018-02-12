@@ -137,8 +137,8 @@ int getCodingStats(int argc, char** argv) {
                 allSeqs.push_back(line);
         } alignment->close();
         
-        std::cerr << "loaded seqs for: " << allAligmentFiles[i] << std::endl;
-        std::cerr << "allSeqs.size(): " << allSeqs.size() << std::endl;
+        //std::cerr << "loaded seqs for: " << allAligmentFiles[i] << std::endl;
+        //std::cerr << "allSeqs.size(): " << allSeqs.size() << std::endl;
         if (allSeqs.size() > 0) {
             assert(allSeqs[0].length() % 3 == 0); // The gene length must be divisible by three
             if (opt::ploidy == 'd')
@@ -146,9 +146,9 @@ int getCodingStats(int argc, char** argv) {
             
             std::vector<string> statsThisGene; statsThisGene.push_back(allAligmentFiles[i]);
             if (opt::ploidy == 'd') {
-                std::cerr << "getting stats for: " << allAligmentFiles[i] << std::endl;
                 std::vector<std::vector<double> > combinedVectorForPCA; 
                 getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, sets, opt::tStVratio, opt::nonCodingNull);
+                std::cerr << "got stats for: " << allAligmentFiles[i] << std::endl;
                 if (opt::pNgroupsFile != "") {
                     int ns1 = (int)sets->set1Loci.size(); int ns2 = (int)sets->set2Loci.size(); int ns3 = (int)sets->set3Loci.size();
                     statsThisGene.push_back(numToString(sets->withinSet1pN/(2*ns1*(ns1-1))));
