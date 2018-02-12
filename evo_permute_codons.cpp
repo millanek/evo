@@ -83,8 +83,8 @@ int permuteCodons(int argc, char** argv) {
         
         assert(allSeqs[0].length() == vector_sum(geneLengths));
         std::cerr << "loaded seqs for: " << allAligmentFiles[i] << std::endl;
-        std::cerr << "allSeqs[0].size(): " << allSeqs[0].length() << "; equals " << allSeqs[0].length()/3 << "AA" << std::endl;
     }
+    std::cerr << "allSeqs[0].size(): " << allSeqs[0].length() << "; equals " << allSeqs[0].length()/3 << "AA" << std::endl;
     
     // Loop over the mutiple alignment files for the second time to print out the permuted sequences:
     int totalAA = (int)allSeqs[0].length()/3;
@@ -92,7 +92,7 @@ int permuteCodons(int argc, char** argv) {
     std::mt19937 eng(rd()); // seed the generator
     std::uniform_int_distribution<> randomAApos(0, totalAA-1); // define the range
     for (std::vector<std::string>::size_type i = 0; i != allAligmentFiles.size(); i++) {
-        std::string permutedFileName = stripExtension(allAligmentFiles[i].c_str()) + "_permuted.txt";
+        std::string permutedFileName = allAligmentFiles[i] + "_permuted.txt";
         std::ofstream* permutedFile = new std::ofstream(permutedFileName.c_str());
         int thisLengthAA = geneLengths[i]/3;
         std::vector<string> thisSeqs(sampleNames.size(),"");
