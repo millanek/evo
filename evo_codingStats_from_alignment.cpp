@@ -76,6 +76,9 @@ int getCodingStats(int argc, char** argv) {
     }
     
     pNsets* sets;
+    if (sets->initialised == true) {
+        std::cerr << "Sets are initialised" << std::endl;
+    }
     if (opt::pNgroupsFile != "") {
         std::ifstream* pNgroupsF = new std::ifstream(opt::pNgroupsFile);
         sets = new pNsets(pNgroupsF);
@@ -146,7 +149,7 @@ int getCodingStats(int argc, char** argv) {
             
             std::vector<string> statsThisGene; statsThisGene.push_back(allAligmentFiles[i]);
             if (opt::ploidy == 'd') {
-                std::vector<std::vector<double> > combinedVectorForPCA; 
+                std::vector<std::vector<double> > combinedVectorForPCA;
                 getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, sets, opt::tStVratio, opt::nonCodingNull);
                 std::cerr << "got stats for: " << allAligmentFiles[i] << std::endl;
                 if (opt::pNgroupsFile != "") {
