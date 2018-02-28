@@ -97,6 +97,8 @@ int getSeqMain(int argc, char** argv) {
     std::cerr << "and the reference genome: " << opt::genomeFile << std::endl;
     if (opt::splitNum > 0)
         std::cerr << "with splits at every " << opt::splitNum << " variants" << std::endl;
+    if (opt::bootSVDnameRoot != "")
+        std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
     
     // Open connections to read from the vcf and reference genome files
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
