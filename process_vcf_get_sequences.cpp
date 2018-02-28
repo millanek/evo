@@ -81,7 +81,7 @@ namespace opt
     static int splitNum = 0;
     static char hetTreatment = 'r';
     static bool bSVD = false;
-    static string bootSVDnameRoot = "";
+    static string bootSVDnameRoot;
     static string accesibleGenBedFile;
 
 }
@@ -97,7 +97,7 @@ int getSeqMain(int argc, char** argv) {
     std::cerr << "and the reference genome: " << opt::genomeFile << std::endl;
     if (opt::splitNum > 0)
         std::cerr << "with splits at every " << opt::splitNum << " variants" << std::endl;
-    if (opt::bootSVDnameRoot != "")
+    if (!opt::bootSVDnameRoot.empty())
         std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
     
     // Open connections to read from the vcf and reference genome files
