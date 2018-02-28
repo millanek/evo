@@ -97,6 +97,8 @@ int getSeqMain(int argc, char** argv) {
     std::cerr << "and the reference genome: " << opt::genomeFile << std::endl;
     if (opt::splitNum > 0)
         std::cerr << "with splits at every " << opt::splitNum << " variants" << std::endl;
+    
+    std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
     if (!opt::bootSVDnameRoot.empty())
         std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
     
@@ -438,7 +440,7 @@ int getSeqMain(int argc, char** argv) {
             std::cout << ";" << std::endl;
             std::cout << "end;" << std::endl;
         
-            if (opt::bootSVDnameRoot != "") { // Output bootstrap sequences
+            if (!opt::bootSVDnameRoot.empty()) { // Output bootstrap sequences
                 int totalLength = (int)scaffoldStrings[0].length();
                 std::random_device rd; // obtain a random number from hardware
                 std::mt19937 eng(rd()); // seed the generator
