@@ -46,10 +46,11 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       --incl-Pn=Mz_coords.PNsequence.NoIndels.fa  Also include an outgroup sequence (for now works only with --split)\n"
 "       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
 "       --makeSVDinput                              Generates input for SVDquartets to STD_OUT\n"
+"       --makeBootstrapSeqs=FILENAME_ROOT           Generate bootstrap sequence replicates for SVDquartets\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD };
+enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD, OPT_SVD_BOOT };
 
 static const char* shortopts = "hpws:cr";
 
@@ -63,6 +64,7 @@ static const struct option longopts[] = {
     { "incl-Pn",   required_argument, NULL, OPT_PN },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
     { "makeSVDinput", required_argument, NULL, OPT_SVD },
+    { "makeBootstrapSeqs", required_argument, NULL, OPT_SVD_BOOT },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -79,6 +81,7 @@ namespace opt
     static int splitNum = 0;
     static char hetTreatment = 'r';
     static bool bSVD = false;
+    static string bootSVDnameRoot = "";
     static string accesibleGenBedFile;
 
 }
@@ -404,11 +407,14 @@ int getSeqMain(int argc, char** argv) {
                 scaffoldStrings[i] = "";
             }
         } else if (opt::bWholeGenome) {
-            std::cout << "#NEXUS" << std::endl;
-            std::cout << "begin data;" << std::endl;
-            std::cout << "dimensions ntax=" << numSamples << " nchar=" << scaffoldStrings[0].length() << ";" << std::endl;
-            std::cout << "format datatype=standard missing=." << ";" << std::endl;
-            std::cout << "matrix" << std::endl;
+            if (opt::bSVD) {
+                std::cout << "#NEXUS" << std::endl;
+                std::cout << "begin data;" << std::endl;
+                std::cout << "dimensions ntax=" << numSamples << " nchar=" << scaffoldStrings[0].length() << ";" << std::endl;
+                std::cout << "format datatype=dna missing=." << ";" << std::endl;
+                std::cout << "matrix" << std::endl;
+            }
+            std::vector<string> editedSnVector;
             for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                 
                 string editedSn = sampleNames[i];
@@ -418,15 +424,48 @@ int getSeqMain(int argc, char** argv) {
                         editedSn = editedSn + " ";
                     }
                 }
-                std::cout << editedSn.substr(0,32) << "\t" << scaffoldStrings[i] << std::endl;
+                editedSnVector.push_back(editedSn.substr(0,32));
                 if (!opt::bSVD) {
                     print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
+                } else {
+                    std::cout << editedSnVector[i] << "\t" << scaffoldStrings[i] << std::endl;
                 }
                 scaffoldStrings[i] = "";
                 
             }
             std::cout << ";" << std::endl;
             std::cout << "end;" << std::endl;
+        
+            if (opt::bootSVDnameRoot != "") { // Output bootstrap sequences
+                int totalLength = (int)scaffoldStrings[0].length();
+                std::random_device rd; // obtain a random number from hardware
+                std::mt19937 eng(rd()); // seed the generator
+                std::uniform_int_distribution<> randomPos(0, totalLength-1); // define the range
+                for (std::vector<std::string>::size_type i = 0; i != 100; i++) {
+                    std::string bootFileName = opt::bootSVDnameRoot + "_" + numToString(i) + + "_boot.txt";
+                    std::ofstream* bootFile = new std::ofstream(bootFileName.c_str());
+                    int numSamples = (int)sampleNames.size();
+                    std::vector<string> thisSeqs(numSamples,"");
+                    for (int j = 0; j < totalLength; j++) {
+                        int pos = randomPos(eng);
+                        for (int k = 0; k < numSamples; k++) {
+                            thisSeqs[k] += scaffoldStrings[k].substr(pos,1);
+                        }
+                    }
+                    *bootFile << "#NEXUS" << std::endl;
+                    *bootFile << "begin data;" << std::endl;
+                    *bootFile << "dimensions ntax=" << numSamples << " nchar=" << scaffoldStrings[0].length() << ";" << std::endl;
+                    *bootFile << "format datatype=dna missing=." << ";" << std::endl;
+                    *bootFile << "matrix" << std::endl;
+                    for (int k = 0; k < numSamples; k++) {
+                        *bootFile << editedSnVector[i] << "\t" << thisSeqs[k] << std::endl;
+                        thisSeqs[k] = "";
+                    }
+                    std::cout << ";" << std::endl;
+                    std::cout << "end;" << std::endl;
+                    bootFile->close();
+                }
+            }
         }
     }
     
@@ -629,6 +668,7 @@ void parseGetSeqOptions(int argc, char** argv) {
             case OPT_PN: arg >> opt::outgroupFile; break;
             case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
             case OPT_SVD: opt::bSVD = true; break;
+            case OPT_SVD_BOOT: arg >> opt::bootSVDnameRoot; break;
             case 'h':
                 std::cout << GETSEQ_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
