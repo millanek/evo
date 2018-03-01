@@ -453,6 +453,7 @@ int getSeqMain(int argc, char** argv) {
                     for (int j = 0; j < totalLength; j++) {
                         int pos = randomPos(eng);
                         for (int k = 0; k < numSamples; k++) {
+                            std::cerr << pos << "=pos;" << std::endl;
                             thisSeqs[k] += scaffoldStrings[k].substr(pos,1);
                         }
                     }
@@ -462,7 +463,7 @@ int getSeqMain(int argc, char** argv) {
                     *bootFile << "format datatype=dna missing=." << ";" << std::endl;
                     *bootFile << "matrix" << std::endl;
                     for (int k = 0; k < numSamples; k++) {
-                        *bootFile << editedSnVector[i] << "\t" << thisSeqs[k] << std::endl;
+                        *bootFile << editedSnVector[k] << "\t" << thisSeqs[k] << std::endl;
                         thisSeqs[k] = "";
                     }
                     std::cout << ";" << std::endl;
