@@ -52,12 +52,12 @@ static const char *GETSEQ_USAGE_MESSAGE =
 
 enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD, OPT_SVD_BOOT };
 
-static const char* shortopts = "hpws:cr";
+static const char* shortopts = "hpws:cH:";
 
 static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
     { "by-scaffold",   no_argument, NULL, OPT_BY_SCAFFOLD },
-    { "het-treatment",   no_argument, NULL, 'H' },
+    { "het-treatment",   required_argument, NULL, 'H' },
     { "whole-genome",   no_argument, NULL, OPT_WG },
     { "LDhat",   no_argument, NULL, OPT_LDHAT },
     { "split",   required_argument, NULL, OPT_SPLIT },
@@ -458,7 +458,7 @@ int getSeqMain(int argc, char** argv) {
                     }
                     *bootFile << "#NEXUS" << std::endl;
                     *bootFile << "begin data;" << std::endl;
-                    *bootFile << "dimensions ntax=" << numSamples << " nchar=" << scaffoldStrings[0].length() << ";" << std::endl;
+                    *bootFile << "dimensions ntax=" << numSamples << " nchar=" << thisSeqs[0].length() << ";" << std::endl;
                     *bootFile << "format datatype=dna missing=." << ";" << std::endl;
                     *bootFile << "matrix" << std::endl;
                     for (int k = 0; k < numSamples; k++) {
