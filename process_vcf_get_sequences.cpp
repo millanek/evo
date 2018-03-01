@@ -52,7 +52,7 @@ static const char *GETSEQ_USAGE_MESSAGE =
 
 enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD, OPT_SVD_BOOT };
 
-static const char* shortopts = "hpws:cH:";
+static const char* shortopts = "hs:H:";
 
 static const struct option longopts[] = {
     { "samples",   required_argument, NULL, 's' },
