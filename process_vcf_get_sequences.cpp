@@ -434,8 +434,6 @@ int getSeqMain(int argc, char** argv) {
                 } else {
                     std::cout << editedSnVector[i] << "\t" << scaffoldStrings[i] << std::endl;
                 }
-                scaffoldStrings[i] = "";
-                
             }
             std::cout << ";" << std::endl;
             std::cout << "end;" << std::endl;
@@ -454,7 +452,7 @@ int getSeqMain(int argc, char** argv) {
                     for (int j = 0; j < totalLength; j++) {
                         int pos = randomPos(eng);
                         for (int k = 0; k < numSamples; k++) {
-                            std::cerr << pos << "=pos;" << std::endl;
+                         //   std::cerr << pos << "=pos;" << std::endl;
                             thisSeqs[k] += scaffoldStrings[k].substr(pos,1);
                         }
                     }
