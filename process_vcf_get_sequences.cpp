@@ -63,7 +63,7 @@ static const struct option longopts[] = {
     { "split",   required_argument, NULL, OPT_SPLIT },
     { "incl-Pn",   required_argument, NULL, OPT_PN },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
-    { "makeSVDinput", required_argument, NULL, OPT_SVD },
+    { "makeSVDinput", no_argument, NULL, OPT_SVD },
     { "makeBootstrapSeqs", required_argument, NULL, OPT_SVD_BOOT },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
