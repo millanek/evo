@@ -465,8 +465,8 @@ int getSeqMain(int argc, char** argv) {
                         *bootFile << editedSnVector[k] << "\t" << thisSeqs[k] << std::endl;
                         thisSeqs[k] = "";
                     }
-                    std::cout << ";" << std::endl;
-                    std::cout << "end;" << std::endl;
+                    *bootFile << ";" << std::endl;
+                    *bootFile << "end;" << std::endl;
                     bootFile->close();
                 }
             }
