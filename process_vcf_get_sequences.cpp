@@ -719,7 +719,8 @@ void parseGetSeqOptions(int argc, char** argv) {
     
     // Parse the input filenames
     opt::vcfFile = argv[optind++];
-    if( argc - optind == 2) {
+    std::cerr << "argc - optind " << argc - optind << std::endl;
+    if( argc - optind == 1) {
         opt::genomeFile = argv[optind++];
     }
 }
