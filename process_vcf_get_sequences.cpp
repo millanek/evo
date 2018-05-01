@@ -167,7 +167,6 @@ int getSeqMain(int argc, char** argv) {
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (fields[0] != currentScaffoldNum) {
-                std::cerr << "currentScaffoldNum: " << currentScaffoldNum << std::endl;
                 if (currentScaffoldNum != "") {
                     if (opt::genomeFile != "") {
                         for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
@@ -265,6 +264,7 @@ int getSeqMain(int argc, char** argv) {
                         }
                     }
                 } else {
+                    std::cerr << "currentScaffoldNum: " << currentScaffoldNum << std::endl;
                     getline(*genomeFile, thisScaffoldName);
                     thisScaffoldName.erase(0,1);
                     currentScaffoldNum = fields[0];
