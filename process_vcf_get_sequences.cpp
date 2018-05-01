@@ -98,7 +98,7 @@ int getSeqMain(int argc, char** argv) {
     if (opt::splitNum > 0)
         std::cerr << "with splits at every " << opt::splitNum << " variants" << std::endl;
     
-    std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
+    //std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
     if (!opt::bootSVDnameRoot.empty())
         std::cerr << "Bootstrap sequences will be output to " << opt::bootSVDnameRoot << "_i_boot.txt" << std::endl;
     
@@ -206,15 +206,15 @@ int getSeqMain(int argc, char** argv) {
                     
                     if (opt::splitNum > 0) {
                         std::vector<string::size_type> scaledSplits = splits;
+                        std::cerr << "Splits" << std::endl;
+                        print_vector_stream(splits, std::cerr);
                         if (!opt::accesibleGenBedFile.empty()) { // Need to rescale the splits
                             for (int i = 0; i < splits.size(); i++) {
                                 scaledSplits[i] = ag->getAccessibleBPinRegion(currentScaffoldNum, 0, (int)splits[i]);
                             }
+                            std::cerr << "Scaled splits:" << std::endl;
+                            print_vector_stream(scaledSplits, std::cerr);
                         }
-                        std::cerr << "Splits" << std::endl;
-                        print_vector_stream(splits, std::cerr);
-                        std::cerr << "Scaled splits:" << std::endl;
-                        print_vector_stream(scaledSplits, std::cerr);
                         
                         
                         if (!opt::outgroupFile.empty()) {
@@ -354,6 +354,7 @@ int getSeqMain(int argc, char** argv) {
                     splits.push_back(inStrPos);
                     std::cerr << processedVariantCounter << " variants processed..." << std::endl;
                     std::cerr << "Split at bp: " << inStrPos << std::endl;
+                    std::cerr << "scaffoldStrings[0].length(): " << scaffoldStrings[0].length() << std::endl;
                 }
             } else {
                 if (processedVariantCounter % 10000 == 0)
