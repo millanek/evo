@@ -307,9 +307,11 @@ int getSeqMain(int argc, char** argv) {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("2");
                             }
                         } else {
+                            std::cerr << "lengthToAppend: " << lengthToAppend << std::endl;
+                            std::cerr << "opt::genomeFile: " << opt::genomeFile << std::endl;
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
-                                std::cerr << "lengthToAppend: " << lengthToAppend << std::endl;
+                                
                             }
                             if (opt::bSVD) {
                                 std::vector<std::string> genotypeAndZeroOne = returnGenotypeBaseAndZeroOne(fields[3], fields[4], genotype, opt::hetTreatment);
