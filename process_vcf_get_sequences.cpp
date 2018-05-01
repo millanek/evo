@@ -307,8 +307,8 @@ int getSeqMain(int argc, char** argv) {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append("2");
                             }
                         } else {
-                            std::cerr << "lengthToAppend: " << lengthToAppend << std::endl;
-                            std::cerr << "opt::genomeFile: " << opt::genomeFile << std::endl;
+                            //std::cerr << "lengthToAppend: " << lengthToAppend << std::endl;
+                            //std::cerr << "opt::genomeFile: " << opt::genomeFile << std::endl;
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
                                 
@@ -719,7 +719,7 @@ void parseGetSeqOptions(int argc, char** argv) {
     
     // Parse the input filenames
     opt::vcfFile = argv[optind++];
-    std::cerr << "argc - optind " << argc - optind << std::endl;
+    //std::cerr << "argc - optind " << argc - optind << std::endl;
     if( argc - optind == 1) {
         opt::genomeFile = argv[optind++];
     }
