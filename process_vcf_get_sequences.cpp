@@ -309,6 +309,7 @@ int getSeqMain(int argc, char** argv) {
                         } else {
                             if (opt::genomeFile != "") {
                                 scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS].append(currentScaffoldReference.substr(inStrPos, lengthToAppend));
+                                std::cerr << "lengthToAppend: " << lengthToAppend << std::endl;
                             }
                             if (opt::bSVD) {
                                 std::vector<std::string> genotypeAndZeroOne = returnGenotypeBaseAndZeroOne(fields[3], fields[4], genotype, opt::hetTreatment);
