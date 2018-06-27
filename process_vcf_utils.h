@@ -363,7 +363,7 @@ std::string stripExtension(const std::string& filename);
 std::string stripPath(const std::string& filename);
 
 Counts getThisVariantCounts(const std::vector<std::string>& fields);
-Counts getThisVariantCountsSimple(const std::vector<std::string>& fields);
+void getThisVariantCountsSimple(const std::vector<std::string>& fields, Counts* thisVariantCounts);
 ThreeSetCounts getThreeSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::string& AA);
 FourSetCounts getFourSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& set4_loci, const std::string& AA = "N");
 ThreeSetCounts getThreeSetVariantCountsAA4(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& AA_loci);

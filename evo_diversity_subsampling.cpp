@@ -79,21 +79,23 @@ int subsamplingDxy(int argc, char** argv) {
             //std::cerr << "Variant N:" << totalVariantNumber << std::endl;
             std::vector<std::string> fields = split(line, '\t');
             string scaffold = fields[0]; string pos = fields[1];
-            Counts counts = getThisVariantCountsSimple(fields);
-            counts.inbreedingCoefficient = calculateInbreedingCoefficient(counts.individualsWithVariant);
-            counts.chiSqPvalForInbreeding = calculateChiSqPvalForInbreeding(counts.individualsWithVariant);
-            if (counts.inbreedingCoefficient < 0 && counts.chiSqPvalForInbreeding < 0.05) {
+            Counts* counts = new Counts();
+            getThisVariantCountsSimple(fields, counts);
+            counts->inbreedingCoefficient = calculateInbreedingCoefficient(counts->individualsWithVariant);
+            counts->chiSqPvalForInbreeding = calculateChiSqPvalForInbreeding(counts->individualsWithVariant);
+            if (counts->inbreedingCoefficient < 0 && counts->chiSqPvalForInbreeding < 0.05) {
                 std::cerr << "filtering out:" << std::endl;
                 std::cerr << scaffold+"\t"+pos << std::endl;
-                std::cerr << "counts.chiSqPvalForInbreeding: " << counts.chiSqPvalForInbreeding << std::endl;
-                std::cerr << "counts.inbreedingCoefficient: " << counts.inbreedingCoefficient << std::endl;
+                std::cerr << "counts.chiSqPvalForInbreeding: " << counts->chiSqPvalForInbreeding << std::endl;
+                std::cerr << "counts.inbreedingCoefficient: " << counts->inbreedingCoefficient << std::endl;
                 std::cerr << std::endl;
             } else {
-                vcfCountsMap[scaffold+"\t"+pos] = counts;
-                double thisVariantDxy = calculateOverallDxy(counts);
+                vcfCountsMap[scaffold+"\t"+pos] = *counts;
+                double thisVariantDxy = calculateOverallDxy(*counts);
                 totalDxySum = totalDxySum + thisVariantDxy;
                 vcfDxyMap[scaffold+"\t"+pos] = thisVariantDxy;
             }
+            delete counts;
         }
     }
     std::cerr << "Done" << std::endl;

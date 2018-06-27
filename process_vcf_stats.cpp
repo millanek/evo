@@ -19,7 +19,7 @@
 
 static const char *STATS_USAGE_MESSAGE =
 "Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] VCF_FILE\n"
-"Calculating various statistics from a VCF file, output to STD_OUT\n"
+"Calculating various statistics from a VCF file\n"
 "\n"
 "       --help                           display this help and exit\n"
 "\n"
@@ -165,13 +165,13 @@ int statsMain(int argc, char** argv) {
     // Start reading from the vcf file
     std::istream* inFile = createReader(fileName.c_str());
     int numSamples; int numChromosomes; int totalVariantNumber = 0;
-    string line; int bootstrapBlockNum = 0;
+    string line; int bootstrapBlockNum = 0; std::vector<std::string> fields;
     while (getline(*inFile, line)) {
         if (line[0] == '#' && line[1] == '#')
             continue;
         else if (line[0] == '#' && line[1] == 'C') {
             // Read the sample names, initialise output variables, and (if supplied) locate populations
-            std::vector<std::string> fields = split(line, '\t');
+            fields = split(line, '\t');
             if (opt::sampleNameFile.empty()) {
                 for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
                     sampleNames.push_back(fields[i]);
@@ -206,34 +206,35 @@ int statsMain(int argc, char** argv) {
             
         } else {
             totalVariantNumber++;
-            std::vector<std::string> fields = split(line, '\t');
+            fields = split(line, '\t');
             
-            FilterResult result;
-            result.counts = getThisVariantCountsSimple(fields);
+            FilterResult* result = new FilterResult();
+            Counts* c = new Counts(); getThisVariantCountsSimple(fields, c);
+            result->counts = *c;
             
             // Only do these calculations if none of the genotypes are missing:
-            if (result.counts.bAnyMissingGenotypes == false) {
+            if (result->counts.bAnyMissingGenotypes == false) {
                 if (opt::countHets) {
-                    het_analysis(hetCounts, hetsSharedWithOthers, result);
+                    het_analysis(hetCounts, hetsSharedWithOthers, *result);
                 }
                 if (opt::countPrivateVars) {
-                    privateVars_analysis(privateVarCounts,result,populationsIndices, populationsIndicesComplements);
+                    privateVars_analysis(privateVarCounts,*result,populationsIndices, populationsIndicesComplements);
                 }
                 if (opt::bDoubleton) {
                 //    doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);
                 }
                 if (opt::bDiffH1) {
-                    diffs_between_H1(diffMatrixH1, result);
+                    diffs_between_H1(diffMatrixH1, *result);
                 }
                 if (opt::bDiffAllH) {
-                    diffs_between_AllH(diffMatrixAllH, result);
+                    diffs_between_AllH(diffMatrixAllH, *result);
                 }
             }
             if (opt::bDiffs) {
-                if (!result.counts.bIsMultiallelic) {
-                    diffs_between_individuals(diffMatrix,diffMatrixMe,thisBootstrapBlock,diffMatrixHetsVsHomDiff,pairwiseMissingness,thisBootstrapBlockMissingness,result);
+                if (!result->counts.bIsMultiallelic) {
+                diffs_between_individuals(diffMatrix,diffMatrixMe,thisBootstrapBlock,diffMatrixHetsVsHomDiff,pairwiseMissingness,thisBootstrapBlockMissingness,*result);
                 } else {
-                    diffs_between_individuals_with_multialleleics(diffMatrixMe,pairwiseMissingness,thisBootstrapBlock,thisBootstrapBlockMissingness,result);
+                diffs_between_individuals_with_multialleleics(diffMatrixMe,pairwiseMissingness,thisBootstrapBlock,thisBootstrapBlockMissingness,*result);
                 }
             }
             
@@ -248,6 +249,8 @@ int statsMain(int argc, char** argv) {
                     bootstrapBlockNum++;
                 }
             }
+            delete c;
+            delete result;
                 
             if (totalVariantNumber % 100000 == 0)
                 std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
@@ -256,6 +259,7 @@ int statsMain(int argc, char** argv) {
     }
     
     if (opt::numAccessibleBP > -1) {
+        std::cerr << "opt::numAccessibleBP " << opt::numAccessibleBP << std::endl;
         for (int i = 0; i < diffMatrixMe.size(); i++) {
             for (int j = 0; j < diffMatrixMe[i].size(); j++) {
                 diffMatrixMe[i][j] =  (double)diffMatrixMe[i][j]/opt::numAccessibleBP;
@@ -296,6 +300,7 @@ int statsMain(int argc, char** argv) {
             pBootOutFile->close();
         }
     }
+    
     
     string fileNoPath = stripPath(fileRoot);
     

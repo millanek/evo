@@ -87,6 +87,7 @@ inline std::vector<std::string> returnGenotypeBaseAndZeroOne(const std::string& 
             exit(1);
         }
     }
+    exit(1);
 }
 
 
@@ -119,6 +120,7 @@ inline std::string returnGenotypeBaseZeroOne(const std::vector<char>& genotype, 
             exit(1);
         }
     }
+    exit(1);
 }
 
 

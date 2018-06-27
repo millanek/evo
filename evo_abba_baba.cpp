@@ -7,7 +7,6 @@
 //
 
 #include "evo_abba_baba.h"
-#include "process_vcf_stats_utils.h"
 
 
 #define SUBPROGRAM "abba-baba"
@@ -82,6 +81,19 @@ namespace ABBABABAcounts {
     // int ABBABABA = 0;
 }
 
+
+class ABBA_BABA_Freq_allResults {
+public:
+    ABBA_BABA_Freq_allResults() : Dnumerator(0), Ddenominator(0), lastVarsDnum(0), lastVarsDdenom(0), windowDnum(0), windowDdenom(0), f_d_denominator(0), window_f_d_denominator(0),  lastVarsF_d_denom(0), f_d_num(0), window_f_d_num(0),  lastVarsF_d_num(0),f_G_denom(0), f_G_num(0), lastVarsF_G_num(0), lastVarsF_G_denom(0), f_dM_denominator(0), window_f_dM_denominator(0), lastVarsF_dM_denom(0) {};
+    double Dnumerator; double Ddenominator;     // simple D statistic
+    double lastVarsDnum; double lastVarsDdenom; // D within a long stretch window for jackkinive analysis
+    double windowDnum; double windowDdenom; // D within a window
+    double f_d_denominator; double window_f_d_denominator; double lastVarsF_d_denom;
+    double f_dM_denominator; double window_f_dM_denominator; double lastVarsF_dM_denom;
+    double f_d_num; double window_f_d_num; double lastVarsF_d_num;
+    double f_G_denom; double f_G_num; double lastVarsF_G_num; double lastVarsF_G_denom;
+};
+
 inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq_allResults& res) {
     if (c.set1daAF == -1) {
         ABBABABAcounts::noDafInfo++;
@@ -109,17 +121,17 @@ inline void incrementDnumDdenomFrequency(const ThreeSetCounts& c, ABBA_BABA_Freq
             thisF_d_denom = ((1-c.set1daAF)*c.set3daAF*c.set3daAF) - (c.set1daAF*(1-c.set3daAF)*c.set3daAF);
         }
         //if (thisF_d_denom != 0) {
-           /* if (thisDnumerator/thisF_d_denom > 1) {
-                std::cerr << "f_d:\t" << thisDnumerator/thisF_d_denom << std::endl;
-                std::cerr << "D num:\t" << thisDnumerator << std::endl;
-                std::cerr << "f_d denom:\t" << thisF_d_denom << std::endl;
-                std::cerr << "p1:\t" << c.set1daAF << std::endl;
-                std::cerr << "p2:\t" << c.set2daAF << std::endl;
-                std::cerr << "p3:\t" << c.set3daAF << std::endl;
-            } */
-            res.f_d_denominator += thisF_d_denom; res.window_f_d_denominator += thisF_d_denom; res.lastVarsF_d_denom += thisF_d_denom;
-            res.f_d_num += thisDnumerator; res.window_f_d_num += thisDnumerator; res.lastVarsF_d_num += thisDnumerator;
-            ABBABABAcounts::used_f_d_Counter++;
+        /* if (thisDnumerator/thisF_d_denom > 1) {
+         std::cerr << "f_d:\t" << thisDnumerator/thisF_d_denom << std::endl;
+         std::cerr << "D num:\t" << thisDnumerator << std::endl;
+         std::cerr << "f_d denom:\t" << thisF_d_denom << std::endl;
+         std::cerr << "p1:\t" << c.set1daAF << std::endl;
+         std::cerr << "p2:\t" << c.set2daAF << std::endl;
+         std::cerr << "p3:\t" << c.set3daAF << std::endl;
+         } */
+        res.f_d_denominator += thisF_d_denom; res.window_f_d_denominator += thisF_d_denom; res.lastVarsF_d_denom += thisF_d_denom;
+        res.f_d_num += thisDnumerator; res.window_f_d_num += thisDnumerator; res.lastVarsF_d_num += thisDnumerator;
+        ABBABABAcounts::used_f_d_Counter++;
         //}
         
         double thisF_dM_denom;
@@ -198,6 +210,7 @@ inline std::string getAAfromInfo(const std::vector<std::string>& info) {
     }
     return AA;
 }
+
 
 
 void doAbbaBaba() {

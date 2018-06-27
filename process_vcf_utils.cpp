@@ -173,12 +173,11 @@ void randomisePhase(char& v1, char& v2) {
 
 
 
-Counts getThisVariantCountsSimple(const std::vector<std::string>& fields) {
-    Counts thisVariantCounts;
+void getThisVariantCountsSimple(const std::vector<std::string>& fields, Counts* thisVariantCounts) {
     int numSamples = (int)fields.size()-NUM_NON_GENOTYPE_COLUMNS;
-    thisVariantCounts.individualsWithVariant.assign(numSamples,0);
-    thisVariantCounts.missingGenotypesPerIndividual.assign(numSamples,false);
-    thisVariantCounts.haplotypesWithVariant.assign(numSamples*2,0);
+    thisVariantCounts->individualsWithVariant.assign(numSamples,0);
+    thisVariantCounts->missingGenotypesPerIndividual.assign(numSamples,false);
+    thisVariantCounts->haplotypesWithVariant.assign(numSamples*2,0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
     // Find the position of DP (per sample read depth) in the genotypeData vector below
     std::vector<std::string> format = split(fields[8], ':');
@@ -191,41 +190,40 @@ Counts getThisVariantCountsSimple(const std::vector<std::string>& fields) {
         if (lastAlt == "*") {
             alleleAsMissing = numAltAlleles;
             if ((numAltAlleles - 1) > 1) {
-                thisVariantCounts.bIsMultiallelic = true;
+                thisVariantCounts->bIsMultiallelic = true;
             }
         } else {
             if (numAltAlleles > 1) {
-                thisVariantCounts.bIsMultiallelic = true;
+                thisVariantCounts->bIsMultiallelic = true;
             }
         }
     }
     
     // Find the position of GQ (genotype quality) in the genotypeData vector below
-    if (fields[NUM_NON_GENOTYPE_COLUMNS][1] == '|') { thisVariantCounts.bPhased = true; }
+    if (fields[NUM_NON_GENOTYPE_COLUMNS][1] == '|') { thisVariantCounts->bPhased = true; }
     for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
         char v1 = fields[i][0]; char v2 = fields[i][2];
-        if (thisVariantCounts.bPhased == false) randomisePhase(v1,v2);
+        if (thisVariantCounts->bPhased == false) randomisePhase(v1,v2);
         int v1int = v1 - '0'; int v2int = v2 - '0';
         if (v1 == '.' || v2 == '.' || v1int == alleleAsMissing || v2int == alleleAsMissing) {
-            thisVariantCounts.bAnyMissingGenotypes = true;
-            thisVariantCounts.missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
+            thisVariantCounts->bAnyMissingGenotypes = true;
+            thisVariantCounts->missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
         } else {
-            thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)] = v1int;
-            thisVariantCounts.haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)+1] = v2int;
+            thisVariantCounts->haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)] = v1int;
+            thisVariantCounts->haplotypesWithVariant[2*(i-NUM_NON_GENOTYPE_COLUMNS)+1] = v2int;
         }
         // Multiallelic sites will be ignored in the genotype record
-        if (!thisVariantCounts.bIsMultiallelic) {
+        if (!thisVariantCounts->bIsMultiallelic) {
             if (v1 == '1') {
-                thisVariantCounts.overall++;
-                thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
+                thisVariantCounts->overall++;
+                thisVariantCounts->individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
             }
             if (v2 == '1') {
-                thisVariantCounts.overall++;
-                thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
+                thisVariantCounts->overall++;
+                thisVariantCounts->individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
             }
         }
     }
-    return thisVariantCounts;
 }
 
 
