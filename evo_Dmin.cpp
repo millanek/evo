@@ -192,11 +192,13 @@ int DminMain(int argc, char** argv) {
     std::vector<std::vector<double>> initDs(3); // vector with three empty (double) vectors
     std::vector<std::vector<double>> Dnums; Dnums.assign(nCombinations,init);
     std::vector<std::vector<double>> Ddenoms; Ddenoms.assign(nCombinations,init);
-    std::vector<std::vector<double>> localDnums; localDnums.assign(nCombinations,init);
-    std::vector<std::vector<double>> localDdenoms; localDdenoms.assign(nCombinations,init);
+   // std::vector<std::vector<double>> localDnums; localDnums.assign(nCombinations,init);
+    //std::vector<std::vector<double>> localDdenoms; localDdenoms.assign(nCombinations,init);
     std::vector<std::vector<std::vector<double>>> regionDs; regionDs.assign(nCombinations, initDs);
     std::vector<double> ABBAtotals(nCombinations,0); std::vector<double> BABAtotals(nCombinations,0);
     std::vector<double> BBAAtotals(nCombinations,0);
+    std::vector<double> localABBAtotals(nCombinations,0); std::vector<double> localBABAtotals(nCombinations,0);
+    std::vector<double> localBBAAtotals(nCombinations,0);
     std::vector<int> usedVars(nCombinations,0); // Will count the number of used variants for each trio
     int totalVariantNumber = 0;
     std::vector<string> sampleNames; std::vector<std::string> fields;
@@ -205,7 +207,7 @@ int DminMain(int argc, char** argv) {
     else if (nCombinations < 100000) reportProgressEvery = 10000;
     else reportProgressEvery = 1000;
     std::clock_t start; std::clock_t startGettingCounts; std::clock_t startCalculation;
-    double durationOverall; double durationGettingCounts; double durationCalculation;
+    double durationOverall; double durationGettingCounts; double durationCalculation; double durationFirstLoop;
     
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
@@ -235,11 +237,11 @@ int DminMain(int argc, char** argv) {
            //  std::cerr << "telvit at pos: "; print_vector_stream(speciesToPosMap["telvit"], std::cerr);
         } else {
             totalVariantNumber++;
-            //if (totalVariantNumber % reportProgressEvery == 0) {
+            if (totalVariantNumber % reportProgressEvery == 0) {
                 durationOverall = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
                 std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
                 std::cerr << "GettingCounts " << durationGettingCounts << " calculation " << durationCalculation << "secs" << std::endl;
-            //}
+            }
             fields = split(line, '\t');
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
@@ -262,10 +264,10 @@ int DminMain(int argc, char** argv) {
             for (std::vector<std::string>::size_type i = 0; i != species.size(); i++) {
                 allPs.push_back(c->setDAFs.at(species[i]));
             }
-            
+            // durationFirstLoop = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             
             // Now calculate the D stats:
-            double p_S1; double p_S2; double p_S3;
+            double p_S1; double p_S2; double p_S3; double ABBA; double BABA; double BBAA;
             for (int i = 0; i != trios.size(); i++) {
                 usedVars[i]++;
                 
@@ -273,29 +275,33 @@ int DminMain(int argc, char** argv) {
                 p_S2 = allPs[triosInt[i][1]];
                 p_S3 = allPs[triosInt[i][2]];
 
-                if (p_S1 == -1 || p_S2 == -1 || p_S3 == -1)
-                    continue; // If any member of the trio has entirely missing data, just move on to the next trio
+                if (p_S1 == -1) continue; // If any member of the trio has entirely missing data, just move on to the next trio
+                if (p_S2 == -1) continue;
+                if (p_S3 == -1) continue;
                 
-                double ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[i] += ABBA;
-                double BABA = (p_S1*(1-p_S2)*p_S3*(1-p_O)); BABAtotals[i] += BABA;
-                double BBAA = ((1-p_S3)*p_S2*p_S1*(1-p_O)); BBAAtotals[i] += BBAA;
+                ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[i] += ABBA; localABBAtotals[i] += ABBA;
+                BABA = (p_S1*(1-p_S2)*p_S3*(1-p_O)); BABAtotals[i] += BABA; localBABAtotals[i] += BABA;
+                BBAA = ((1-p_S3)*p_S2*p_S1*(1-p_O)); BBAAtotals[i] += BBAA; localBBAAtotals[i] += BBAA;
              //   if (p_O == 0.0) {
-                Dnums[i][0] += ABBA - BABA;
-                Dnums[i][1] += ABBA - BBAA;  // Dnums[i][1] += ((1-p_S1)*p_S3*p_S2*(1-p_O)) - (p_S1*(1-p_S3)*p_S2*(1-p_O));
-                Dnums[i][2] += BBAA - BABA;  // Dnums[i][2] += ((1-p_S3)*p_S2*p_S1*(1-p_O)) - (p_S3*(1-p_S2)*p_S1*(1-p_O));
+               // Dnums[i][0] += ABBA - BABA;
+               // Dnums[i][1] += ABBA - BBAA;  // Dnums[i][1] += ((1-p_S1)*p_S3*p_S2*(1-p_O)) - (p_S1*(1-p_S3)*p_S2*(1-p_O));
+               // Dnums[i][2] += BBAA - BABA;  // Dnums[i][2] += ((1-p_S3)*p_S2*p_S1*(1-p_O)) - (p_S3*(1-p_S2)*p_S1*(1-p_O));
 
-                Ddenoms[i][0] += ABBA + BABA;
-                Ddenoms[i][1] += ABBA + BBAA;   // ((1-p_S1)*p_S3*p_S2*(1-p_O)) + (p_S1*(1-p_S3)*p_S2*(1-p_O));
-                Ddenoms[i][2] += BBAA + BABA; // ((1-p_S3)*p_S2*p_S1*(1-p_O)) + (p_S3*(1-p_S2)*p_S1*(1-p_O));
+               // Ddenoms[i][0] += ABBA + BABA;
+              //  Ddenoms[i][1] += ABBA + BBAA;   // ((1-p_S1)*p_S3*p_S2*(1-p_O)) + (p_S1*(1-p_S3)*p_S2*(1-p_O));
+              //  Ddenoms[i][2] += BBAA + BABA; // ((1-p_S3)*p_S2*p_S1*(1-p_O)) + (p_S3*(1-p_S2)*p_S1*(1-p_O));
                 
-                localDnums[i][0] += ABBA - BABA; localDnums[i][1] += ABBA - BBAA; localDnums[i][2] += BBAA - BABA;
-                localDdenoms[i][0] += ABBA + BABA; localDdenoms[i][1] += ABBA + BBAA; localDdenoms[i][2] += BBAA + BABA;
-                if (usedVars[i] % opt::jkWindowSize == 0) {
-                    double regionD0 = localDnums[i][0]/localDdenoms[i][0]; double regionD1 = localDnums[i][1]/localDdenoms[i][1];
-                    double regionD2 = localDnums[i][2]/localDdenoms[i][2];
+                // localDnums[i][0] += ABBA - BABA; localDnums[i][1] += ABBA - BBAA; localDnums[i][2] += BBAA - BABA;
+                // localDdenoms[i][0] += ABBA + BABA; localDdenoms[i][1] += ABBA + BBAA; localDdenoms[i][2] += BBAA + BABA;
+               if (usedVars[i] % opt::jkWindowSize == 0) {
+                    double localDnums1 = localABBAtotals[i] - localBABAtotals[i]; double localDnums2 = localABBAtotals[i] - localBBAAtotals[i]; double localDnums3 = localBBAAtotals[i] - localBABAtotals[i];
+                    double localDdenoms1 = localABBAtotals[i] + localBABAtotals[i]; double localDdenoms2 = localABBAtotals[i] + localBBAAtotals[i]; double localDdenoms3 = localBBAAtotals[i] + localBABAtotals[i];
+                    double regionD0 = localDnums1/localDdenoms1; double regionD1 = localDnums2/localDdenoms2;
+                    double regionD2 = localDnums3/localDdenoms3;
                     regionDs[i][0].push_back(regionD0); regionDs[i][1].push_back(regionD1); regionDs[i][2].push_back(regionD2);
-                    localDnums[i][0] = 0; localDnums[i][1] = 0; localDnums[i][2] = 0;
-                    localDdenoms[i][0] = 0; localDdenoms[i][1] = 0; localDdenoms[i][2] = 0;
+                    //localDnums[i][0] = 0; localDnums[i][1] = 0; localDnums[i][2] = 0;
+                    //localDdenoms[i][0] = 0; localDdenoms[i][1] = 0; localDdenoms[i][2] = 0;
+                    localABBAtotals[i] = 0; localBABAtotals[i] = 0; localBBAAtotals[i] = 0;
                 }
             // }
             }
@@ -310,8 +316,8 @@ int DminMain(int argc, char** argv) {
         double D1stdErr = jackknive_std_err(regionDs[i][0]); double D2stdErr = jackknive_std_err(regionDs[i][1]);
         double D3stdErr = jackknive_std_err(regionDs[i][2]);
         // Get the D values
-        double D1 = Dnums[i][0]/Ddenoms[i][0]; double D2 = Dnums[i][1]/Ddenoms[i][1];
-        double D3 = Dnums[i][2]/Ddenoms[i][2];
+        Dnums[i][0] = ABBAtotals[i] - BABAtotals[i]; Dnums[i][1] = ABBAtotals[i] - BBAAtotals[i]; Dnums[i][2] = BBAAtotals[i] - BABAtotals[i];
+        double D1 = Dnums[i][0]/Ddenoms[i][0]; double D2 = Dnums[i][1]/Ddenoms[i][1]; double D3 = Dnums[i][2]/Ddenoms[i][2];
         // Get the Z-scores
         double D1_Z = abs(D1)/D1stdErr; double D2_Z = abs(D2)/D2stdErr;
         double D3_Z = abs(D3)/D3stdErr;
