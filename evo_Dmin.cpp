@@ -177,11 +177,12 @@ int DminMain(int argc, char** argv) {
     
     // first, get all combinations of three sets (species):
     std::vector<std::vector<string>> trios; trios.resize(nCombinations);
+    std::vector<std::vector<int>> triosInt; triosInt.resize(nCombinations);
     std::vector<bool> v(species.size()); std::fill(v.begin(), v.begin() + 3, true); // prepare a selection vector
     int pNum = 0;
     do {
         for (int i = 0; i < v.size(); ++i) {
-            if (v[i]) trios[pNum].push_back(species[i]);
+            if (v[i]) { trios[pNum].push_back(species[i]); triosInt[pNum].push_back(i); }
         } pNum++;
     } while (std::prev_permutation(v.begin(), v.end())); // Getting all permutations of the selection vector - so it selects all combinations
     std::cerr << "Done permutations" << std::endl;
@@ -256,20 +257,50 @@ int DminMain(int argc, char** argv) {
             double p_O = c->setDAFs.at("Outgroup");
             if (p_O == 0) { delete c; continue; } // We need to make sure that the outgroup is defined
             
-            // Now calculate the D stats
+            
+            std::vector<double> allPs;
+            for (std::vector<std::string>::size_type i = 0; i != species.size(); i++) {
+                allPs.push_back(c->setDAFs.at(species[i]));
+            }
+            
+            
+            // Now calculate the D stats for the first trio:
             double p_S1; double p_S2; double p_S3;
-            for (int i = 0; i != trios.size(); i++) {
+            p_S1 = c->setDAFs.at(trios[0][0]); p_S2 = c->setDAFs.at(trios[0][1]);
+            p_S3 = c->setDAFs.at(trios[0][2]);
+            double pS1test = allPs[triosInt[0][0]]; assert(p_S1 == pS1test);
+            if (p_S1 != -1 && p_S2 != -1 && p_S3 != -1) {
+               // If any member of the trio has entirely missing data, just move on to the next trio
+                double ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[0] += ABBA;
+                double BABA = (p_S1*(1-p_S2)*p_S3*(1-p_O)); BABAtotals[0] += BABA;
+                double BBAA = ((1-p_S3)*p_S2*p_S1*(1-p_O)); BBAAtotals[0] += BBAA;
+                
+                Dnums[0][0] += ABBA - BABA;
+                Dnums[0][1] += ABBA - BBAA;  // Dnums[i][1] += ((1-p_S1)*p_S3*p_S2*(1-p_O)) - (p_S1*(1-p_S3)*p_S2*(1-p_O));
+                Dnums[0][2] += BBAA - BABA;  // Dnums[i][2] += ((1-p_S3)*p_S2*p_S1*(1-p_O)) - (p_S3*(1-p_S2)*p_S1*(1-p_O));
+                
+                Ddenoms[0][0] += ABBA + BABA;
+                Ddenoms[0][1] += ABBA + BBAA;   // ((1-p_S1)*p_S3*p_S2*(1-p_O)) + (p_S1*(1-p_S3)*p_S2*(1-p_O));
+                Ddenoms[0][2] += BBAA + BABA; // ((1-p_S3)*p_S2*p_S1*(1-p_O)) + (p_S3*(1-p_S2)*p_S1*(1-p_O));
+                
+                localDnums[0][0] += ABBA - BABA; localDnums[0][1] += ABBA - BBAA; localDnums[0][2] += BBAA - BABA;
+                localDdenoms[0][0] += ABBA + BABA; localDdenoms[0][1] += ABBA + BBAA; localDdenoms[0][2] += BBAA + BABA;
+            }
+            // and for the rest of the trios
+            for (int i = 1; i != trios.size(); i++) {
                 usedVars[i]++;
-                if (i > 1) { // Reduce the number of accesses to the map to minimum
-                    if (trios[i][0] != trios[i-1][0])
-                        p_S1 = c->setDAFs.at(trios[i][0]);
-                    if (trios[i][1] != trios[i-1][1])
-                        p_S2 = c->setDAFs.at(trios[i][1]);
-                    if (trios[i][2] != trios[i-1][2])
-                        p_S3 = c->setDAFs.at(trios[i][2]);
-                } else {
-                    p_S1 = c->setDAFs.at(trios[i][0]); p_S2 = c->setDAFs.at(trios[i][1]);
-                    p_S3 = c->setDAFs.at(trios[i][2]);
+                // Reduce the number of accesses to the map to minimum
+                if (trios[i][0] != trios[i-1][0]) {
+                    //p_S1 = c->setDAFs.at(trios[i][0]);
+                    p_S1 = allPs[triosInt[i][0]]; //assert(p_S1 == pS1test);
+                }
+                if (trios[i][1] != trios[i-1][1]) {
+                    //p_S2 = c->setDAFs.at(trios[i][1]);
+                    p_S2 = allPs[triosInt[i][1]];
+                }
+                if (trios[i][2] != trios[i-1][2]) {
+                    //p_S3 = c->setDAFs.at(trios[i][2]);
+                    p_S3 = allPs[triosInt[i][2]];
                 }
                 
                 if (p_S1 == -1 || p_S2 == -1 || p_S3 == -1)
