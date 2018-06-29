@@ -22,6 +22,7 @@ static const char *DMIN_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       --AAeqO                                 ancestral allele info in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
 "                                               the Outgroup setting in the SETS.txt file will be ignored\n"
+"       --fixP3=SPECIES                         (optional) fix the P3 individual and only claculate the stats for cominations of P1 and P2\n"
 "       -w SIZE, --window=SIZE                  (optional) output D statistics for nonoverlapping windows containing SIZE SNPs with nonzero D (default: 50)\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
 "\n"
@@ -256,10 +257,20 @@ int DminMain(int argc, char** argv) {
             if (p_O == 0) { delete c; continue; } // We need to make sure that the outgroup is defined
             
             // Now calculate the D stats
+            double p_S1; double p_S2; double p_S3;
             for (int i = 0; i != trios.size(); i++) {
                 usedVars[i]++;
-                double p_S1 = c->setDAFs.at(trios[i][0]); double p_S2 = c->setDAFs.at(trios[i][1]);
-                double p_S3 = c->setDAFs.at(trios[i][2]);
+                if (i > 1) { // Reduce the number of accesses to the map to minimum
+                    if (trios[i][0] != trios[i-1][0])
+                        p_S1 = c->setDAFs.at(trios[i][0]);
+                    if (trios[i][1] != trios[i-1][1])
+                        p_S2 = c->setDAFs.at(trios[i][1]);
+                    if (trios[i][2] != trios[i-1][2])
+                        p_S3 = c->setDAFs.at(trios[i][2]);
+                } else {
+                    p_S1 = c->setDAFs.at(trios[i][0]); p_S2 = c->setDAFs.at(trios[i][1]);
+                    p_S3 = c->setDAFs.at(trios[i][2]);
+                }
                 
                 if (p_S1 == -1 || p_S2 == -1 || p_S3 == -1)
                     continue; // If any member of the trio has entirely missing data, just move on to the next trio
