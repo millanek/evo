@@ -210,7 +210,7 @@ int DminMain(int argc, char** argv) {
            //  std::cerr << "Outgroup at pos: "; print_vector_stream(speciesToPosMap["Outgroup"], std::cerr);
            //  std::cerr << "telvit at pos: "; print_vector_stream(speciesToPosMap["telvit"], std::cerr);
         } else {
-            totalVariantNumber++;
+            totalVariantNumber++; if (totalVariantNumber % 100000 == 0) std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
             fields = split(line, '\t');
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
