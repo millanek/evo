@@ -72,7 +72,7 @@ public:
     std::map<string,int> setAlleleCounts; // The number of non-missing alleles for this set
     std::vector<size_t> setSizes;
     std::map<string,double> setAAFs; // Allele frequencies - alternative allele
-    std::map<string,double> setDAFs; // Allele frequencies - derived allele
+    std::unordered_map<string,double> setDAFs; // Allele frequencies - derived allele
     std::vector<int> individualsWithVariant; // 0 homRef, 1 het, 2 homAlt
    // std::vector<int> set1individualsWithVariant; std::vector<int> set2individualsWithVariant;
    // std::vector<int> set3individualsWithVariant; std::vector<int> set4individualsWithVariant;
