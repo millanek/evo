@@ -198,6 +198,11 @@ int DminMain(int argc, char** argv) {
     std::vector<int> usedVars(nCombinations,0); // Will count the number of used variants for each trio
     int totalVariantNumber = 0;
     std::vector<string> sampleNames; std::vector<std::string> fields;
+    // Find out how often to report progress, based on the number of trios
+    int reportProgressEvery; if (nCombinations < 1000) reportProgressEvery = 100000;
+    else if (nCombinations < 100000) reportProgressEvery = 10000;
+    else reportProgressEvery = 1000;
+    
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
             continue;
@@ -224,7 +229,7 @@ int DminMain(int argc, char** argv) {
            //  std::cerr << "Outgroup at pos: "; print_vector_stream(speciesToPosMap["Outgroup"], std::cerr);
            //  std::cerr << "telvit at pos: "; print_vector_stream(speciesToPosMap["telvit"], std::cerr);
         } else {
-            totalVariantNumber++; if (totalVariantNumber % 100000 == 0) std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
+            totalVariantNumber++; if (totalVariantNumber % reportProgressEvery == 0) std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
             fields = split(line, '\t');
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
