@@ -150,6 +150,8 @@ int DminMain(int argc, char** argv) {
     string setsFileRoot = stripExtension(opt::setsFile);
     std::ofstream* outFileBBAA = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_BBAA.txt");
     std::ofstream* outFileDmin = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_Dmin.txt");
+    std::ofstream* outFileCombine = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_combine.txt");
+    std::ofstream* outFileCombineStdErr = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_combine_stderr.txt");
     std::map<string, std::vector<string>> speciesToIDsMap;
     std::map<string, string> IDsToSpeciesMap;
     std::map<string, std::vector<size_t>> speciesToPosMap;
@@ -207,7 +209,7 @@ int DminMain(int argc, char** argv) {
     else if (nCombinations < 100000) reportProgressEvery = 10000;
     else reportProgressEvery = 1000;
     std::clock_t start; std::clock_t startGettingCounts; std::clock_t startCalculation;
-    double durationOverall; double durationGettingCounts; double durationCalculation; double durationFirstLoop;
+    double durationOverall; double durationGettingCounts; double durationCalculation;
     
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
@@ -370,6 +372,12 @@ int DminMain(int argc, char** argv) {
             if (ABBAtotals[i] < BBAAtotals[i] || ABBAtotals[i] < BABAtotals[i])
                 std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
         }
+        
+        // Output a simple file that can be used for combining multiple local runs:
+        *outFileCombine << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2] << "\t" << BBAAtotals[i] << "\t" << BABAtotals[i] << "\t" << ABBAtotals[i] << std::endl;
+        print_vector(regionDs[i][0], *outFileCombineStdErr, ','); *outFileCombineStdErr << "\t"; print_vector(regionDs[i][1], *outFileCombineStdErr, ','); *outFileCombineStdErr << "\t";
+        print_vector(regionDs[i][2], *outFileCombineStdErr, ','); *outFileCombineStdErr << std::endl;
+        
         //std::cerr << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2] << "\t" << D1 << "\t" << D2 << "\t" << D3 << "\t" << BBAAtotals[i] << "\t" << BABAtotals[i] << "\t" << ABBAtotals[i] << std::endl;
        
     }
