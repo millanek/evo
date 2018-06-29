@@ -202,8 +202,8 @@ int DminMain(int argc, char** argv) {
     int reportProgressEvery; if (nCombinations < 1000) reportProgressEvery = 100000;
     else if (nCombinations < 100000) reportProgressEvery = 10000;
     else reportProgressEvery = 1000;
-    std::clock_t start;
-    double duration;
+    std::clock_t start; std::clock_t startGettingCounts; std::clock_t startCalculation;
+    double durationOverall; double durationGettingCounts; double durationCalculation;
     
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
@@ -234,8 +234,9 @@ int DminMain(int argc, char** argv) {
         } else {
             totalVariantNumber++;
             //if (totalVariantNumber % reportProgressEvery == 0) {
-                duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-                std::cerr << "Processed " << totalVariantNumber << " variants in " << duration << "secs" << std::endl;
+                durationOverall = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+                std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
+                std::cerr << "GettingCounts " << durationGettingCounts << " calculation " << durationCalculation << "secs" << std::endl;
             //}
             fields = split(line, '\t');
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
@@ -243,26 +244,30 @@ int DminMain(int argc, char** argv) {
             string refAllele = fields[3]; if (refAllele.length() > 1) continue; // Only consider biallelic SNPs
             string altAllele = fields[4]; if (altAllele.length() > 1) continue; // Only consider biallelic SNPs
             
+            startGettingCounts = std::clock();
             GeneralSetCounts* c = new GeneralSetCounts(speciesToPosMap, (int)genotypes.size());
             getSetVariantCounts(c, genotypes, posToSpeciesMap);
             genotypes.clear(); genotypes.shrink_to_fit();
+            durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
             
-            if (c->setAlleleCounts.at("Outgroup") == 0) { delete c; continue; } // We need to make sure that the outgroup is defined
+            
+            startCalculation = std::clock();
+            double p_O = c->setDAFs.at("Outgroup");
+            if (p_O == 0) { delete c; continue; } // We need to make sure that the outgroup is defined
             
             // Now calculate the D stats
             for (int i = 0; i != trios.size(); i++) {
-                double c_S1 = c->setAlleleCounts[trios[i][0]]; double c_S2 = c->setAlleleCounts[trios[i][1]];
-                double c_S3 = c->setAlleleCounts[trios[i][2]];
-                if (c_S1 == 0 || c_S2 == 0 || c_S3 == 0)
+                usedVars[i]++;
+                double p_S1 = c->setDAFs.at(trios[i][0]); double p_S2 = c->setDAFs.at(trios[i][1]);
+                double p_S3 = c->setDAFs.at(trios[i][2]);
+                
+                if (p_S1 == -1 || p_S2 == -1 || p_S3 == -1)
                     continue; // If any member of the trio has entirely missing data, just move on to the next trio
                 
-                usedVars[i]++;
-                double p_S1 = c->setDAFs[trios[i][0]]; double p_S2 = c->setDAFs[trios[i][1]];
-                double p_S3 = c->setDAFs[trios[i][2]]; double p_O = c->setDAFs["Outgroup"];
                 double ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[i] += ABBA;
                 double BABA = (p_S1*(1-p_S2)*p_S3*(1-p_O)); BABAtotals[i] += BABA;
                 double BBAA = ((1-p_S3)*p_S2*p_S1*(1-p_O)); BBAAtotals[i] += BBAA;
-                // if (p_O == 0.0) {
+             //   if (p_O == 0.0) {
                 Dnums[i][0] += ABBA - BABA;
                 Dnums[i][1] += ABBA - BBAA;  // Dnums[i][1] += ((1-p_S1)*p_S3*p_S2*(1-p_O)) - (p_S1*(1-p_S3)*p_S2*(1-p_O));
                 Dnums[i][2] += BBAA - BABA;  // Dnums[i][2] += ((1-p_S3)*p_S2*p_S1*(1-p_O)) - (p_S3*(1-p_S2)*p_S1*(1-p_O));
@@ -282,6 +287,7 @@ int DminMain(int argc, char** argv) {
                 }
             // }
             }
+            durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             delete c;
         }
     }
