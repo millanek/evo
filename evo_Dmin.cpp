@@ -264,45 +264,15 @@ int DminMain(int argc, char** argv) {
             }
             
             
-            // Now calculate the D stats for the first trio:
+            // Now calculate the D stats:
             double p_S1; double p_S2; double p_S3;
-            p_S1 = c->setDAFs.at(trios[0][0]); p_S2 = c->setDAFs.at(trios[0][1]);
-            p_S3 = c->setDAFs.at(trios[0][2]);
-            double pS1test = allPs[triosInt[0][0]]; assert(p_S1 == pS1test);
-            if (p_S1 != -1 && p_S2 != -1 && p_S3 != -1) {
-               // If any member of the trio has entirely missing data, just move on to the next trio
-                double ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[0] += ABBA;
-                double BABA = (p_S1*(1-p_S2)*p_S3*(1-p_O)); BABAtotals[0] += BABA;
-                double BBAA = ((1-p_S3)*p_S2*p_S1*(1-p_O)); BBAAtotals[0] += BBAA;
-                
-                Dnums[0][0] += ABBA - BABA;
-                Dnums[0][1] += ABBA - BBAA;  // Dnums[i][1] += ((1-p_S1)*p_S3*p_S2*(1-p_O)) - (p_S1*(1-p_S3)*p_S2*(1-p_O));
-                Dnums[0][2] += BBAA - BABA;  // Dnums[i][2] += ((1-p_S3)*p_S2*p_S1*(1-p_O)) - (p_S3*(1-p_S2)*p_S1*(1-p_O));
-                
-                Ddenoms[0][0] += ABBA + BABA;
-                Ddenoms[0][1] += ABBA + BBAA;   // ((1-p_S1)*p_S3*p_S2*(1-p_O)) + (p_S1*(1-p_S3)*p_S2*(1-p_O));
-                Ddenoms[0][2] += BBAA + BABA; // ((1-p_S3)*p_S2*p_S1*(1-p_O)) + (p_S3*(1-p_S2)*p_S1*(1-p_O));
-                
-                localDnums[0][0] += ABBA - BABA; localDnums[0][1] += ABBA - BBAA; localDnums[0][2] += BBAA - BABA;
-                localDdenoms[0][0] += ABBA + BABA; localDdenoms[0][1] += ABBA + BBAA; localDdenoms[0][2] += BBAA + BABA;
-            }
-            // and for the rest of the trios
-            for (int i = 1; i != trios.size(); i++) {
+            for (int i = 0; i != trios.size(); i++) {
                 usedVars[i]++;
-                // Reduce the number of accesses to the map to minimum
-                if (trios[i][0] != trios[i-1][0]) {
-                    //p_S1 = c->setDAFs.at(trios[i][0]);
-                    p_S1 = allPs[triosInt[i][0]]; //assert(p_S1 == pS1test);
-                }
-                if (trios[i][1] != trios[i-1][1]) {
-                    //p_S2 = c->setDAFs.at(trios[i][1]);
-                    p_S2 = allPs[triosInt[i][1]];
-                }
-                if (trios[i][2] != trios[i-1][2]) {
-                    //p_S3 = c->setDAFs.at(trios[i][2]);
-                    p_S3 = allPs[triosInt[i][2]];
-                }
                 
+                p_S1 = allPs[triosInt[i][0]];  //pS1test = c->setDAFs.at(trios[i][0]); //assert(p_S1 == pS1test);
+                p_S2 = allPs[triosInt[i][1]];
+                p_S3 = allPs[triosInt[i][2]];
+
                 if (p_S1 == -1 || p_S2 == -1 || p_S3 == -1)
                     continue; // If any member of the trio has entirely missing data, just move on to the next trio
                 
