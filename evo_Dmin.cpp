@@ -202,6 +202,8 @@ int DminMain(int argc, char** argv) {
     int reportProgressEvery; if (nCombinations < 1000) reportProgressEvery = 100000;
     else if (nCombinations < 100000) reportProgressEvery = 10000;
     else reportProgressEvery = 1000;
+    std::clock_t start;
+    double duration;
     
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
@@ -225,13 +227,16 @@ int DminMain(int argc, char** argv) {
                 }
                 speciesToPosMap[sp] = spPos;
             }
+            start = std::clock();
            //  std::cerr << " " << std::endl;
            //  std::cerr << "Outgroup at pos: "; print_vector_stream(speciesToPosMap["Outgroup"], std::cerr);
            //  std::cerr << "telvit at pos: "; print_vector_stream(speciesToPosMap["telvit"], std::cerr);
         } else {
             totalVariantNumber++;
-            //if (totalVariantNumber % reportProgressEvery == 0)
-                std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
+            //if (totalVariantNumber % reportProgressEvery == 0) {
+                duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+                std::cerr << "Processed " << totalVariantNumber << " variants in " << duration << "secs" << std::endl;
+            //}
             fields = split(line, '\t');
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
