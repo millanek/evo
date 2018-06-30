@@ -265,12 +265,13 @@ template <class T> void print_matrix(T matrix, std::ostream& outFile) {
 }
 
 // Print an arbitrary vector to a file
-template <class T> void print_vector(T vector, std::ostream& outFile, char delim = '\t') {
+template <class T> void print_vector(T vector, std::ostream& outFile, char delim = '\t', bool endLine = true) {
     for (int i = 0; i < vector.size(); i++) {
-        if (i == (vector.size()-1))
-            outFile << vector[i] << std::endl;
-        else
+        if (i == (vector.size()-1)) {
+            if (endLine) outFile << vector[i] << std::endl;
+        } else {
             outFile << vector[i] << delim;
+        }
     }
 }
 

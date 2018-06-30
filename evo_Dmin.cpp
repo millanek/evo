@@ -163,7 +163,7 @@ int DminMain(int argc, char** argv) {
         std::vector<string> ID_Species = split(line, '\t');
         speciesToIDsMap[ID_Species[1]].push_back(ID_Species[0]);
         IDsToSpeciesMap[ID_Species[0]] = ID_Species[1];
-        std::cerr << ID_Species[1] << "\t" << ID_Species[0] << std::endl;
+        //std::cerr << ID_Species[1] << "\t" << ID_Species[0] << std::endl;
     }
     // Get a vector of set names (usually species)
     std::vector<string> species;
@@ -259,7 +259,7 @@ int DminMain(int argc, char** argv) {
             
             startCalculation = std::clock();
             double p_O = c->setDAFs.at("Outgroup");
-            if (p_O == 0) { delete c; continue; } // We need to make sure that the outgroup is defined
+            if (p_O == -1) { delete c; continue; } // We need to make sure that the outgroup is defined
             
             
             std::vector<double> allPs;
@@ -271,27 +271,25 @@ int DminMain(int argc, char** argv) {
             // Now calculate the D stats:
             double p_S1; double p_S2; double p_S3; double ABBA; double BABA; double BBAA;
             for (int i = 0; i != trios.size(); i++) {
+                p_S1 = allPs[triosInt[i][0]];  // double pS1test = c->setDAFs.at(trios[i][0]); assert(p_S1 == pS1test);
+                if (p_S1 == -1) {delete c; continue; } // If any member of the trio has entirely missing data, just move on to the next trio
+                p_S2 = allPs[triosInt[i][1]];  // double pS2test = c->setDAFs.at(trios[i][1]); assert(p_S2 == pS2test);
+                if (p_S2 == -1) {delete c; continue; }
+                p_S3 = allPs[triosInt[i][2]];  // double pS3test = c->setDAFs.at(trios[i][2]); assert(p_S3 == pS3test);
+                if (p_S3 == -1) {delete c; continue; }
                 usedVars[i]++;
-                
-                p_S1 = allPs[triosInt[i][0]];  //pS1test = c->setDAFs.at(trios[i][0]); //assert(p_S1 == pS1test);
-                p_S2 = allPs[triosInt[i][1]];
-                p_S3 = allPs[triosInt[i][2]];
-
-                if (p_S1 == -1) continue; // If any member of the trio has entirely missing data, just move on to the next trio
-                if (p_S2 == -1) continue;
-                if (p_S3 == -1) continue;
                 
                 ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[i] += ABBA; localABBAtotals[i] += ABBA;
                 BABA = (p_S1*(1-p_S2)*p_S3*(1-p_O)); BABAtotals[i] += BABA; localBABAtotals[i] += BABA;
                 BBAA = ((1-p_S3)*p_S2*p_S1*(1-p_O)); BBAAtotals[i] += BBAA; localBBAAtotals[i] += BBAA;
              //   if (p_O == 0.0) {
-               // Dnums[i][0] += ABBA - BABA;
+               //Dnums[i][0] += ABBA - BABA;
                // Dnums[i][1] += ABBA - BBAA;  // Dnums[i][1] += ((1-p_S1)*p_S3*p_S2*(1-p_O)) - (p_S1*(1-p_S3)*p_S2*(1-p_O));
                // Dnums[i][2] += BBAA - BABA;  // Dnums[i][2] += ((1-p_S3)*p_S2*p_S1*(1-p_O)) - (p_S3*(1-p_S2)*p_S1*(1-p_O));
 
-               // Ddenoms[i][0] += ABBA + BABA;
-              //  Ddenoms[i][1] += ABBA + BBAA;   // ((1-p_S1)*p_S3*p_S2*(1-p_O)) + (p_S1*(1-p_S3)*p_S2*(1-p_O));
-              //  Ddenoms[i][2] += BBAA + BABA; // ((1-p_S3)*p_S2*p_S1*(1-p_O)) + (p_S3*(1-p_S2)*p_S1*(1-p_O));
+                //Ddenoms[i][0] += ABBA + BABA;
+                //Ddenoms[i][1] += ABBA + BBAA;   // ((1-p_S1)*p_S3*p_S2*(1-p_O)) + (p_S1*(1-p_S3)*p_S2*(1-p_O));
+                //Ddenoms[i][2] += BBAA + BABA; // ((1-p_S3)*p_S2*p_S1*(1-p_O)) + (p_S3*(1-p_S2)*p_S1*(1-p_O));
                 
                 // localDnums[i][0] += ABBA - BABA; localDnums[i][1] += ABBA - BBAA; localDnums[i][2] += BBAA - BABA;
                 // localDdenoms[i][0] += ABBA + BABA; localDdenoms[i][1] += ABBA + BBAA; localDdenoms[i][2] += BBAA + BABA;
@@ -318,7 +316,10 @@ int DminMain(int argc, char** argv) {
         double D1stdErr = jackknive_std_err(regionDs[i][0]); double D2stdErr = jackknive_std_err(regionDs[i][1]);
         double D3stdErr = jackknive_std_err(regionDs[i][2]);
         // Get the D values
-        Dnums[i][0] = ABBAtotals[i] - BABAtotals[i]; Dnums[i][1] = ABBAtotals[i] - BBAAtotals[i]; Dnums[i][2] = BBAAtotals[i] - BABAtotals[i];
+        Dnums[i][0] = ABBAtotals[i] - BABAtotals[i];
+        //double Dnum1 = ABBAtotals[i] - BABAtotals[i]; assert(Dnum1 == Dnums[i][0]);
+        Dnums[i][1] = ABBAtotals[i] - BBAAtotals[i]; Dnums[i][2] = BBAAtotals[i] - BABAtotals[i];
+        Ddenoms[i][0] = ABBAtotals[i] + BABAtotals[i]; Ddenoms[i][1] = ABBAtotals[i] + BBAAtotals[i]; Ddenoms[i][2] = BBAAtotals[i] + BABAtotals[i];
         double D1 = Dnums[i][0]/Ddenoms[i][0]; double D2 = Dnums[i][1]/Ddenoms[i][1]; double D3 = Dnums[i][2]/Ddenoms[i][2];
         // Get the Z-scores
         double D1_Z = abs(D1)/D1stdErr; double D2_Z = abs(D2)/D2stdErr;
@@ -355,31 +356,30 @@ int DminMain(int argc, char** argv) {
                 *outFileDmin << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2] << "\t" << D1 << "\t" << D1_Z << "\t" << std::endl;
             else
                 *outFileDmin << trios[i][1] << "\t" << trios[i][0] << "\t" << trios[i][2] << "\t" << abs(D1) << "\t" << D1_Z << "\t"<< std::endl;
-            if (BBAAtotals[i] < BABAtotals[i] || BBAAtotals[i] < ABBAtotals[i])
-                std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
+           // if (BBAAtotals[i] < BABAtotals[i] || BBAAtotals[i] < ABBAtotals[i])
+           //     std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
         } else if (abs(D2) <= abs(D1) && abs(D2) <= abs(D3)) { // (P3 == S2)
             if (D2 >= 0)
                 *outFileDmin << trios[i][0] << "\t" << trios[i][2] << "\t" << trios[i][1] << "\t" << D2 << "\t" << D2_Z << "\t"<< std::endl;
             else
                 *outFileDmin << trios[i][2] << "\t" << trios[i][0] << "\t" << trios[i][1] << "\t" << abs(D2) << "\t" << D2_Z << "\t"<< std::endl;
-            if (BABAtotals[i] < BBAAtotals[i] || BABAtotals[i] < ABBAtotals[i])
-                std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
+           // if (BABAtotals[i] < BBAAtotals[i] || BABAtotals[i] < ABBAtotals[i])
+           //     std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
         } else if (abs(D3) <= abs(D1) && abs(D3) <= abs(D2)) { // (P3 == S1)
             if (D3 >= 0)
                 *outFileDmin << trios[i][2] << "\t" << trios[i][1] << "\t" << trios[i][0] << "\t" << D3 << "\t" << D3_Z << "\t"<< std::endl;
             else
                 *outFileDmin << trios[i][1] << "\t" << trios[i][2] << "\t" << trios[i][0] << "\t" << abs(D3) << "\t" << D3_Z << "\t" << std::endl;;
-            if (ABBAtotals[i] < BBAAtotals[i] || ABBAtotals[i] < BABAtotals[i])
-                std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
+           // if (ABBAtotals[i] < BBAAtotals[i] || ABBAtotals[i] < BABAtotals[i])
+           //     std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
         }
         
         // Output a simple file that can be used for combining multiple local runs:
         *outFileCombine << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2] << "\t" << BBAAtotals[i] << "\t" << BABAtotals[i] << "\t" << ABBAtotals[i] << std::endl;
-        print_vector(regionDs[i][0], *outFileCombineStdErr, ','); *outFileCombineStdErr << "\t"; print_vector(regionDs[i][1], *outFileCombineStdErr, ','); *outFileCombineStdErr << "\t";
-        print_vector(regionDs[i][2], *outFileCombineStdErr, ','); *outFileCombineStdErr << std::endl;
+        print_vector(regionDs[i][0], *outFileCombineStdErr, ',', false); *outFileCombineStdErr << "\t"; print_vector(regionDs[i][1], *outFileCombineStdErr, ',', false); *outFileCombineStdErr << "\t";
+        print_vector(regionDs[i][2], *outFileCombineStdErr, ',',false); *outFileCombineStdErr << std::endl;
         
         //std::cerr << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2] << "\t" << D1 << "\t" << D2 << "\t" << D3 << "\t" << BBAAtotals[i] << "\t" << BABAtotals[i] << "\t" << ABBAtotals[i] << std::endl;
-       
     }
     return 0;
     
