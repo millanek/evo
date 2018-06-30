@@ -197,6 +197,7 @@ int DminMain(int argc, char** argv) {
    // std::vector<std::vector<double>> localDnums; localDnums.assign(nCombinations,init);
     //std::vector<std::vector<double>> localDdenoms; localDdenoms.assign(nCombinations,init);
     std::vector<std::vector<std::vector<double>>> regionDs; regionDs.assign(nCombinations, initDs);
+    std::vector<double> allPs(species.size(),0.0);
     std::vector<double> ABBAtotals(nCombinations,0); std::vector<double> BABAtotals(nCombinations,0);
     std::vector<double> BBAAtotals(nCombinations,0);
     std::vector<double> localABBAtotals(nCombinations,0); std::vector<double> localBABAtotals(nCombinations,0);
@@ -247,8 +248,12 @@ int DminMain(int argc, char** argv) {
             fields = split(line, '\t');
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
-            string refAllele = fields[3]; if (refAllele.length() > 1) continue; // Only consider biallelic SNPs
-            string altAllele = fields[4]; if (altAllele.length() > 1) continue; // Only consider biallelic SNPs
+            // Only consider biallelic SNPs
+            string refAllele = fields[3]; string altAllele = fields[4];
+            if (refAllele.length() > 1 || altAllele.length() > 1) {
+                refAllele.clear(); refAllele.shrink_to_fit(); altAllele.clear(); altAllele.shrink_to_fit();
+                genotypes.clear(); genotypes.shrink_to_fit(); continue;
+            }
             
             startGettingCounts = std::clock();
             GeneralSetCounts* c = new GeneralSetCounts(speciesToPosMap, (int)genotypes.size());
@@ -262,9 +267,9 @@ int DminMain(int argc, char** argv) {
             if (p_O == -1) { delete c; continue; } // We need to make sure that the outgroup is defined
             
             
-            std::vector<double> allPs;
+            //std::vector<double> allPs;
             for (std::vector<std::string>::size_type i = 0; i != species.size(); i++) {
-                allPs.push_back(c->setDAFs.at(species[i]));
+                allPs[i] = c->setDAFs.at(species[i]);
             }
             // durationFirstLoop = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             
@@ -276,7 +281,7 @@ int DminMain(int argc, char** argv) {
                 p_S2 = allPs[triosInt[i][1]];  // double pS2test = c->setDAFs.at(trios[i][1]); assert(p_S2 == pS2test);
                 if (p_S2 == -1) continue;
                 p_S3 = allPs[triosInt[i][2]];  // double pS3test = c->setDAFs.at(trios[i][2]); assert(p_S3 == pS3test);
-                if (p_S3 == -1) continue; 
+                if (p_S3 == -1) continue;
                 usedVars[i]++;
                 
                 ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[i] += ABBA; localABBAtotals[i] += ABBA;
