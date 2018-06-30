@@ -33,7 +33,7 @@ enum { OPT_AA_EQ_O };
 
 static const char* shortopts = "hfw:n:";
 
-static const int JK_WINDOW = 5000;
+static const int JK_WINDOW = 20000;
 
 static const struct option longopts[] = {
     { "run-name",   required_argument, NULL, 'n' },
@@ -192,8 +192,8 @@ int DminMain(int argc, char** argv) {
     // And need to prepare the vectors to hold the D values:
     std::vector<double> init(3,0.0); // Vector of initial values
     std::vector<std::vector<double>> initDs(3); // vector with three empty (double) vectors
-    std::vector<std::vector<double>> Dnums; Dnums.assign(nCombinations,init);
-    std::vector<std::vector<double>> Ddenoms; Ddenoms.assign(nCombinations,init);
+  //  std::vector<std::vector<double>> Dnums; Dnums.assign(nCombinations,init);
+  //  std::vector<std::vector<double>> Ddenoms; Ddenoms.assign(nCombinations,init);
    // std::vector<std::vector<double>> localDnums; localDnums.assign(nCombinations,init);
     //std::vector<std::vector<double>> localDdenoms; localDdenoms.assign(nCombinations,init);
     std::vector<std::vector<std::vector<double>>> regionDs; regionDs.assign(nCombinations, initDs);
@@ -321,11 +321,15 @@ int DminMain(int argc, char** argv) {
         double D1stdErr = jackknive_std_err(regionDs[i][0]); double D2stdErr = jackknive_std_err(regionDs[i][1]);
         double D3stdErr = jackknive_std_err(regionDs[i][2]);
         // Get the D values
-        Dnums[i][0] = ABBAtotals[i] - BABAtotals[i];
-        //double Dnum1 = ABBAtotals[i] - BABAtotals[i]; assert(Dnum1 == Dnums[i][0]);
-        Dnums[i][1] = ABBAtotals[i] - BBAAtotals[i]; Dnums[i][2] = BBAAtotals[i] - BABAtotals[i];
-        Ddenoms[i][0] = ABBAtotals[i] + BABAtotals[i]; Ddenoms[i][1] = ABBAtotals[i] + BBAAtotals[i]; Ddenoms[i][2] = BBAAtotals[i] + BABAtotals[i];
-        double D1 = Dnums[i][0]/Ddenoms[i][0]; double D2 = Dnums[i][1]/Ddenoms[i][1]; double D3 = Dnums[i][2]/Ddenoms[i][2];
+        //Dnums[i][0] = ABBAtotals[i] - BABAtotals[i]; Dnums[i][1] = ABBAtotals[i] - BBAAtotals[i]; Dnums[i][2] = BBAAtotals[i] - BABAtotals[i];
+        double Dnum1 = ABBAtotals[i] - BABAtotals[i]; // assert(Dnum1 == Dnums[i][0]);
+        double Dnum2 = ABBAtotals[i] - BBAAtotals[i]; // assert(Dnum2 == Dnums[i][1]);
+        double Dnum3 = BBAAtotals[i] - BABAtotals[i]; // assert(Dnum3 == Dnums[i][2]);
+        // Ddenoms[i][0] = ABBAtotals[i] + BABAtotals[i]; Ddenoms[i][1] = ABBAtotals[i] + BBAAtotals[i]; Ddenoms[i][2] = BBAAtotals[i] + BABAtotals[i];
+        double Ddenom1 = ABBAtotals[i] + BABAtotals[i]; // assert(Ddenom1 == Ddenoms[i][0]);
+        double Ddenom2 = ABBAtotals[i] + BBAAtotals[i]; // assert(Ddenom2 == Ddenoms[i][1]);
+        double Ddenom3 = BBAAtotals[i] + BABAtotals[i]; // assert(Ddenom3 == Ddenoms[i][2]);
+        double D1 = Dnum1/Ddenom1; double D2 = Dnum2/Ddenom2; double D3 = Dnum3/Ddenom3;
         // Get the Z-scores
         double D1_Z = abs(D1)/D1stdErr; double D2_Z = abs(D2)/D2stdErr;
         double D3_Z = abs(D3)/D3stdErr;
