@@ -272,11 +272,11 @@ int DminMain(int argc, char** argv) {
             double p_S1; double p_S2; double p_S3; double ABBA; double BABA; double BBAA;
             for (int i = 0; i != trios.size(); i++) {
                 p_S1 = allPs[triosInt[i][0]];  // double pS1test = c->setDAFs.at(trios[i][0]); assert(p_S1 == pS1test);
-                if (p_S1 == -1) {delete c; continue; } // If any member of the trio has entirely missing data, just move on to the next trio
+                if (p_S1 == -1) continue;  // If any member of the trio has entirely missing data, just move on to the next trio
                 p_S2 = allPs[triosInt[i][1]];  // double pS2test = c->setDAFs.at(trios[i][1]); assert(p_S2 == pS2test);
-                if (p_S2 == -1) {delete c; continue; }
+                if (p_S2 == -1) continue;
                 p_S3 = allPs[triosInt[i][2]];  // double pS3test = c->setDAFs.at(trios[i][2]); assert(p_S3 == pS3test);
-                if (p_S3 == -1) {delete c; continue; }
+                if (p_S3 == -1) continue; 
                 usedVars[i]++;
                 
                 ABBA = ((1-p_S1)*p_S2*p_S3*(1-p_O)); ABBAtotals[i] += ABBA; localABBAtotals[i] += ABBA;
