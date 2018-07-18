@@ -121,7 +121,7 @@ int DminCombineMain(int argc, char** argv) {
         double ABBAstdErr = jackknive_std_err(ABBA_local_Ds);
         double BABAstdErr = jackknive_std_err(BABA_local_Ds);
         //std::cerr << "BBAAstdErr" << BBAAstdErr << std::endl;
-        double D1_Z = fabs(D1)/BBAAstdErr; double D2_Z = abs(D2)/ABBAstdErr;
+        double D1_Z = fabs(D1)/BBAAstdErr; double D2_Z = fabs(D2)/ABBAstdErr;
         double D3_Z = fabs(D3)/BABAstdErr;
         //std::cerr << "D1_Z = " << D1_Z << std::endl;
         
