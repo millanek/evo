@@ -42,13 +42,14 @@
 #include "remove_lowercase.h"
 #include "evo_permute_codons.h"
 #include "evo_Dmin.h"
+#include "evo_Dmin_combine.h"
 
 
 //#define TESTING 1
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r20"
+#define PACKAGE_VERSION "0.1 r21"
 
 
 static const char *VERSION_MESSAGE =
@@ -66,6 +67,7 @@ static const char *USAGE_MESSAGE =
 "           abba-baba           Perform the abba-baba test\n"
 "           cbs                 calculate the lenghts of tracts of 'compatibility by sequence' (cbs) between samples from genotypes\n"
 "           Dmin                calculate the minimum value of the D statistic (ABBA-BABA) for all possible trios of samples\n"
+"           DminCombine         combine results from different Dmin runs (e.g. per-chromosome)\n"
 "           RegionsDxy          Dxy (or other statistics) for regions in a .bed file; optional subsampling\n"
 "           filter              filter a vcf file\n"
 "           stats               get various statistics from a vcf file\n"
@@ -184,6 +186,8 @@ int main(int argc, char **argv) {
             permuteCodons(argc - 1, argv + 1);
         else if (command == "Dmin")
             DminMain(argc - 1, argv + 1);
+        else if (command == "DminCombine")
+            DminCombineMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

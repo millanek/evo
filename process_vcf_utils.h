@@ -345,6 +345,11 @@ inline double convertToDouble(std::string const& s)
     return x;
 }
 
+inline bool file_exists(const std::string& name) {
+    std::ifstream f(name.c_str());
+    return f.good();
+}
+
 
 double stringToDouble(std::string s);
 
