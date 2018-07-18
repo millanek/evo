@@ -121,8 +121,8 @@ int DminCombineMain(int argc, char** argv) {
         double ABBAstdErr = jackknive_std_err(ABBA_local_Ds);
         double BABAstdErr = jackknive_std_err(BABA_local_Ds);
         //std::cerr << "BBAAstdErr" << BBAAstdErr << std::endl;
-        double D1_Z = abs(D1)/BBAAstdErr; double D2_Z = abs(D2)/ABBAstdErr;
-        double D3_Z = abs(D3)/BABAstdErr;
+        double D1_Z = fabs(D1)/BBAAstdErr; double D2_Z = abs(D2)/ABBAstdErr;
+        double D3_Z = fabs(D3)/BABAstdErr;
         //std::cerr << "D1_Z = " << D1_Z << std::endl;
         
         // Find which topology is in agreement with the counts of the BBAA, BABA, and ABBA patterns
@@ -131,21 +131,21 @@ int DminCombineMain(int argc, char** argv) {
                 *outFileBBAA << s1 << "\t" << s2 << "\t" << s3;
             else
                 *outFileBBAA << s2 << "\t" << s1 << "\t" << s3;
-            *outFileBBAA << "\t" << abs(D1) << "\t" << D1_Z << "\t";
+            *outFileBBAA << "\t" << fabs(D1) << "\t" << D1_Z << "\t";
             *outFileBBAA << BBAAtotal << "\t" << BABAtotal << "\t" << ABBAtotal << std::endl;
         } else if (BABAtotal >= BBAAtotal && BABAtotal >= ABBAtotal) {
             if (D2 >= 0)
                 *outFileBBAA << s1 << "\t" << s3 << "\t" << s2;
             else
                 *outFileBBAA << s3 << "\t" << s1 << "\t" << s2;
-            *outFileBBAA << "\t" << abs(D2) << "\t" << D2_Z << "\t";
+            *outFileBBAA << "\t" << fabs(D2) << "\t" << D2_Z << "\t";
             *outFileBBAA << BABAtotal << "\t" << BBAAtotal << "\t" << ABBAtotal << std::endl;
         } else if (ABBAtotal >= BBAAtotal && ABBAtotal >= BABAtotal) {
             if (D3 >= 0)
                 *outFileBBAA << s3 << "\t" << s2 << "\t" << s1;
             else
                 *outFileBBAA << s2 << "\t" << s3 << "\t" << s1;
-            *outFileBBAA << "\t" << abs(D3) << "\t" << D3_Z << "\t";
+            *outFileBBAA << "\t" << fabs(D3) << "\t" << D3_Z << "\t";
             *outFileBBAA << ABBAtotal << "\t" << BABAtotal << "\t" << BBAAtotal << std::endl;
         }
         
