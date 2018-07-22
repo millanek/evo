@@ -84,8 +84,8 @@ int DminCombineMain(int argc, char** argv) {
                     assert(s1 == patternCounts[0]); assert(s2 == patternCounts[1]); assert(s3 == patternCounts[2]);
                 }
                 double BBAA = stringToDouble(patternCounts[3]);
-                double ABBA = stringToDouble(patternCounts[4]);
-                double BABA = stringToDouble(patternCounts[5]);
+                double BABA = stringToDouble(patternCounts[4]);
+                double ABBA = stringToDouble(patternCounts[5]);
                 BBAAtotal += BBAA; ABBAtotal += ABBA; BABAtotal += BABA;
             }
         }
@@ -106,24 +106,47 @@ int DminCombineMain(int argc, char** argv) {
                 std::vector<string> localDs = split(line, '\t');
                 assert(localDs.size() == 3);
                 std::vector<string> BBAA_D_strings = split(localDs[0], ',');
-                std::vector<string> ABBA_D_strings = split(localDs[1], ',');
-                std::vector<string> BABA_D_strings = split(localDs[2], ',');
+                std::vector<string> BABA_D_strings = split(localDs[1], ',');
+                std::vector<string> ABBA_D_strings = split(localDs[2], ',');
                 for (int j = 0; j < BBAA_D_strings.size(); j++) {
-                    BBAA_local_Ds.push_back(stringToDouble(BBAA_D_strings[j]));
-                    ABBA_local_Ds.push_back(stringToDouble(ABBA_D_strings[j]));
-                    BABA_local_Ds.push_back(stringToDouble(BABA_D_strings[j]));
+                    //std::cerr << "BBAA_D_strings[j] = " << BBAA_D_strings[j] << std::endl;
+                    double thisBBAA_localD = stringToDouble(BBAA_D_strings[j]);
+                    if (!std::isnan(thisBBAA_localD)) BBAA_local_Ds.push_back(thisBBAA_localD);
+                   // std::cerr << "BABA_D_strings[j] = " << BABA_D_strings[j] << std::endl;
+                    double thisBABA_localD = stringToDouble(BABA_D_strings[j]);
+                    if (!std::isnan(thisBABA_localD)) BABA_local_Ds.push_back(thisBABA_localD);
+                    //std::cerr << "ABBA_D_strings[j] = " << ABBA_D_strings[j] << std::endl;
+                    double thisABBA_localD = stringToDouble(ABBA_D_strings[j]);
+                    if (!std::isnan(thisABBA_localD)) ABBA_local_Ds.push_back(thisABBA_localD);
                 }
             } else { // all lines have been processed
                 allDone = true; break;
             }
         }
+       // std::cerr << "D1 = " << D1 << std::endl;
+        //print_vector_stream(BBAA_local_Ds, std::cerr);
         double BBAAstdErr = jackknive_std_err(BBAA_local_Ds);
-        double ABBAstdErr = jackknive_std_err(ABBA_local_Ds);
+        //print_vector_stream(BABA_local_Ds, std::cerr);
         double BABAstdErr = jackknive_std_err(BABA_local_Ds);
+        //print_vector_stream(ABBA_local_Ds, std::cerr);
+        //std::cerr << "D1 = " << D1 << std::endl;
+        double ABBAstdErr = jackknive_std_err(ABBA_local_Ds);
+        //std::cerr << "D1 = " << D1 << std::endl;
         //std::cerr << "BBAAstdErr" << BBAAstdErr << std::endl;
-        double D1_Z = fabs(D1)/BBAAstdErr; double D2_Z = fabs(D2)/ABBAstdErr;
-        double D3_Z = fabs(D3)/BABAstdErr;
+        double D1_Z = fabs(D1)/BBAAstdErr; double D2_Z = fabs(D2)/BABAstdErr;
+        double D3_Z = fabs(D3)/ABBAstdErr;
         //std::cerr << "D1_Z = " << D1_Z << std::endl;
+        if (s1 == "Altcal" && s2 == "Altshe" && s3 == "Asplep") {
+            std::cerr << "D1_Z = " << D1_Z << std::endl;
+            std::cerr << "BBAAstdErr = " << BBAAstdErr << std::endl;
+            print_vector_stream(BBAA_local_Ds, std::cerr);
+            std::cerr << "ABBAstdErr = " << ABBAstdErr << std::endl;
+            std::cerr << "BABAstdErr = " << BABAstdErr << std::endl;
+            std::cerr << "ABBAtotal = " << ABBAtotal << std::endl;
+            std::cerr << "BABAtotal = " << BABAtotal << std::endl;
+            std::cerr << "BBAAtotal = " << BBAAtotal << std::endl;
+        }
+
         
         // Find which topology is in agreement with the counts of the BBAA, BABA, and ABBA patterns
         if (BBAAtotal >= BABAtotal && BBAAtotal >= ABBAtotal) {
@@ -147,6 +170,24 @@ int DminCombineMain(int argc, char** argv) {
                 *outFileBBAA << s2 << "\t" << s3 << "\t" << s1;
             *outFileBBAA << "\t" << fabs(D3) << "\t" << D3_Z << "\t";
             *outFileBBAA << ABBAtotal << "\t" << BABAtotal << "\t" << BBAAtotal << std::endl;
+        }
+        
+        // Find Dmin:
+        if (fabs(D1) <= fabs(D2) && fabs(D1) <= fabs(D3)) { // (P3 == S3)
+            if (D1 >= 0)
+                *outFileDmin << s1 << "\t" << s2 << "\t" << s3 << "\t" << D1 << "\t" << D1_Z << "\t" << std::endl;
+            else
+                *outFileDmin << s1 << "\t" << s2 << "\t" << s3 << "\t" << fabs(D1) << "\t" << D1_Z << "\t"<< std::endl;
+        } else if (fabs(D2) <= fabs(D1) && fabs(D2) <= fabs(D3)) { // (P3 == S2)
+            if (D2 >= 0)
+                *outFileDmin << s1 << "\t" << s3 << "\t" << s2 << "\t" << D2 << "\t" << D2_Z << "\t"<< std::endl;
+            else
+                *outFileDmin << s3 << "\t" << s1 << "\t" << s2 << "\t" << fabs(D2) << "\t" << D2_Z << "\t"<< std::endl;
+        } else if (fabs(D3) <= fabs(D1) && fabs(D3) <= fabs(D2)) { // (P3 == S1)
+            if (D3 >= 0)
+                *outFileDmin << s3 << "\t" << s2 << "\t" << s1 << "\t" << D3 << "\t" << D3_Z << "\t"<< std::endl;
+            else
+                *outFileDmin << s2 << "\t" << s3 << "\t" << s1 << "\t" << fabs(D3) << "\t" << D3_Z << "\t" << std::endl;;
         }
         
         BBAA_local_Ds.clear(); ABBA_local_Ds.clear(); BABA_local_Ds.clear();

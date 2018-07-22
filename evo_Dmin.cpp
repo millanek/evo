@@ -22,7 +22,8 @@ static const char *DMIN_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       --AAeqO                                 ancestral allele info in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
 "                                               the Outgroup setting in the SETS.txt file will be ignored\n"
-"       --fixP3=SPECIES                         (optional) fix the P3 individual and only claculate the stats for cominations of P1 and P2\n"
+"       --fixP3=SPECIES                         NOT IMPLEMENTED!! (optional) fix the P3 individual and only claculate the stats for cominations of P1 and P2\n"
+"       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
 "       -w SIZE, --window=SIZE                  (optional) output D statistics for nonoverlapping windows containing SIZE SNPs with nonzero D (default: 50)\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
 "\n"
@@ -31,7 +32,7 @@ static const char *DMIN_USAGE_MESSAGE =
 
 enum { OPT_AA_EQ_O };
 
-static const char* shortopts = "hfw:n:";
+static const char* shortopts = "hfw:r:n:";
 
 static const int JK_WINDOW = 20000;
 
@@ -40,6 +41,7 @@ static const struct option longopts[] = {
     { "window",   required_argument, NULL, 'w' },
     { "AAeqO",   no_argument, NULL, OPT_AA_EQ_O },
     { "frequency",   no_argument, NULL, 'f' },
+    { "region",   no_argument, NULL, 'r' },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -54,6 +56,8 @@ namespace opt
     static int minScLength = 0;
     static int windowSize = 50;
     int jkWindowSize = JK_WINDOW;
+    int regionStart = -1;
+    int regionLength = -1;
 }
 
 class GeneralSetCounts {
@@ -148,10 +152,23 @@ int DminMain(int argc, char** argv) {
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
     string setsFileRoot = stripExtension(opt::setsFile);
-    std::ofstream* outFileBBAA = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_BBAA.txt");
-    std::ofstream* outFileDmin = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_Dmin.txt");
-    std::ofstream* outFileCombine = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_combine.txt");
-    std::ofstream* outFileCombineStdErr = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_combine_stderr.txt");
+    std::ofstream* outFileBBAA;
+    std::ofstream* outFileDmin;
+    std::ofstream* outFileCombine;
+    std::ofstream* outFileCombineStdErr;
+    if (opt::regionStart == -1) {
+        outFileBBAA = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_BBAA.txt");
+        outFileDmin = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_Dmin.txt");
+        outFileCombine = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_combine.txt");
+        outFileCombineStdErr = new std::ofstream(setsFileRoot+ "_" + opt::runName + "_combine_stderr.txt");
+    } else {
+        string fileNameString = setsFileRoot+"_"+opt::runName+"_"+numToString(opt::regionStart)+"_"+numToString(opt::regionStart+opt::regionLength);
+        outFileBBAA = new std::ofstream(fileNameString+"_BBAA.txt");
+        outFileDmin = new std::ofstream(fileNameString+"_Dmin.txt");
+        outFileCombine = new std::ofstream(fileNameString+"_combine.txt");
+        outFileCombineStdErr = new std::ofstream(fileNameString+"_combine_stderr.txt");
+    }
+    
     std::map<string, std::vector<string>> speciesToIDsMap;
     std::map<string, string> IDsToSpeciesMap;
     std::map<string, std::vector<size_t>> speciesToPosMap;
@@ -240,6 +257,13 @@ int DminMain(int argc, char** argv) {
            //  std::cerr << "telvit at pos: "; print_vector_stream(speciesToPosMap["telvit"], std::cerr);
         } else {
             totalVariantNumber++;
+            if (opt::regionStart != -1) {
+                if (totalVariantNumber < opt::regionStart)
+                    continue;
+                if (totalVariantNumber > (opt::regionStart+opt::regionLength)) {
+                    std::cerr << "DONE" << std::endl; break;
+                }
+            }
             if (totalVariantNumber % reportProgressEvery == 0) {
                 durationOverall = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
                 std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
@@ -331,8 +355,8 @@ int DminMain(int argc, char** argv) {
         double Ddenom3 = BBAAtotals[i] + BABAtotals[i]; // assert(Ddenom3 == Ddenoms[i][2]);
         double D1 = Dnum1/Ddenom1; double D2 = Dnum2/Ddenom2; double D3 = Dnum3/Ddenom3;
         // Get the Z-scores
-        double D1_Z = abs(D1)/D1stdErr; double D2_Z = abs(D2)/D2stdErr;
-        double D3_Z = abs(D3)/D3stdErr;
+        double D1_Z = fabs(D1)/D1stdErr; double D2_Z = fabs(D2)/D2stdErr;
+        double D3_Z = fabs(D3)/D3stdErr;
         
         
         // Find which topology is in agreement with the counts of the BBAA, BABA, and ABBA patterns
@@ -341,44 +365,44 @@ int DminMain(int argc, char** argv) {
                 *outFileBBAA << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2];
             else
                 *outFileBBAA << trios[i][1] << "\t" << trios[i][0] << "\t" << trios[i][2];
-            *outFileBBAA << "\t" << abs(D1) << "\t" << D1_Z << "\t";
+            *outFileBBAA << "\t" << fabs(D1) << "\t" << D1_Z << "\t";
             *outFileBBAA << BBAAtotals[i] << "\t" << BABAtotals[i] << "\t" << ABBAtotals[i] << std::endl;
         } else if (BABAtotals[i] >= BBAAtotals[i] && BABAtotals[i] >= ABBAtotals[i]) {
             if (D2 >= 0)
                 *outFileBBAA << trios[i][0] << "\t" << trios[i][2] << "\t" << trios[i][1];
             else
                 *outFileBBAA << trios[i][2] << "\t" << trios[i][0] << "\t" << trios[i][1];
-            *outFileBBAA << "\t" << abs(D2) << "\t" << D2_Z << "\t";
+            *outFileBBAA << "\t" << fabs(D2) << "\t" << D2_Z << "\t";
             *outFileBBAA << BABAtotals[i] << "\t" << BBAAtotals[i] << "\t" << ABBAtotals[i] << std::endl;
         } else if (ABBAtotals[i] >= BBAAtotals[i] && ABBAtotals[i] >= BABAtotals[i]) {
             if (D3 >= 0)
                 *outFileBBAA << trios[i][2] << "\t" << trios[i][1] << "\t" << trios[i][0];
             else
                 *outFileBBAA << trios[i][1] << "\t" << trios[i][2] << "\t" << trios[i][0];
-            *outFileBBAA << "\t" << abs(D3) << "\t" << D3_Z << "\t";
+            *outFileBBAA << "\t" << fabs(D3) << "\t" << D3_Z << "\t";
             *outFileBBAA << ABBAtotals[i] << "\t" << BABAtotals[i] << "\t" << BBAAtotals[i] << std::endl;
         }
         
         // Find Dmin:
-        if (abs(D1) <= abs(D2) && abs(D1) <= abs(D3)) { // (P3 == S3)
+        if (fabs(D1) <= fabs(D2) && fabs(D1) <= fabs(D3)) { // (P3 == S3)
             if (D1 >= 0)
                 *outFileDmin << trios[i][0] << "\t" << trios[i][1] << "\t" << trios[i][2] << "\t" << D1 << "\t" << D1_Z << "\t" << std::endl;
             else
-                *outFileDmin << trios[i][1] << "\t" << trios[i][0] << "\t" << trios[i][2] << "\t" << abs(D1) << "\t" << D1_Z << "\t"<< std::endl;
+                *outFileDmin << trios[i][1] << "\t" << trios[i][0] << "\t" << trios[i][2] << "\t" << fabs(D1) << "\t" << D1_Z << "\t"<< std::endl;
            // if (BBAAtotals[i] < BABAtotals[i] || BBAAtotals[i] < ABBAtotals[i])
            //     std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
-        } else if (abs(D2) <= abs(D1) && abs(D2) <= abs(D3)) { // (P3 == S2)
+        } else if (fabs(D2) <= fabs(D1) && fabs(D2) <= fabs(D3)) { // (P3 == S2)
             if (D2 >= 0)
                 *outFileDmin << trios[i][0] << "\t" << trios[i][2] << "\t" << trios[i][1] << "\t" << D2 << "\t" << D2_Z << "\t"<< std::endl;
             else
-                *outFileDmin << trios[i][2] << "\t" << trios[i][0] << "\t" << trios[i][1] << "\t" << abs(D2) << "\t" << D2_Z << "\t"<< std::endl;
+                *outFileDmin << trios[i][2] << "\t" << trios[i][0] << "\t" << trios[i][1] << "\t" << fabs(D2) << "\t" << D2_Z << "\t"<< std::endl;
            // if (BABAtotals[i] < BBAAtotals[i] || BABAtotals[i] < ABBAtotals[i])
            //     std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
-        } else if (abs(D3) <= abs(D1) && abs(D3) <= abs(D2)) { // (P3 == S1)
+        } else if (fabs(D3) <= fabs(D1) && fabs(D3) <= fabs(D2)) { // (P3 == S1)
             if (D3 >= 0)
                 *outFileDmin << trios[i][2] << "\t" << trios[i][1] << "\t" << trios[i][0] << "\t" << D3 << "\t" << D3_Z << "\t"<< std::endl;
             else
-                *outFileDmin << trios[i][1] << "\t" << trios[i][2] << "\t" << trios[i][0] << "\t" << abs(D3) << "\t" << D3_Z << "\t" << std::endl;;
+                *outFileDmin << trios[i][1] << "\t" << trios[i][2] << "\t" << trios[i][0] << "\t" << fabs(D3) << "\t" << D3_Z << "\t" << std::endl;;
            // if (ABBAtotals[i] < BBAAtotals[i] || ABBAtotals[i] < BABAtotals[i])
            //     std::cerr << "\t" << "WARNING: Dmin tree different from DAF tree" << std::endl;
         }
@@ -397,7 +421,7 @@ int DminMain(int argc, char** argv) {
 
 
 void parseDminOptions(int argc, char** argv) {
-    bool die = false;
+    bool die = false; string regionArgString; std::vector<string> regionArgs;
     for (char c; (c = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1;)
     {
         std::istringstream arg(optarg != NULL ? optarg : "");
@@ -406,6 +430,8 @@ void parseDminOptions(int argc, char** argv) {
             case '?': die = true; break;
             case 'w': arg >> opt::windowSize; break;
             case 'n': arg >> opt::runName; break;
+            case 'r': arg >> regionArgString; regionArgs = split(regionArgString, ',');
+                opt::regionStart = (int)stringToDouble(regionArgs[0]); opt::regionLength = (int)stringToDouble(regionArgs[1]);  break;
             case OPT_AA_EQ_O: opt::bAaEqO = true; break;
             case 'h':
                 std::cout << DMIN_USAGE_MESSAGE;
