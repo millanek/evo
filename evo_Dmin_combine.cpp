@@ -104,20 +104,22 @@ int DminCombineMain(int argc, char** argv) {
         for (int i = 0; i < dminstdErrFiles.size(); i++) {
             if (getline(*dminstdErrFiles[i], line)) {
                 std::vector<string> localDs = split(line, '\t');
-                assert(localDs.size() == 3);
-                std::vector<string> BBAA_D_strings = split(localDs[0], ',');
-                std::vector<string> BABA_D_strings = split(localDs[1], ',');
-                std::vector<string> ABBA_D_strings = split(localDs[2], ',');
-                for (int j = 0; j < BBAA_D_strings.size(); j++) {
-                    //std::cerr << "BBAA_D_strings[j] = " << BBAA_D_strings[j] << std::endl;
-                    double thisBBAA_localD = stringToDouble(BBAA_D_strings[j]);
-                    if (!std::isnan(thisBBAA_localD)) BBAA_local_Ds.push_back(thisBBAA_localD);
-                   // std::cerr << "BABA_D_strings[j] = " << BABA_D_strings[j] << std::endl;
-                    double thisBABA_localD = stringToDouble(BABA_D_strings[j]);
-                    if (!std::isnan(thisBABA_localD)) BABA_local_Ds.push_back(thisBABA_localD);
-                    //std::cerr << "ABBA_D_strings[j] = " << ABBA_D_strings[j] << std::endl;
-                    double thisABBA_localD = stringToDouble(ABBA_D_strings[j]);
-                    if (!std::isnan(thisABBA_localD)) ABBA_local_Ds.push_back(thisABBA_localD);
+                assert(localDs.size() == 3 || localDs.size() == 0);
+                if (localDs.size() == 3) {
+                    std::vector<string> BBAA_D_strings = split(localDs[0], ',');
+                    std::vector<string> BABA_D_strings = split(localDs[1], ',');
+                    std::vector<string> ABBA_D_strings = split(localDs[2], ',');
+                    for (int j = 0; j < BBAA_D_strings.size(); j++) {
+                        //std::cerr << "BBAA_D_strings[j] = " << BBAA_D_strings[j] << std::endl;
+                        double thisBBAA_localD = stringToDouble(BBAA_D_strings[j]);
+                        if (!std::isnan(thisBBAA_localD)) BBAA_local_Ds.push_back(thisBBAA_localD);
+                       // std::cerr << "BABA_D_strings[j] = " << BABA_D_strings[j] << std::endl;
+                        double thisBABA_localD = stringToDouble(BABA_D_strings[j]);
+                        if (!std::isnan(thisBABA_localD)) BABA_local_Ds.push_back(thisBABA_localD);
+                        //std::cerr << "ABBA_D_strings[j] = " << ABBA_D_strings[j] << std::endl;
+                        double thisABBA_localD = stringToDouble(ABBA_D_strings[j]);
+                        if (!std::isnan(thisABBA_localD)) ABBA_local_Ds.push_back(thisABBA_localD);
+                    }
                 }
             } else { // all lines have been processed
                 allDone = true; break;
