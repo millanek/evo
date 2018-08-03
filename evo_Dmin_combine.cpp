@@ -104,7 +104,7 @@ int DminCombineMain(int argc, char** argv) {
         for (int i = 0; i < dminstdErrFiles.size(); i++) {
             if (getline(*dminstdErrFiles[i], line)) {
                 std::vector<string> localDs = split(line, '\t');
-                assert(localDs.size() == 3 || localDs.size() == 0);
+                //assert(localDs.size() == 3 || localDs.size() == 0);
                 if (localDs.size() == 3) {
                     std::vector<string> BBAA_D_strings = split(localDs[0], ',');
                     std::vector<string> BABA_D_strings = split(localDs[1], ',');
@@ -120,6 +120,8 @@ int DminCombineMain(int argc, char** argv) {
                         double thisABBA_localD = stringToDouble(ABBA_D_strings[j]);
                         if (!std::isnan(thisABBA_localD)) ABBA_local_Ds.push_back(thisABBA_localD);
                     }
+                } else {
+                    print_vector_stream(localDs,std::cerr);
                 }
             } else { // all lines have been processed
                 allDone = true; break;
