@@ -20,17 +20,17 @@ static const char *DMINCOMBINE_USAGE_MESSAGE =
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
+"       -s , --subset=start,length              (optional) only process a subset of the VCF file\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 
 enum { OPT_AA_EQ_O };
 
-static const char* shortopts = "hn:";
-
-static const int JK_WINDOW = 20000;
+static const char* shortopts = "hn:s:";
 
 static const struct option longopts[] = {
+    { "subset",   required_argument, NULL, 's' },
     { "run-name",   required_argument, NULL, 'n' },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -40,6 +40,8 @@ namespace opt
 {
     static std::vector<string> dminFiles;
     static string runName = "combined";
+    int subsetStart = -1;
+    int subsetLength = -1;
 }
 
 
@@ -71,7 +73,16 @@ int DminCombineMain(int argc, char** argv) {
     string s1; string s2; string s3;
     double BBAAtotal = 0; double ABBAtotal = 0; double BABAtotal = 0;
     bool allDone = false;
+    int processedTriosNumber = 0;
     do {
+        processedTriosNumber++;
+        if (opt::subsetStart != -1) {
+            if (processedTriosNumber < opt::subsetStart)
+                continue;
+            if (processedTriosNumber > (opt::subsetStart+opt::subsetLength)) {
+                std::cerr << "DONE" << std::endl; break;
+            }
+        }
         for (int i = 0; i < dminBBAAscoreFiles.size(); i++) {
             if (getline(*dminBBAAscoreFiles[i], line)) {
                 std::vector<string> patternCounts = split(line, '\t');
@@ -283,7 +294,7 @@ int DminCombineMain(int argc, char** argv) {
 
 
 void parseDminCombineOptions(int argc, char** argv) {
-    bool die = false;
+    bool die = false; string subsetArgString; std::vector<string> subsetArgs;
     for (char c; (c = getopt_long(argc, argv, shortopts, longopts, NULL)) != -1;)
     {
         std::istringstream arg(optarg != NULL ? optarg : "");
@@ -291,6 +302,8 @@ void parseDminCombineOptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 'n': arg >> opt::runName; break;
+            case 's': arg >> subsetArgString; subsetArgs = split(subsetArgString, ',');
+                opt::subsetStart = (int)stringToDouble(subsetArgs[0]); opt::subsetLength = (int)stringToDouble(subsetArgs[1]);  break;
             case 'h':
                 std::cout << DMINCOMBINE_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
