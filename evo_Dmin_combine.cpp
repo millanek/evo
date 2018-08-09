@@ -77,11 +77,19 @@ int DminCombineMain(int argc, char** argv) {
     do {
         processedTriosNumber++;
         if (opt::subsetStart != -1) {
-            if (processedTriosNumber < opt::subsetStart)
+            if (processedTriosNumber < opt::subsetStart) {
+                for (int i = 0; i < dminBBAAscoreFiles.size(); i++) { getline(*dminBBAAscoreFiles[i], line); }
+                for (int i = 0; i < dminstdErrFiles.size(); i++) { getline(*dminstdErrFiles[i], line); }
                 continue;
+            }
             if (processedTriosNumber > (opt::subsetStart+opt::subsetLength)) {
                 std::cerr << "DONE" << std::endl; break;
             }
+        }
+        if (processedTriosNumber % 10000 == 0) {
+            //durationOverall = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+            std::cerr << "Processed " << processedTriosNumber << " trios" << std::endl;
+            //std::cerr << "GettingCounts " << durationGettingCounts << " calculation " << durationCalculation << "secs" << std::endl;
         }
         for (int i = 0; i < dminBBAAscoreFiles.size(); i++) {
             if (getline(*dminBBAAscoreFiles[i], line)) {
