@@ -52,7 +52,14 @@ int DminCombineMain(int argc, char** argv) {
     
     std::vector<std::istream*> dminstdErrFiles; std::vector<std::istream*> dminBBAAscoreFiles;
     for (int i = 0; i < opt::dminFiles.size(); i++) {
-        std::istream* dminBBAAscoreFile = createReader((opt::dminFiles[i] + "_combine.txt").c_str());
+        std::istream* dminBBAAscoreFile;
+        if (file_exists(opt::dminFiles[i] + "_combine.txt")) {
+            dminBBAAscoreFile = createReader((opt::dminFiles[i] + "_combine.txt").c_str());
+        } else if(file_exists(opt::dminFiles[i] + "_combine.txt.gz")) {
+            dminBBAAscoreFile = createReader((opt::dminFiles[i] + "_combine.txt.gz").c_str());
+        } else {
+            std::cerr << "Can't fine the file: " << opt::dminFiles[i] + "_combine.txt" << " or " << opt::dminFiles[i] + "_combine.txt.gz" << std::endl;
+        }
         dminBBAAscoreFiles.push_back(dminBBAAscoreFile);
         std::istream* dminstdErrFile;
         if (file_exists(opt::dminFiles[i] + "_combine_stderr.txt")) {
