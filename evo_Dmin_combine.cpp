@@ -142,9 +142,10 @@ int DminCombineMain(int argc, char** argv) {
                 } else {
                     print_vector_stream(localDs,std::cerr);
                 }
-            } else { // all lines have been processed
-                allDone = true; break;
             }
+        }
+        if (BBAA_local_Ds.size() == 0 || BABA_local_Ds.size() == 0 || ABBA_local_Ds.size() == 0) { // no info to estimate the standard error; probably all lines have been processed
+            allDone = true; break;
         }
        // std::cerr << "D1 = " << D1 << std::endl;
         //print_vector_stream(BBAA_local_Ds, std::cerr);
