@@ -328,7 +328,7 @@ void parseDminCombineOptions(int argc, char** argv) {
     
     
     int nFilenames = argc - optind;
-    if (nFilenames < 2) {
+    if (nFilenames < 1) {
         std::cerr << "missing arguments\n";
         die = true;
     }
