@@ -115,38 +115,42 @@ void getVariantCountsForFst(const std::vector<std::string>& fields, SetCounts* t
     thisVariantCounts->set2_n_withoutMissing = n2;
     
     std::vector<std::string> altAlleles = split(fields[4], ',');
-    int numAltAlleles = (int)altAlleles.size();
+    thisVariantCounts->n_alt_alleles = (int)altAlleles.size();
     int alleleAsMissing = -1;
     for (int i = 0; i < (int)altAlleles.size(); i++) {
         if (altAlleles[i] == "*") {
-            numAltAlleles = numAltAlleles - 1;
+            thisVariantCounts->n_alt_alleles = thisVariantCounts->n_alt_alleles - 1;
             alleleAsMissing = i + 1;
+        }
+        if (altAlleles[i].length() > 1) {
+            thisVariantCounts->bIndel = true;
         }
     }
     
-    if (numAltAlleles == 1) {
+    if (thisVariantCounts->n_alt_alleles == 1) {
         int alt = 1;
 
-        if (alleleAsMissing == 1)
-            alt = 2;
+        if (alleleAsMissing == 1) alt = 2;
 
         int set1i = 0; int set2i = 0; int set1hapI = 0; int set2hapI = 0;
         std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
-        // std::cerr << fields[0] << "\t" << fields[1] << "\tgenotypes.size()" << genotypes.size() << std::endl;
+        //std::cerr << fields[0] << "\t" << fields[1] << "\tgenotypes.size()" << genotypes.size() << std::endl;
         for (const size_t i : set1_loci) {
             int v1int = genotypes[i][0] - '0'; int v2int = genotypes[i][2] - '0';
             if (v1int == alt) {
                 thisVariantCounts->set1Count++; thisVariantCounts->set1individualsWithVariant[set1i]++;
                 thisVariantCounts->set1HaplotypeVariant[set1hapI]++;
             } else if (genotypes[i][0] == '.' || v1int == alleleAsMissing) {
-                thisVariantCounts->missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
+               //std::cerr << fields[0] << "\t" << fields[1] << "\t" << genotypes[i][0] << "\t" << i << std::endl;
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
                 thisVariantCounts->set1_n_withoutMissing = thisVariantCounts->set1_n_withoutMissing - 1;
             }
             if (v2int == alt) {
                 thisVariantCounts->set1Count++; thisVariantCounts->set1individualsWithVariant[set1i]++;
                 thisVariantCounts->set1HaplotypeVariant[set1hapI+1]++;
             } else if (genotypes[i][2] == '.' || v2int == alleleAsMissing) {
-                thisVariantCounts->missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                //std::cerr << fields[0] << "\t" << fields[1] << "\t" << genotypes[i][2] << std::endl;
                 thisVariantCounts->set1_n_withoutMissing = thisVariantCounts->set1_n_withoutMissing - 1;
             }
             set1i++; set1hapI = set1hapI+2;
@@ -157,14 +161,14 @@ void getVariantCountsForFst(const std::vector<std::string>& fields, SetCounts* t
                 thisVariantCounts->set2Count++; thisVariantCounts->set2individualsWithVariant[set2i]++;
                 thisVariantCounts->set2HaplotypeVariant[set2hapI]++;
             } else if (genotypes[i][0] == '.' || v1int == alleleAsMissing) {
-                thisVariantCounts->missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
                 thisVariantCounts->set2_n_withoutMissing = thisVariantCounts->set2_n_withoutMissing - 1;
             }
             if (genotypes[i][2] - '0' == alt) {
                 thisVariantCounts->set2Count++; thisVariantCounts->set2individualsWithVariant[set2i]++;
                 thisVariantCounts->set2HaplotypeVariant[set2hapI+1]++;
             } else if (genotypes[i][2] == '.' || v2int == alleleAsMissing) {
-                thisVariantCounts->missingGenotypesPerIndividual[i- NUM_NON_GENOTYPE_COLUMNS] = true;
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
                 thisVariantCounts->set2_n_withoutMissing = thisVariantCounts->set2_n_withoutMissing - 1;
             }
             set2i++; set2hapI = set2hapI+2;
@@ -415,25 +419,24 @@ void getFstFromVCF() {
             std::vector<std::string> fields = split(line, '\t');
             string scaffold = fields[0]; string loc = fields[1]; // Scaffold
             std::vector<std::string> info = split(fields[7], ';');
-            // Only consider biallelic SNPs
-            string refAllele = fields[3]; string altAllele = fields[4];
-            if (refAllele.length() > 1 || altAllele.length() > 1) {
-                refAllele.clear(); refAllele.shrink_to_fit(); altAllele.clear(); altAllele.shrink_to_fit();
-                continue;
-            }
-            
-            
-                
             SetCounts* counts = new SetCounts();
+            // Only consider biallelic SNPs
+            string refAllele = fields[3];
+            if (refAllele.length() > 1) { counts->bIndel = true;
+                refAllele.clear(); refAllele.shrink_to_fit(); continue;
+            }
+
+            
             getVariantCountsForFst(fields,counts,set1Loci,set2Loci);
-            //std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
+           // std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
             //std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << "\t" << n1 << std::endl;
             //std::cerr << "Still here: " << counts.set2HaplotypeVariant.size() << "\t" << counts.set2individualsWithVariant.size() << "\t" << n2 << std::endl;
             //print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
             //print_vector_stream(counts.set1individualsWithVariant, std::cerr);
             //print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
             
-            if ((counts->set1Count > 0 || counts->set2Count > 0) && (counts->set1Count < counts->set1_n_withoutMissing || counts->set2Count < counts->set2_n_withoutMissing)) {
+            if (counts->n_alt_alleles == 1 && counts->bIndel == false && (counts->set1Count > 0 || counts->set2Count > 0)
+                && (counts->set1Count < counts->set1_n_withoutMissing || counts->set2Count < counts->set2_n_withoutMissing)) {
                 countedVariantNumber++;
                 double FstNumerator = calculateFstNumerator(*counts); fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
                 double FstDenominator = calculateFstDenominator(*counts); fstDenominators.push_back(FstDenominator); fixedWindowFstDenomVector.push_back(FstDenominator);

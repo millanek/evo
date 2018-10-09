@@ -191,7 +191,7 @@ public:
 
 class SetCounts {
 public:
-    SetCounts() : overall(0), set1Count(0), set2Count(0), fisher_pval(1), chi_sq_pval(1),set1_n_withoutMissing(0), set2_n_withoutMissing(0), bAnyMissingGenotypes(false) {};
+    SetCounts() : overall(0), set1Count(0), set2Count(0), fisher_pval(1), chi_sq_pval(1),set1_n_withoutMissing(0), set2_n_withoutMissing(0), bAnyMissingGenotypes(false), n_alt_alleles(0), bIndel(false) {};
     
     int overall;
     bool bAnyMissingGenotypes;
@@ -206,6 +206,8 @@ public:
     int set2Count;
     int set1_n_withoutMissing;
     int set2_n_withoutMissing;
+    int n_alt_alleles; // the number of alternative alleles at a locus
+    bool bIndel;
     double fisher_pval;
     double chi_sq_pval;
     
