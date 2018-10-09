@@ -191,16 +191,21 @@ public:
 
 class SetCounts {
 public:
-    SetCounts() : overall(0), set1Count(0), set2Count(0), fisher_pval(1), chi_sq_pval(1) {};
+    SetCounts() : overall(0), set1Count(0), set2Count(0), fisher_pval(1), chi_sq_pval(1),set1_n_withoutMissing(0), set2_n_withoutMissing(0), bAnyMissingGenotypes(false) {};
     
     int overall;
+    bool bAnyMissingGenotypes;
     std::vector<int> individualsWithVariant;
+    std::vector<bool> missingGenotypesPerIndividual;
+    std::vector<int> haplotypesWithVariant;
     std::vector<int> set1HaplotypeVariant;
     std::vector<int> set2HaplotypeVariant;
     std::vector<int> set1individualsWithVariant;
     std::vector<int> set2individualsWithVariant;
     int set1Count;
     int set2Count;
+    int set1_n_withoutMissing;
+    int set2_n_withoutMissing;
     double fisher_pval;
     double chi_sq_pval;
     

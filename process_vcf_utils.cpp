@@ -179,7 +179,6 @@ void getThisVariantCountsSimple(const std::vector<std::string>& fields, Counts* 
     thisVariantCounts->missingGenotypesPerIndividual.assign(numSamples,false);
     thisVariantCounts->haplotypesWithVariant.assign(numSamples*2,0);
     //std::cerr << "Fields: " << (fields.size()-NUM_NON_GENOTYPE_COLUMNS) << std::endl;
-    // Find the position of DP (per sample read depth) in the genotypeData vector below
     std::vector<std::string> format = split(fields[8], ':');
     std::vector<std::string> altAlleles = split(fields[4], ',');
     const int numAltAlleles = (int)altAlleles.size();
