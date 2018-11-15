@@ -238,8 +238,8 @@ std::vector<double> calculatePiTwoSets(const SetCounts& thisVarCounts, const int
             }
         }
     }
-    pi1 = (2.0/(n1*(n1-1)))*pi1;
-    pi2 = (2.0/(n2*(n2-1)))*pi2;
+    pi1 = (2.0/(thisVarCounts.set1_n_withoutMissing*(thisVarCounts.set1_n_withoutMissing-1)))*pi1;
+    pi2 = (2.0/(thisVarCounts.set2_n_withoutMissing*(thisVarCounts.set2_n_withoutMissing-1)))*pi2;
     
     std::vector<double> pis; pis.push_back(pi1); pis.push_back(pi2);
     return pis;

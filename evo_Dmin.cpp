@@ -175,13 +175,17 @@ int DminMain(int argc, char** argv) {
     std::map<size_t, string> posToSpeciesMap;
     
     // Get the sample sets
+    bool outgroupSpecified = false;
     while (getline(*setsFile, line)) {
        // std::cerr << line << std::endl;
         std::vector<string> ID_Species = split(line, '\t');
+        if (ID_Species[1] == "Outgroup") { outgroupSpecified = true; }
         speciesToIDsMap[ID_Species[1]].push_back(ID_Species[0]);
         IDsToSpeciesMap[ID_Species[0]] = ID_Species[1];
         //std::cerr << ID_Species[1] << "\t" << ID_Species[0] << std::endl;
     }
+    if (!outgroupSpecified) { std::cerr << "The file " << opt::setsFile << " needs to specify the \"Outgroup\"" << std::endl; exit(1); }
+    
     // Get a vector of set names (usually species)
     std::vector<string> species;
     for(std::map<string,std::vector<string>>::iterator it = speciesToIDsMap.begin(); it != speciesToIDsMap.end(); ++it) {
@@ -230,11 +234,13 @@ int DminMain(int argc, char** argv) {
     double durationOverall; double durationGettingCounts; double durationCalculation;
     
     while (getline(*vcfFile, line)) {
+        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end()); // Deal with any left over \r from files prepared on Windows
         if (line[0] == '#' && line[1] == '#')
             continue;
         else if (line[0] == '#' && line[1] == 'C') {
             fields = split(line, '\t');
             std::vector<std::string> sampleNames(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+           // print_vector_stream(sampleNames, std::cerr);
             for (std::vector<std::string>::size_type i = 0; i != sampleNames.size(); i++) {
                 posToSpeciesMap[i] = IDsToSpeciesMap[sampleNames[i]];
             }
@@ -246,7 +252,7 @@ int DminMain(int argc, char** argv) {
                 std::vector<string> IDs = it->second;
                 std::vector<size_t> spPos = locateSet(sampleNames, IDs);
                 if (spPos.empty()) {
-                    std::cerr << "Did not find any samples in the VCF for " << sp << std::endl;
+                    std::cerr << "Did not find any samples in the VCF for \"" << sp << "\"" << std::endl;
                     assert(!spPos.empty());
                 }
                 speciesToPosMap[sp] = spPos;
@@ -284,7 +290,7 @@ int DminMain(int argc, char** argv) {
             getSetVariantCounts(c, genotypes, posToSpeciesMap);
             genotypes.clear(); genotypes.shrink_to_fit();
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
-            
+           // std::cerr << "Here:" << totalVariantNumber << std::endl;
             
             startCalculation = std::clock();
             double p_O = c->setDAFs.at("Outgroup");
