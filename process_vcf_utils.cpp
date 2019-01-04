@@ -10,6 +10,87 @@
 #include "process_vcf_utils.h"
 #include "process_vcf_stats_utils.h"
 
+
+
+// Works only on biallelic markers
+void getSetVariantCounts(GeneralSetCounts* c, const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
+    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
+    
+    // Go through the genotypes - only biallelic markers are allowed
+    for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
+        // The first allele in this individual
+        if (genotypes[i][0] == '1') {
+            c->overall++; c->individualsWithVariant[i]++;
+            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
+        } else if (genotypes[i][0] == '0') {
+            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
+        }
+        // The second allele in this individual
+        if (genotypes[i][2] == '1') {
+            c->overall++;
+            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
+            c->individualsWithVariant[i]++;
+        } else if (genotypes[i][0] == '0') {
+            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
+        }
+    }
+    
+    // If at least one of the outgroup individuals has non-missing data
+    // Find out what is the "ancestral allele" - i.e. the one more common in the outgroup
+    int AAint;
+    try {
+        if (c->setAlleleCounts.at("Outgroup") > 0) {
+            if (c->setRefCounts.at("Outgroup") > c->setAltCounts.at("Outgroup")) { AAint = 0; }
+            else { AAint = 1; }
+        }
+    } catch (std::out_of_range& e) { AAint = -1; }
+    
+    // Now fill in the allele frequencies
+    for(std::map<string,int>::iterator it = c->setAltCounts.begin(); it != c->setAltCounts.end(); ++it) {
+        if (c->setAlleleCounts.at(it->first) > 0) {
+            c->setAAFs[it->first] = (double)c->setAltCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+            if (AAint == 0) { // Ancestral allele seems to be the ref, so derived is alt
+                c->setDAFs[it->first] = (double)c->setAltCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+            } else if (AAint == 1) { // Ancestral allele seems to be alt, so derived is ref
+                c->setDAFs[it->first] = (double)c->setRefCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+            }
+        }
+    }
+}
+
+// Works only on biallelic markers
+void getSetVariantCountsSimple(GeneralSetCounts* c, const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
+    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
+    
+    // Go through the genotypes - only biallelic markers are allowed
+    for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
+        // The first allele in this individual
+        if (genotypes[i][0] == '1') {
+            c->overall++; c->individualsWithVariant[i]++;
+            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
+        } else if (genotypes[i][0] == '0') {
+            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
+        }
+        // The second allele in this individual
+        if (genotypes[i][2] == '1') {
+            c->overall++;
+            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
+            c->individualsWithVariant[i]++;
+        } else if (genotypes[i][0] == '0') {
+            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
+        }
+    }
+    
+    // Now fill in the allele frequencies
+    for(std::map<string,int>::iterator it = c->setAltCounts.begin(); it != c->setAltCounts.end(); ++it) {
+        if (c->setAlleleCounts.at(it->first) > 0) {
+            c->setAAFs[it->first] = (double)c->setAltCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+        }
+    }
+}
+
+
+
 void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     std::stringstream ss(s);
     std::string item;

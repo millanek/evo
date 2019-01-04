@@ -43,13 +43,14 @@
 #include "evo_permute_codons.h"
 #include "evo_Dmin.h"
 #include "evo_Dmin_combine.h"
+#include "evo_PBS.h"
 
 
 //#define TESTING 1
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r21"
+#define PACKAGE_VERSION "0.1 r22"
 
 
 static const char *VERSION_MESSAGE =
@@ -66,20 +67,21 @@ static const char *USAGE_MESSAGE =
 "Commands:\n"
 "           abba-baba           Perform the abba-baba test\n"
 "           cbs                 calculate the lenghts of tracts of 'compatibility by sequence' (cbs) between samples from genotypes\n"
+"           codingStats         claculate various interesting statistics about protein coding sequences given multiple alignment\n"
 "           Dmin                calculate the minimum value of the D statistic (ABBA-BABA) for all possible trios of samples\n"
 "           DminCombine         combine results from different Dmin runs (e.g. per-chromosome)\n"
-"           RegionsDxy          Dxy (or other statistics) for regions in a .bed file; optional subsampling\n"
 "           filter              filter a vcf file\n"
-"           stats               get various statistics from a vcf file\n"
-"           sharing             find out how Massoko variants segregate in Lake Malawi\n"
-"           test                used for testing/developing new programs\n"
-"           massoko             filtering and getting fixed (and nearly fixed) variants from the Lake Massoko VCF file\n"
 "           getWGSeq            obtain whole genome sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getMtSeq            obtain mitochondrial sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getCodingSeq        obtain coding sequences (e.g. for gene/variant classification - missense/nonsense/etc..)\n"
+"           massoko             filtering and getting fixed (and nearly fixed) variants from the Lake Massoko VCF file\n"
+"           PBS                 Calculating the population branch statistics (looking for positive selection)\n"
+"           RegionsDxy          Dxy (or other statistics) for regions in a .bed file; optional subsampling\n"
 "           SeqFromGenomes      Get subsequences (usually genes) from whole genome sequences\n"
-"           codingStats         claculate various interesting statistics about protein coding sequences given multiple alignment\n"
 "           sequenom            prepare a variant list for a sequenom assay in the format used at the Sanger Institute\n"
+"           sharing             find out how Massoko variants segregate in Lake Malawi\n"
+"           stats               get various statistics from a vcf file\n"
+"           test                used for testing/developing new programs\n"
 "           VCFfromSequenom     Generate a VCF file from a sequenom output file\n"
 " Various utils:    \n"
 "           aa-seq              Final steps in generating an ancestral sequence from a multiple alignment (.maf)\n"
@@ -188,6 +190,8 @@ int main(int argc, char **argv) {
             DminMain(argc - 1, argv + 1);
         else if (command == "DminCombine")
             DminCombineMain(argc - 1, argv + 1);
+        else if (command == "PBS")
+            PBSmain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

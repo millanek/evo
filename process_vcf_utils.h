@@ -52,6 +52,29 @@ template <typename T> void reset_matrix_to_zero(std::vector<std::vector<T> >& m)
     }
 }
 
+class GeneralSetCounts {
+public:
+    GeneralSetCounts(const std::map<string, std::vector<size_t>>& setsToPosMap, const int nSamples) : overall(0) {
+        for(std::map<string, std::vector<size_t>>::const_iterator it = setsToPosMap.begin(); it != setsToPosMap.end(); ++it) {
+            setRefCounts[it->first] = 0; setAltCounts[it->first] = 0; setAlleleCounts[it->first] = 0;
+            setAAFs[it->first] = -1.0; setDAFs[it->first] = -1.0;
+            setSizes.push_back(it->second.size());
+        }
+        individualsWithVariant.assign(nSamples, 0);
+    };
+    
+    int overall;
+    std::map<string,int> setRefCounts;
+    std::map<string,int> setAltCounts;
+    std::map<string,int> setAlleleCounts; // The number of non-missing alleles for this set
+    std::vector<size_t> setSizes;
+    std::map<string,double> setAAFs; // Allele frequencies - alternative allele
+    std::unordered_map<string,double> setDAFs; // Allele frequencies - derived allele
+    std::vector<int> individualsWithVariant; // 0 homRef, 1 het, 2 homAlt
+    // std::vector<int> set1individualsWithVariant; std::vector<int> set2individualsWithVariant;
+    // std::vector<int> set3individualsWithVariant; std::vector<int> set4individualsWithVariant;
+};
+
 
 class Counts {
 public:
@@ -87,10 +110,10 @@ public:
 
 class ThreeSetCounts {
 public:
-    ThreeSetCounts() : overall(0), set1AltCount(0), set2AltCount(0), set3AltCount(0), set1RefCount(0), set2RefCount(0), set3RefCount(0), set1AltAF(-1), set2AltAF(-1), set3AltAF(-1), set1daAF(-1), set2daAF(-1), set3daAF(-1) {};
+    ThreeSetCounts() : overall(0), set1AltCount(0), set2AltCount(0), set3AltCount(0), set1RefCount(0), set2RefCount(0), set3RefCount(0), set1AltAF(-1), set2AltAF(-1), set3AltAF(-1), set1daAF(-1), set2daAF(-1), set3daAF(-1), bAnyMissingGenotypes(false),  bIndel(false), n_alt_alleles(0), set1_n_withoutMissing(0), set2_n_withoutMissing(0), set3_n_withoutMissing(0) {};
     
     
-    int overall;
+    int overall; bool bAnyMissingGenotypes; bool bIndel;
     int set1AltCount; int set2AltCount; int set3AltCount;
     int set1RefCount; int set2RefCount; int set3RefCount;
     double set1AltAF; double set2AltAF; double set3AltAF;  // Allele frequencies - alternative allele
@@ -98,6 +121,13 @@ public:
     std::vector<int> individualsWithVariant;
     std::vector<int> set1individualsWithVariant; std::vector<int> set2individualsWithVariant;
     std::vector<int> set3individualsWithVariant;
+    std::vector<bool> missingGenotypesPerIndividual;
+    int n_alt_alleles; // the number of alternative alleles at a locus
+    int set1_n_withoutMissing;
+    int set2_n_withoutMissing;
+    int set3_n_withoutMissing;
+    std::vector<int> haplotypesWithVariant;
+    std::vector<int> set1HaplotypeVariant; std::vector<int> set2HaplotypeVariant; std::vector<int> set3HaplotypeVariant;
 };
 
 
@@ -357,6 +387,8 @@ inline bool file_exists(const std::string& name) {
     return f.good();
 }
 
+void getSetVariantCounts(GeneralSetCounts* c, const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap);
+void getSetVariantCountsSimple(GeneralSetCounts* c, const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap);
 
 double stringToDouble(std::string s);
 

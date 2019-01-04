@@ -98,6 +98,111 @@ namespace opt
     static string runName = "";
 }
 
+void getVariantCountsForPBS(const std::vector<std::string>& fields, ThreeSetCounts* thisVariantCounts, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci) {
+    
+    int numSamples = (int)fields.size()-NUM_NON_GENOTYPE_COLUMNS;
+    thisVariantCounts->individualsWithVariant.assign(numSamples,0);
+    thisVariantCounts->missingGenotypesPerIndividual.assign(numSamples,false);
+    thisVariantCounts->haplotypesWithVariant.assign(numSamples*2,0);
+    
+    thisVariantCounts->set1individualsWithVariant.assign(set1_loci.size(),0);
+    thisVariantCounts->set2individualsWithVariant.assign(set2_loci.size(),0);
+    thisVariantCounts->set3individualsWithVariant.assign(set3_loci.size(),0);
+    int n1 = (int)(set1_loci.size()*2); int n2 = (int)(set2_loci.size()*2); int n3 = (int)(set3_loci.size()*2);
+    thisVariantCounts->set1HaplotypeVariant.assign(n1,0); thisVariantCounts->set2HaplotypeVariant.assign(n2,0); thisVariantCounts->set3HaplotypeVariant.assign(n3,0);
+    thisVariantCounts->set1_n_withoutMissing = n1; thisVariantCounts->set2_n_withoutMissing = n2; thisVariantCounts->set3_n_withoutMissing = n3;
+    
+    std::vector<std::string> altAlleles = split(fields[4], ',');
+    thisVariantCounts->n_alt_alleles = (int)altAlleles.size();
+    int alleleAsMissing = -1;
+    for (int i = 0; i < (int)altAlleles.size(); i++) {
+        if (altAlleles[i] == "*") {
+            thisVariantCounts->n_alt_alleles = thisVariantCounts->n_alt_alleles - 1;
+            alleleAsMissing = i + 1;
+        }
+        if (altAlleles[i].length() > 1) {
+            thisVariantCounts->bIndel = true;
+        }
+    }
+    
+    if (thisVariantCounts->n_alt_alleles == 1) {
+        int alt = (alleleAsMissing == 1) ? 1 : 2;
+        
+        int set1i = 0; int set2i = 0; int set3i = 0; int set1hapI = 0; int set2hapI = 0; int set3hapI = 0;
+        std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+        //std::cerr << fields[0] << "\t" << fields[1] << "\tgenotypes.size()" << genotypes.size() << std::endl;
+        for (const size_t i : set1_loci) {
+            int v1int = genotypes[i][0] - '0'; int v2int = genotypes[i][2] - '0';
+            if (v1int == alt) {
+                thisVariantCounts->set1AltCount++; thisVariantCounts->set1individualsWithVariant[set1i]++;
+                thisVariantCounts->set1HaplotypeVariant[set1hapI]++;
+            } else if (genotypes[i][0] == '.' || v1int == alleleAsMissing) {
+                //std::cerr << fields[0] << "\t" << fields[1] << "\t" << genotypes[i][0] << "\t" << i << std::endl;
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                thisVariantCounts->set1_n_withoutMissing--;
+            }
+            if (v2int == alt) {
+                thisVariantCounts->set1AltCount++; thisVariantCounts->set1individualsWithVariant[set1i]++;
+                thisVariantCounts->set1HaplotypeVariant[set1hapI+1]++;
+            } else if (genotypes[i][2] == '.' || v2int == alleleAsMissing) {
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                //std::cerr << fields[0] << "\t" << fields[1] << "\t" << genotypes[i][2] << std::endl;
+                thisVariantCounts->set1_n_withoutMissing--;
+            }
+            set1i++; set1hapI = set1hapI+2;
+        } thisVariantCounts->set1AltAF = (double)thisVariantCounts->set1AltCount/thisVariantCounts->set1_n_withoutMissing;
+        for (const size_t i : set2_loci) {
+            int v1int = genotypes[i][0] - '0'; int v2int = genotypes[i][2] - '0';
+            if (genotypes[i][0] - '0' == alt) {
+                thisVariantCounts->set2AltCount++; thisVariantCounts->set2individualsWithVariant[set2i]++;
+                thisVariantCounts->set2HaplotypeVariant[set2hapI]++;
+            } else if (genotypes[i][0] == '.' || v1int == alleleAsMissing) {
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                thisVariantCounts->set2_n_withoutMissing--;
+            }
+            if (genotypes[i][2] - '0' == alt) {
+                thisVariantCounts->set2AltCount++; thisVariantCounts->set2individualsWithVariant[set2i]++;
+                thisVariantCounts->set2HaplotypeVariant[set2hapI+1]++;
+            } else if (genotypes[i][2] == '.' || v2int == alleleAsMissing) {
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                thisVariantCounts->set2_n_withoutMissing--;
+            }
+            set2i++; set2hapI = set2hapI+2;
+        } thisVariantCounts->set2AltAF = (double)thisVariantCounts->set2AltCount/thisVariantCounts->set2_n_withoutMissing;
+        for (const size_t i : set3_loci) {
+            int v1int = genotypes[i][0] - '0'; int v2int = genotypes[i][2] - '0';
+            if (genotypes[i][0] - '0' == alt) {
+                thisVariantCounts->set3AltCount++; thisVariantCounts->set2individualsWithVariant[set2i]++;
+                thisVariantCounts->set3HaplotypeVariant[set2hapI]++;
+            } else if (genotypes[i][0] == '.' || v1int == alleleAsMissing) {
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                thisVariantCounts->set3_n_withoutMissing--;
+            }
+            if (genotypes[i][2] - '0' == alt) {
+                thisVariantCounts->set3AltCount++; thisVariantCounts->set3individualsWithVariant[set2i]++;
+                thisVariantCounts->set3HaplotypeVariant[set2hapI+1]++;
+            } else if (genotypes[i][2] == '.' || v2int == alleleAsMissing) {
+                thisVariantCounts->missingGenotypesPerIndividual[i] = true;
+                thisVariantCounts->set3_n_withoutMissing--;
+            }
+            set3i++; set3hapI = set3hapI+2;
+        } thisVariantCounts->set3AltAF = (double)thisVariantCounts->set3AltCount/thisVariantCounts->set3_n_withoutMissing;
+        for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
+            if (genotypes[i][0] - '0' == alt)
+                thisVariantCounts->overall++;
+            if (genotypes[i][2] - '0' == alt)
+                thisVariantCounts->overall++;
+        }
+    }
+    // std::cerr << "got here" << std::endl;
+    /*if (fields[1] == "13433") {
+     std::cerr << thisVariantCounts.set1Count << std::endl;
+     std::cerr << thisVariantCounts.set2Count << std::endl;
+     print_vector_stream(thisVariantCounts.set1individualsWithVariant, std::cerr);
+     print_vector_stream(thisVariantCounts.set2individualsWithVariant, std::cerr);
+     } */
+}
+
 
 void getVariantCountsForFst(const std::vector<std::string>& fields, SetCounts* thisVariantCounts, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci) {
 
