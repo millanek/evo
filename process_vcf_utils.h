@@ -22,6 +22,7 @@
 #include <math.h>
 #include <random>
 #include <unordered_map>
+#include <ctime>
 #include "gzstream.h"
 using std::string;
 #define PROGRAM_BIN "evo"
