@@ -15,8 +15,8 @@
 
 static const char *PBS_USAGE_MESSAGE =
 "Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] INPUT_FILE.vcf POPULATIONS.txt PBS_trios.txt\n"
-"Calculate the PBS statistic from:"
-"Sequencing of 50 human exomes reveals adaptation to high altitude. Science 329, 75–78 (2010)."
+"Calculate the PBS statistic from:\n"
+"Sequencing of 50 human exomes reveals adaptation to high altitude. Science 329, 75–78 (2010).\n"
 "The POPULATIONS.txt file should have two columns: SAMPLE_ID    POPULATION_ID\n"
 "The PBS_trios.txt should names of three populations for which the PBS will be calculated:\n"
 "POP1   POP2    POP3\n"
@@ -25,15 +25,17 @@ static const char *PBS_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       -w SIZE,STEP --window=SIZE,STEP         the parameters of the sliding window: contains SIZE SNPs and move by STEP (default: 20,10)\n"
 "       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
+"       -n, --run-name                          run-name will be included in the output file name\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hw:";
+static const char* shortopts = "hw:n:";
 
 
 static const struct option longopts[] = {
     { "window",   required_argument, NULL, 'w' },
     { "help",   no_argument, NULL, 'h' },
+    { "run-name",   required_argument, NULL, 'n' },
     { NULL, 0, NULL, 0 }
 };
 
@@ -42,6 +44,7 @@ namespace opt
     static string vcfFile;
     static string setsFile;
     static string PBStriosFile;
+    static string runName = "";
     static int windowSize = 20;
     static int windowStep = 10;
 }
@@ -137,7 +140,7 @@ int PBSmain(int argc, char** argv) {
     while (getline(*PBStriosFile,line)) {
         // std::cerr << line << std::endl;
         std::vector<string> threePops = split(line, '\t'); assert(threePops.size() == 3);
-        std::ofstream* outFile = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
+        std::ofstream* outFile = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
         *outFile << "chr\t" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
         outFiles.push_back(outFile);
         PBStrios.push_back(threePops);
@@ -271,6 +274,7 @@ void parsePBSoptions(int argc, char** argv) {
                 opt::windowSize = atoi(windowSizeStep[0].c_str());
                 opt::windowStep = atoi(windowSizeStep[1].c_str());
                 break;
+            case 'n': arg >> opt::runName; break;
             case 'h':
                 std::cout << PBS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
