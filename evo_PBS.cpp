@@ -147,10 +147,9 @@ int PBSmain(int argc, char** argv) {
     }
     
     
-    // And need to prepare the vectors to hold the D values:
-    std::vector<double> init(3,0.0); // Vector of initial values
+    // And need to prepare the vectors to hold the PBS values and the coordinates:
     std::deque<double> initDeq(opt::windowSize,0.0); // deque to initialise per-site PBS values
-    std::vector<std::deque<double>> initThreeDeques(3,initDeq); // vector of three per-site PBS deques - for each population in the trio
+    std::vector<std::deque<double>> initThreeDeques(4,initDeq); // vector of three per-site PBS deques - for each population in the trio, and the fourth is for the coordinates
     std::vector<std::vector<std::deque<double>>> PBSresults(PBStrios.size(),initThreeDeques);
     //std::deque<std::vector<double>> regionPBSnums; regionPBSnums.assign(opt::windowSize,init);
     //std::deque<std::vector<double>> regionPBSdenoms; regionPBSdenoms.assign(opt::windowSize,init);
@@ -158,7 +157,7 @@ int PBSmain(int argc, char** argv) {
     int totalVariantNumber = 0;
     std::vector<int> usedVars(PBStrios.size(),0); // Will count the number of used variants for each trio
     std::vector<string> sampleNames; std::vector<std::string> fields;
-    int reportProgressEvery = 1000; string chr;
+    int reportProgressEvery = 1000; string chr; string coord;
     std::clock_t start; std::clock_t startGettingCounts; std::clock_t startCalculation;
     double durationOverall; double durationGettingCounts; double durationCalculation;
     
@@ -197,7 +196,7 @@ int PBSmain(int argc, char** argv) {
                 std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
                 std::cerr << "GettingCounts " << durationGettingCounts << " calculation " << durationCalculation << "secs" << std::endl;
             }
-            fields = split(line, '\t'); chr = fields[0];
+            fields = split(line, '\t'); chr = fields[0]; coord = fields[1];
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
             // Only consider biallelic SNPs
@@ -241,11 +240,12 @@ int PBSmain(int argc, char** argv) {
                                                                       c->setAlleleCounts.at(PBStrios[i][2]));
                 
                 PBSresults[i][0].push_back(thisSNP_PBS[0]); PBSresults[i][1].push_back(thisSNP_PBS[1]); PBSresults[i][2].push_back(thisSNP_PBS[2]);
-                PBSresults[i][0].pop_front(); PBSresults[i][1].pop_front(); PBSresults[i][2].pop_front();
+                PBSresults[i][3].push_back(stringToDouble(coord));
+                PBSresults[i][0].pop_front(); PBSresults[i][1].pop_front(); PBSresults[i][2].pop_front(); PBSresults[i][3].pop_front();
                 
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
-                    *outFiles[i] << chr << "\t" << vector_average(PBSresults[i][0]) << "\t" << vector_average(PBSresults[i][1]) << "\t" << vector_average(PBSresults[i][2]) << std::endl;
+                    *outFiles[i] << chr << "\t" << PBSresults[i][3][0] << "\t" << coord << "\t" << vector_average(PBSresults[i][0]) << "\t" << vector_average(PBSresults[i][1]) << "\t" << vector_average(PBSresults[i][2]) << std::endl;
                 }
                 // }
             }
