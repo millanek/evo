@@ -196,7 +196,10 @@ public:
             std::vector<string> startEndVec = split(scaffoldTranscriptStartEnd[i], '\t');
             if (SNPlocus >= startEndVec[1] && SNPlocus <= startEndVec[2]) {
                 string thisTranscript = startEndVec[0];
-                SNPcategory = "intron"; inGene = geneFromTranscript(thisTranscript);
+                int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');
+                SNPcategory = "intron";
+                if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
+                else inGene = thisTranscript;
                 std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
                 for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
                     std::vector<string> exonVec = split(exons[j], '\t');
@@ -220,7 +223,11 @@ public:
             std::vector<string> startEndVec = split(scaffoldTranscriptStartEnd[i], '\t');
             if (SNPlocus >= startEndVec[1] && SNPlocus <= startEndVec[2]) {
                 string thisTranscript = startEndVec[0];
-                SNPcategory = "intron"; inGene = geneFromTranscript(thisTranscript);
+                SNPcategory = "intron";
+                int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');
+                SNPcategory = "intron";
+                if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
+                else inGene = thisTranscript;
                 std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
                 for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
                     std::vector<string> exonVec = split(exons[j], '\t');
@@ -240,9 +247,9 @@ public:
     int getTranscriptCount(const std::string& geneOrTranscript) {
         int numTranscripts = 0;
         int numDots = (int)std::count(geneOrTranscript.begin(), geneOrTranscript.end(), '.');
-        if (numDots == 3)
+        if (numDots != 4)
             numTranscripts = geneTranscriptCounts[geneOrTranscript];
-        else if (numDots == 4) {
+        else {
             //std::vector<std::string> transcriptVec = split(geneOrTranscript,'.');
             //std::string geneName = transcriptVec[0] + "." + transcriptVec[1] + "." + transcriptVec[2] + "." + transcriptVec[3];
             std::string geneName = geneFromTranscript(geneOrTranscript);
@@ -320,9 +327,10 @@ private:
         string previousGeneName = "";
         for (std::vector<string>::size_type i = 0; i != scaffoldAnnotation.size(); i++) {
             std::vector<string> annotLineVec = split(scaffoldAnnotation[i][0], '\t');
-            std::string geneName = geneFromTranscript(annotLineVec[4]);
-            //if (geneName == "mz.mrna.s0.284")
-                // std::cerr << "geneName: " << geneName << std::endl;
+            int numDots = (int)std::count(annotLineVec[4].begin(), annotLineVec[4].end(), '.');
+            std::string geneName;
+            if (numDots == 4)  geneName = geneFromTranscript(annotLineVec[4]);
+            else geneName = annotLineVec[4];
             if (previousGeneName == geneName) {
                 thisGeneTranscriptCount++;
             } else {
