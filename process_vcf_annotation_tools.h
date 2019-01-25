@@ -211,6 +211,32 @@ public:
         return SNPcategory;
     }
     
+    
+    std::vector<string> getSNPgeneDetails(const string& SNPscaffold, const string& SNPlocus) {
+        std::vector<string> SNPgeneDetails;
+        std::vector<string> scaffoldTranscriptStartEnd = transcriptStartEndMap[SNPscaffold];
+        string inGene = ""; string SNPcategory = "nonCoding";
+        for (std::vector<std::vector<string> >::size_type i = 0; i != scaffoldTranscriptStartEnd.size(); i++) {
+            std::vector<string> startEndVec = split(scaffoldTranscriptStartEnd[i], '\t');
+            if (SNPlocus >= startEndVec[1] && SNPlocus <= startEndVec[2]) {
+                string thisTranscript = startEndVec[0];
+                SNPcategory = "intron"; inGene = geneFromTranscript(thisTranscript);
+                std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
+                for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
+                    std::vector<string> exonVec = split(exons[j], '\t');
+                    if (SNPlocus >= exonVec[1] && SNPlocus <= exonVec[2]) {
+                        SNPcategory = "exon";
+                    }
+                    break;
+                }
+                if (SNPcategory == "exon") { break; }
+            } //else if (SNPcategory == "intron") { if (inGene != geneFromTranscript(startEndVec[0])) { break; } }
+        }
+        SNPgeneDetails.push_back(inGene); SNPgeneDetails.push_back(SNPcategory);
+        return SNPgeneDetails;
+    }
+    
+    
     int getTranscriptCount(const std::string& geneOrTranscript) {
         int numTranscripts = 0;
         int numDots = (int)std::count(geneOrTranscript.begin(), geneOrTranscript.end(), '.');

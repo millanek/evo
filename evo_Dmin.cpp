@@ -14,8 +14,8 @@
 
 static const char *DMIN_USAGE_MESSAGE =
 "Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] INPUT_FILE.vcf SETS.txt\n"
-"Calculate the Dmin-statistic - the ABBA/BABA stat for all trios of species in the dataset (the outgroup being fixed)"
-"the calculation is as definded in Durand et al. 2011"
+"Calculate the Dmin-statistic - the ABBA/BABA stat for all trios of species in the dataset (the outgroup being fixed)\n"
+"the calculation is as definded in Durand et al. 2011\n"
 "The SETS.txt should have two columns: SAMPLE_ID    SPECIES_ID\n"
 "The outgroup (can be multiple samples) should be specified by using the keywork Outgroup in place of the SPECIES_ID\n"
 "\n"

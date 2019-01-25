@@ -72,10 +72,16 @@ int AnnotationPreformat(int argc, char** argv) {
     string directionLastLine = "";
     std::cerr << "Going through " << opt::annotationFile << std::endl;
     while (getline(*annotFile, line)) {
+        if (line[0] == '#') continue;
         std::vector<string> annotVec = split(line, '\t');
         if (annotVec[2] == "CDS") { // only outputting CDS coordinates
             std::vector<string> descriptionVec = split(annotVec[8], ' ');
-            string transcript = descriptionVec[3].substr(1).substr(0,descriptionVec[3].substr(1).length()-2);
+            string transcript = "";
+            if (descriptionVec[2] == "transcript_id") {
+                transcript = descriptionVec[3].substr(1).substr(0,descriptionVec[3].substr(1).length()-2);
+            } else if (descriptionVec[4] == "transcript_id") {
+                transcript = descriptionVec[5].substr(1).substr(0,descriptionVec[5].substr(1).length()-2);
+            }
             if (gpTranscripts.count(transcript) == 1) {
                 string gene = descriptionVec[1].substr(1).substr(0,descriptionVec[1].substr(1).length()-2);
                 string scaffold = annotVec[0];
