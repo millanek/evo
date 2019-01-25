@@ -247,9 +247,9 @@ public:
     int getTranscriptCount(const std::string& geneOrTranscript) {
         int numTranscripts = 0;
         int numDots = (int)std::count(geneOrTranscript.begin(), geneOrTranscript.end(), '.');
-        if (numDots != 4)
+        if (numDots < 4)
             numTranscripts = geneTranscriptCounts[geneOrTranscript];
-        else {
+        else if (numDots == 4) {
             //std::vector<std::string> transcriptVec = split(geneOrTranscript,'.');
             //std::string geneName = transcriptVec[0] + "." + transcriptVec[1] + "." + transcriptVec[2] + "." + transcriptVec[3];
             std::string geneName = geneFromTranscript(geneOrTranscript);
