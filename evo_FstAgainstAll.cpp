@@ -194,6 +194,7 @@ int FstGlobalMain(int argc, char** argv) {
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, coord);
             
             coordDeque.push_back(coord); coordDeque.pop_front();
+            *outFile << chr << "\t" << coordDeque[0] << "\t" << coord << "\t" << "N"; double Fst;
             // Now calculate the Fst stats:
             double p1; double p2; int n1; int n2;
             for (int i = 0; i != populationsToUse.size(); i++) {
@@ -222,7 +223,6 @@ int FstGlobalMain(int argc, char** argv) {
                 }} */
                 if (usedVariantNumber > opt::windowSize && (usedVariantNumber % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
-                    *outFile << chr << "\t" << coordDeque[0] << "\t" << coord << "\t" << "N"; double Fst;
                     Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]);
                     *outFile << "\t" << Fst;
                 }
