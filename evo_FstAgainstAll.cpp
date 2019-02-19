@@ -223,12 +223,10 @@ int FstGlobalMain(int argc, char** argv) {
                 if (usedVariantNumber > opt::windowSize && (usedVariantNumber % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
                     *outFile << chr << "\t" << coordDeque[0] << "\t" << coord << "\t" << "N"; double Fst;
-                    for (int i = 0; i < populationsToUse.size(); i++) {
-                        Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]);
-                        *outFile << "\t" << Fst;
-                    }
-                    *outFile << std::endl;
+                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]);
+                    *outFile << "\t" << Fst;
                 }
+                *outFile << std::endl;
                 // }
             }
             durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;

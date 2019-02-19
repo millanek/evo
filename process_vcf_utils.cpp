@@ -85,6 +85,7 @@ void GeneralSetCountsWithComplements::getComplementCounts(const std::vector<stri
             }
         }
         setAAFsComplement[it->first] = (double)complementAAFCount/complementTotalAlleleCount;
+        setAlleleCountsComplement[it->first] = complementTotalAlleleCount;
     }
 }
 
