@@ -224,7 +224,7 @@ int FstGlobalMain(int argc, char** argv) {
                 }} */
                 if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
-                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]); if (Fst < 0) {
+                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]); if (Fst < 0) { Fst = 0; }
                     *outFile << "\t" << Fst;
                 }
                 // }
