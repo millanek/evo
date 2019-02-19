@@ -204,9 +204,6 @@ int FstGlobalMain(int argc, char** argv) {
                 n2 = c->setAlleleCountsComplement.at(populationsToUse[i]);
                 // std::cerr << p1 << "\t" << p2 << "\t" << n1 << "\t" << n2 << std::endl;
                 
-                if (p1 == 0 && p2 == 0) { continue; }
-                if (p1 == 1 && p2 == 1) { continue; }
-                
                 FstNumDeques[i].push_back(calculateFstNumerator(p1, p2, n1, n2)); FstNumDeques[i].pop_front();
                 FstDenomDeques[i].push_back(calculateFstDenominator(p1, p2)); FstDenomDeques[i].pop_front();
                 
