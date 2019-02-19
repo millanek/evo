@@ -125,7 +125,7 @@ int FstGlobalMain(int argc, char** argv) {
     int totalVariantNumber = 0; int usedVariantNumber = 0;
     //std::vector<int> usedVars(PBStrios.size(),0); // Will count the number of used variants for each trio
     std::vector<string> sampleNames; std::vector<std::string> fields;
-    int reportProgressEvery = 1000; string chr; string coord;
+    int reportProgressEvery = 10000; string chr; string coord;
     std::clock_t start; std::clock_t startGettingCounts; std::clock_t startCalculation;
     double durationOverall; double durationGettingCounts; double durationCalculation;
     
@@ -221,7 +221,7 @@ int FstGlobalMain(int argc, char** argv) {
                 }} */
                 if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
-                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]); if (Fst < 0) { Fst = 0; }
+                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]); if (Fst < 0 || vector_average(FstDenomDeques[i]) == 0) { Fst = 0; }
                     *outFile << "\t" << Fst;
                 }
                 // }
