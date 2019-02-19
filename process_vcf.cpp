@@ -44,6 +44,7 @@
 #include "evo_Dmin.h"
 #include "evo_Dmin_combine.h"
 #include "evo_PBS.h"
+#include "evo_FstAgainstAll.h"
 
 
 //#define TESTING 1
@@ -71,6 +72,7 @@ static const char *USAGE_MESSAGE =
 "           Dmin                calculate the minimum value of the D statistic (ABBA-BABA) for all possible trios of samples\n"
 "           DminCombine         combine results from different Dmin runs (e.g. per-chromosome)\n"
 "           filter              filter a vcf file\n"
+"           FstGlobal           Fst statistic for each population compared against the rest of the dataset\n"
 "           getWGSeq            obtain whole genome sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getMtSeq            obtain mitochondrial sequences (e.g. for phylogenetic analyses, recombination estimation etc.)\n"
 "           getCodingSeq        obtain coding sequences (e.g. for gene/variant classification - missense/nonsense/etc..)\n"
@@ -192,6 +194,9 @@ int main(int argc, char **argv) {
             DminCombineMain(argc - 1, argv + 1);
         else if (command == "PBS")
             PBSmain(argc - 1, argv + 1);
+        else if (command == "FstGlobal") {
+            FstGlobalMain(argc - 1, argv + 1);
+        }
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

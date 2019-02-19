@@ -64,17 +64,38 @@ public:
         individualsWithVariant.assign(nSamples, 0);
     };
     
+    void getSetVariantCountsSimple(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap);
+    void getSetVariantCounts(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap);
+    
     int overall;
     std::map<string,int> setRefCounts;
     std::map<string,int> setAltCounts;
     std::map<string,int> setAlleleCounts; // The number of non-missing alleles for this set
     std::vector<size_t> setSizes;
     std::map<string,double> setAAFs; // Allele frequencies - alternative allele
-    std::unordered_map<string,double> setDAFs; // Allele frequencies - derived allele
+    std::map<string,double> setDAFs; // Allele frequencies - derived allele
     std::vector<int> individualsWithVariant; // 0 homRef, 1 het, 2 homAlt
     // std::vector<int> set1individualsWithVariant; std::vector<int> set2individualsWithVariant;
     // std::vector<int> set3individualsWithVariant; std::vector<int> set4individualsWithVariant;
+    
+private:
+    void getBasicCounts(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap);
 };
+
+class GeneralSetCountsWithComplements : public GeneralSetCounts {
+    public:
+    GeneralSetCountsWithComplements(const std::map<string, std::vector<size_t>>& setsToPosMap, const int nSamples) : GeneralSetCounts(setsToPosMap,nSamples) {
+        for(std::map<string, std::vector<size_t>>::const_iterator it = setsToPosMap.begin(); it != setsToPosMap.end(); ++it) {
+            setAAFsComplement[it->first] = -1.0; setDAFsComplement[it->first] = -1.0; setAlleleCountsComplement[it->first] = 0;
+        }
+    }
+    std::map<string,double> setAAFsComplement; // Allele frequencies - alternative allele, in the complement of the set
+    std::map<string,double> setDAFsComplement; // Allele frequencies - derived allele, in the complement of the set
+    std::map<string,int> setAlleleCountsComplement; // The number of non-missing alleles for the complement of this set
+    
+    void getComplementCounts(const std::vector<string>& populationsToUse);
+};
+
 
 
 class Counts {
@@ -222,7 +243,7 @@ public:
 
 class SetCounts {
 public:
-    SetCounts() : overall(0), set1Count(0), set2Count(0), fisher_pval(1), chi_sq_pval(1),set1_n_withoutMissing(0), set2_n_withoutMissing(0), bAnyMissingGenotypes(false), n_alt_alleles(0), bIndel(false) {};
+    SetCounts() : overall(0), set1Count(0), set2Count(0), fisher_pval(1), chi_sq_pval(1),set1_n_withoutMissing(0), set2_n_withoutMissing(0), bAnyMissingGenotypes(false), n_alt_alleles(0), bIndel(false), p1(0), p2(0) {};
     
     int overall;
     bool bAnyMissingGenotypes;
@@ -241,6 +262,12 @@ public:
     bool bIndel;
     double fisher_pval;
     double chi_sq_pval;
+    double p1; double p2; // allele frequencies
+    
+    void calculateAlleleFrequencies() {
+        p1 = (double)set1Count/set1_n_withoutMissing;
+        p2 = (double)set2Count/set2_n_withoutMissing;
+    }
     
     void reset() {
         overall = 0;

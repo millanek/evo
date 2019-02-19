@@ -16,19 +16,15 @@ void parseFstOptions(int argc, char** argv);
 int fstMain(int argc, char** argv);
 
 
-inline double calculateFstNumerator(const SetCounts& thisVarCounts) {
-    double p1 = (double)thisVarCounts.set1Count/thisVarCounts.set1_n_withoutMissing;
-    double p2 = (double)thisVarCounts.set2Count/thisVarCounts.set2_n_withoutMissing;
+inline double calculateFstNumerator(const double p1, const double p2, const int n1, const int n2) {
     double power = pow((p1-p2), 2);
-    double fraction1 = (p1*(1-p1))/(thisVarCounts.set1_n_withoutMissing-1);
-    double fraction2 = (p2*(1-p2))/(thisVarCounts.set2_n_withoutMissing-1);
+    double fraction1 = (p1*(1-p1))/(n1-1);
+    double fraction2 = (p2*(1-p2))/(n2-1);
     double numerator = power - fraction1 - fraction2;
     return numerator;
 }
 
-inline double calculateFstDenominator(const SetCounts& thisVarCounts) {
-    double p1 = (double)thisVarCounts.set1Count/thisVarCounts.set1_n_withoutMissing;
-    double p2 = (double)thisVarCounts.set2Count/thisVarCounts.set2_n_withoutMissing;
+inline double calculateFstDenominator(const double p1, const double p2) {
     double denominator = (p1*(1-p2))+(p2*(1-p1));
     return denominator;
 }

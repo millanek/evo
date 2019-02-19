@@ -13,81 +13,82 @@
 
 
 // Works only on biallelic markers
-void getSetVariantCounts(GeneralSetCounts* c, const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
-    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
+void GeneralSetCounts::getSetVariantCounts(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
     
-    // Go through the genotypes - only biallelic markers are allowed
-    for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
-        // The first allele in this individual
-        if (genotypes[i][0] == '1') {
-            c->overall++; c->individualsWithVariant[i]++;
-            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
-        } else if (genotypes[i][0] == '0') {
-            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
-        }
-        // The second allele in this individual
-        if (genotypes[i][2] == '1') {
-            c->overall++;
-            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
-            c->individualsWithVariant[i]++;
-        } else if (genotypes[i][0] == '0') {
-            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
-        }
-    }
+    getBasicCounts(genotypes, posToSpeciesMap);
     
     // If at least one of the outgroup individuals has non-missing data
     // Find out what is the "ancestral allele" - i.e. the one more common in the outgroup
     int AAint;
     try {
-        if (c->setAlleleCounts.at("Outgroup") > 0) {
-            if (c->setRefCounts.at("Outgroup") > c->setAltCounts.at("Outgroup")) { AAint = 0; }
+        if (setAlleleCounts.at("Outgroup") > 0) {
+            if (setRefCounts.at("Outgroup") > setAltCounts.at("Outgroup")) { AAint = 0; }
             else { AAint = 1; }
         }
     } catch (std::out_of_range& e) { AAint = -1; }
     
     // Now fill in the allele frequencies
-    for(std::map<string,int>::iterator it = c->setAltCounts.begin(); it != c->setAltCounts.end(); ++it) {
-        if (c->setAlleleCounts.at(it->first) > 0) {
-            c->setAAFs[it->first] = (double)c->setAltCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+    for(std::map<string,int>::iterator it = setAltCounts.begin(); it != setAltCounts.end(); ++it) {
+        if (setAlleleCounts.at(it->first) > 0) {
+            setAAFs[it->first] = (double)setAltCounts.at(it->first)/setAlleleCounts.at(it->first);
             if (AAint == 0) { // Ancestral allele seems to be the ref, so derived is alt
-                c->setDAFs[it->first] = (double)c->setAltCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+                setDAFs[it->first] = (double)setAltCounts.at(it->first)/setAlleleCounts.at(it->first);
             } else if (AAint == 1) { // Ancestral allele seems to be alt, so derived is ref
-                c->setDAFs[it->first] = (double)c->setRefCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+                setDAFs[it->first] = (double)setRefCounts.at(it->first)/setAlleleCounts.at(it->first);
             }
         }
     }
 }
 
 // Works only on biallelic markers
-void getSetVariantCountsSimple(GeneralSetCounts* c, const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
+void GeneralSetCounts::getSetVariantCountsSimple(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
     // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
+    getBasicCounts(genotypes, posToSpeciesMap);
     
+    // Now fill in the allele frequencies
+    for(std::map<string,int>::iterator it = setAltCounts.begin(); it != setAltCounts.end(); ++it) {
+        if (setAlleleCounts.at(it->first) > 0) {
+            setAAFs[it->first] = (double)setAltCounts.at(it->first)/setAlleleCounts.at(it->first);
+        }
+    }
+}
+
+void GeneralSetCounts::getBasicCounts(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
     // Go through the genotypes - only biallelic markers are allowed
     for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
         // The first allele in this individual
         if (genotypes[i][0] == '1') {
-            c->overall++; c->individualsWithVariant[i]++;
-            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
+            overall++; individualsWithVariant[i]++;
+            setAltCounts[posToSpeciesMap.at(i)]++; setAlleleCounts[posToSpeciesMap.at(i)]++;
         } else if (genotypes[i][0] == '0') {
-            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
+            setAlleleCounts[posToSpeciesMap.at(i)]++; setRefCounts[posToSpeciesMap.at(i)]++;
         }
         // The second allele in this individual
         if (genotypes[i][2] == '1') {
-            c->overall++;
-            c->setAltCounts[posToSpeciesMap.at(i)]++; c->setAlleleCounts[posToSpeciesMap.at(i)]++;
-            c->individualsWithVariant[i]++;
+            overall++;
+            setAltCounts[posToSpeciesMap.at(i)]++; setAlleleCounts[posToSpeciesMap.at(i)]++;
+            individualsWithVariant[i]++;
         } else if (genotypes[i][0] == '0') {
-            c->setAlleleCounts[posToSpeciesMap.at(i)]++; c->setRefCounts[posToSpeciesMap.at(i)]++;
-        }
-    }
-    
-    // Now fill in the allele frequencies
-    for(std::map<string,int>::iterator it = c->setAltCounts.begin(); it != c->setAltCounts.end(); ++it) {
-        if (c->setAlleleCounts.at(it->first) > 0) {
-            c->setAAFs[it->first] = (double)c->setAltCounts.at(it->first)/c->setAlleleCounts.at(it->first);
+            setAlleleCounts[posToSpeciesMap.at(i)]++; setRefCounts[posToSpeciesMap.at(i)]++;
         }
     }
 }
+
+void GeneralSetCountsWithComplements::getComplementCounts(const std::vector<string>& populationsToUse) {
+    // Now fill in the allele frequencies
+    for(std::map<string,int>::iterator it = setAltCounts.begin(); it != setAltCounts.end(); ++it) {
+        int complementAAFCount = 0; int complementTotalAlleleCount = 0;
+        for (int i = 0; i < populationsToUse.size(); i++) {
+            if (it->first != populationsToUse[i]) {
+                complementAAFCount += setAltCounts.at(populationsToUse[i]);
+                complementTotalAlleleCount += setAlleleCounts.at(populationsToUse[i]);
+            }
+        }
+        setAAFsComplement[it->first] = (double)complementAAFCount/complementTotalAlleleCount;
+    }
+}
+
+
 
 
 

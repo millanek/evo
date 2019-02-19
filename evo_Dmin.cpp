@@ -216,7 +216,7 @@ int DminMain(int argc, char** argv) {
             
             startGettingCounts = std::clock();
             GeneralSetCounts* c = new GeneralSetCounts(speciesToPosMap, (int)genotypes.size());
-            getSetVariantCounts(c, genotypes, posToSpeciesMap);
+            c->getSetVariantCounts(genotypes, posToSpeciesMap);
             genotypes.clear(); genotypes.shrink_to_fit();
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
            // std::cerr << "Here:" << totalVariantNumber << std::endl;

@@ -542,9 +542,11 @@ void getFstFromVCF() {
             
             if (counts->n_alt_alleles == 1 && counts->bIndel == false && (counts->set1Count > 0 || counts->set2Count > 0)
                 && (counts->set1Count < counts->set1_n_withoutMissing || counts->set2Count < counts->set2_n_withoutMissing)) {
-                countedVariantNumber++;
-                double FstNumerator = calculateFstNumerator(*counts); fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
-                double FstDenominator = calculateFstDenominator(*counts); fstDenominators.push_back(FstDenominator); fixedWindowFstDenomVector.push_back(FstDenominator);
+                countedVariantNumber++; counts->calculateAlleleFrequencies();
+                double FstNumerator = calculateFstNumerator(counts->p1, counts->p2, counts->set1_n_withoutMissing, counts->set2_n_withoutMissing);
+                fstNumerators.push_back(FstNumerator); fixedWindowFstNumVector.push_back(FstNumerator);
+                double FstDenominator = calculateFstDenominator(counts->p1, counts->p2);
+                fstDenominators.push_back(FstDenominator); fixedWindowFstDenomVector.push_back(FstDenominator);
                 assert(FstDenominator != 0);
                 double thisSNPDxy = calculateDxy(*counts, n1, n2); DxyVector.push_back(thisSNPDxy); fixedWindowDxyVector.push_back(thisSNPDxy);
                 std::vector<double> thisSNPhet = getSetHeterozygozities(*counts, n1, n2); heterozygositiesVector.push_back(thisSNPhet);
@@ -798,8 +800,9 @@ void getFstFromMs() {
         //std::cerr << "counts.set1Count" << counts.set1Count << "\t" << "counts.set2Count" << counts.set2Count << std::endl;
         
         if (counts.set1Count > 0 || counts.set2Count > 0) {
-            double FstNum = calculateFstNumerator(counts);
-            double FstDenom = calculateFstDenominator(counts);
+            counts.calculateAlleleFrequencies();
+            double FstNum = calculateFstNumerator(counts.p1, counts.p2, counts.set1_n_withoutMissing, counts.set2_n_withoutMissing);
+            double FstDenom = calculateFstDenominator(counts.p1, counts.p2);
             thisFst = FstNum/FstDenom; if (thisFst < 0) thisFst = 0;
             fstNumerators.push_back(FstNum);
             fstDenominators.push_back(FstDenom);
