@@ -222,9 +222,9 @@ int FstGlobalMain(int argc, char** argv) {
                         } currentGene = SNPgeneDetails[0];
                     }
                 }} */
-                if (usedVariantNumber > opt::windowSize && (usedVariantNumber % opt::windowStep == 0)) {
+                if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
-                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]);
+                    Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]); if (Fst < 0) {
                     *outFile << "\t" << Fst;
                 }
                 // }
