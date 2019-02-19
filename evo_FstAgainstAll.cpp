@@ -169,7 +169,7 @@ int FstGlobalMain(int argc, char** argv) {
             //std::vector<std::string> info = split(fields[7], ';');
             // Only consider biallelic SNPs
             string refAllele = fields[3]; string altAllele = fields[4];
-            if (refAllele.length() > 1 || altAllele.length() > 1) {
+            if (refAllele.length() > 1 || altAllele.length() > 1 || altAllele == "*") {
                 refAllele.clear(); refAllele.shrink_to_fit(); altAllele.clear(); altAllele.shrink_to_fit();
                 genotypes.clear(); genotypes.shrink_to_fit(); continue;
             }
@@ -202,6 +202,7 @@ int FstGlobalMain(int argc, char** argv) {
                 p2 = c->setAAFsComplement.at(populationsToUse[i]);
                 n1 = c->setAlleleCounts.at(populationsToUse[i]);
                 n2 = c->setAlleleCountsComplement.at(populationsToUse[i]);
+                // std::cerr << p1 << "\t" << p2 << "\t" << n1 << "\t" << n2 << std::endl;
                 
                 if (p1 == 0 && p2 == 0) { continue; }
                 if (p1 == 1 && p2 == 1) { continue; }
