@@ -226,9 +226,9 @@ int FstGlobalMain(int argc, char** argv) {
                     Fst = vector_average(FstNumDeques[i])/vector_average(FstDenomDeques[i]);
                     *outFile << "\t" << Fst;
                 }
-                *outFile << std::endl;
                 // }
             }
+            *outFile << std::endl;
             durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             delete c;
         }
