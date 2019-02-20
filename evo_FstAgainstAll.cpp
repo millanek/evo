@@ -193,10 +193,13 @@ int FstGlobalMain(int argc, char** argv) {
             // find if we are in a gene:
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, coord);
             
+            
             coordDeque.push_back(coord); coordDeque.pop_front();
-            *outFile << chr << "\t" << coordDeque[0] << "\t" << coord << "\t" << "N"; double Fst;
+            if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
+                *outFile << chr << "\t" << coordDeque[0] << "\t" << coord << "\t" << "N";
+            }
             // Now calculate the Fst stats:
-            double p1; double p2; int n1; int n2;
+            double p1; double p2; int n1; int n2; double Fst;
             for (int i = 0; i != populationsToUse.size(); i++) {
                 p1 = c->setAAFs.at(populationsToUse[i]); //assert(p_S1 == pS1test);
                 p2 = c->setAAFsComplement.at(populationsToUse[i]);
