@@ -229,7 +229,9 @@ int FstGlobalMain(int argc, char** argv) {
                 }
                 // }
             }
-            *outFile << std::endl;
+            if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
+                *outFile << std::endl;
+            }
             durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             delete c;
         }
