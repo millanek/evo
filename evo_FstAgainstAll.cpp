@@ -211,7 +211,7 @@ int FstGlobalMain(int argc, char** argv) {
                 FstDenomDeques[i].push_back(calculateFstDenominator(p1, p2)); FstDenomDeques[i].pop_front();
                 
                 if (calculateFstNumerator(p1, p2, n1, n2)/calculateFstDenominator(p1, p2) > 1) {
-                    std::cerr << p1 << "\t" << p2 << "\t" << n1 << "\t" << n2 << std::endl;
+                    std::cerr << chr << "\t" << coord << "\t" << p1 << "\t" << p2 << "\t" << n1 << "\t" << n2 << std::endl;
                 }
                 
                /* if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
