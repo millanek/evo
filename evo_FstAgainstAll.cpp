@@ -210,6 +210,10 @@ int FstGlobalMain(int argc, char** argv) {
                 FstNumDeques[i].push_back(calculateFstNumerator(p1, p2, n1, n2)); FstNumDeques[i].pop_front();
                 FstDenomDeques[i].push_back(calculateFstDenominator(p1, p2)); FstDenomDeques[i].pop_front();
                 
+                if (calculateFstNumerator(p1, p2, n1, n2)/calculateFstDenominator(p1, p2) > 1) {
+                    std::cerr << p1 << "\t" << p2 << "\t" << n1 << "\t" << n2 << std::endl;
+                }
+                
                /* if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
                     if (SNPgeneDetails[0] == currentGene) {
                         if (SNPgeneDetails[1] == "exon") {
