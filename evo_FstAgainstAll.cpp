@@ -180,6 +180,14 @@ int FstGlobalMain(int argc, char** argv) {
             c->getComplementCounts(populationsToUse);
             genotypes.clear(); genotypes.shrink_to_fit();
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
+            
+            // if this site is not variable in the populations of interest then just move to the next one
+            if (c->setAAFs.at(populationsToUse[0]) == 0 && c->setAAFsComplement.at(populationsToUse[0]) == 0) {
+                delete c; continue;
+            }
+            if (c->setAAFs.at(populationsToUse[0]) == 1 && c->setAAFsComplement.at(populationsToUse[0]) == 1) {
+                delete c; continue;
+            }
             // std::cerr << "Here:" << totalVariantNumber << std::endl;
             
             startCalculation = std::clock();
@@ -192,7 +200,6 @@ int FstGlobalMain(int argc, char** argv) {
             
             // find if we are in a gene:
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, coord);
-            
             
             coordDeque.push_back(coord); coordDeque.pop_front();
             if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
