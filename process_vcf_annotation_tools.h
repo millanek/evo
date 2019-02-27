@@ -334,7 +334,11 @@ private:
                 string transcriptName = annotLineVec[4]; string transcriptStart = annotLineVec[1];
                 annotLineVec = split(thisScaffoldAnnotation[i][thisScaffoldAnnotation[i].size()-1], '\t');
                 string transcriptEnd = annotLineVec[2];
-                string transcriptStartEnd = transcriptName + "\t" + transcriptStart + "\t" + transcriptEnd;
+                string transcriptStartEnd; if (atoi(transcriptStart.c_str()) < atoi(transcriptEnd.c_str())) {
+                    transcriptStartEnd = transcriptName + "\t" + transcriptStart + "\t" + transcriptEnd;
+                } else {
+                    transcriptStartEnd = transcriptName + "\t" + transcriptEnd + "\t" + transcriptStart;
+                }
                 thisScaffoldTranscriptStartEnd.push_back(transcriptStartEnd);
                 thisScaffoldTranscriptMap[transcriptName] = thisScaffoldAnnotation[i];
                 //std::cerr << "Annotation processed: " << transcriptName << std::endl;

@@ -42,6 +42,7 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
     string inGene = ""; string SNPcategory = "nonCoding";
     for (std::vector<std::vector<string> >::size_type i = 0; i != scaffoldTranscriptStartEnd.size(); i++) {
         std::vector<string> startEndVec = split(scaffoldTranscriptStartEnd[i], '\t');
+        if (SNPlocus == 20001) { print_vector_stream(startEndVec, std::cerr);}
         if (SNPlocus >= atoi(startEndVec[1].c_str()) && SNPlocus <= atoi(startEndVec[2].c_str())) {
             string thisTranscript = startEndVec[0];
             int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');

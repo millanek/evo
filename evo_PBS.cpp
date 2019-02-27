@@ -250,6 +250,7 @@ int PBSmain(int argc, char** argv) {
             // find if we are in a gene:
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, atoi(coord.c_str()));
             
+            std::cerr << coord << "\t";
             print_vector_stream(SNPgeneDetails, std::cerr);
             // Now calculate the PBS stats:
             double p1; double p2; double p3;
