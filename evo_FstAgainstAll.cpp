@@ -199,7 +199,7 @@ int FstGlobalMain(int argc, char** argv) {
             // durationFirstLoop = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             
             // find if we are in a gene:
-            std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, coord);
+            std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, atoi(coord.c_str()));
             
             coordDeque.push_back(coord); coordDeque.pop_front();
             if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {

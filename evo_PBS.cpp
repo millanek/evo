@@ -248,8 +248,9 @@ int PBSmain(int argc, char** argv) {
             // durationFirstLoop = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             
             // find if we are in a gene:
-            std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, coord);
+            std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, atoi(coord.c_str()));
             
+            print_vector_stream(SNPgeneDetails, std::cerr);
             // Now calculate the PBS stats:
             double p1; double p2; double p3;
             for (int i = 0; i != PBStrios.size(); i++) {

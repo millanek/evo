@@ -34,3 +34,31 @@ std::string getReferenceForThisRegion(const std::vector<std::string>& thisRegion
     // std::cerr << "Done" << std::endl;
     return refSeq;
 }
+
+
+std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, const int SNPlocus) {
+    std::vector<string> SNPgeneDetails;
+    std::vector<string> scaffoldTranscriptStartEnd = transcriptStartEndMap[SNPscaffold];
+    string inGene = ""; string SNPcategory = "nonCoding";
+    for (std::vector<std::vector<string> >::size_type i = 0; i != scaffoldTranscriptStartEnd.size(); i++) {
+        std::vector<string> startEndVec = split(scaffoldTranscriptStartEnd[i], '\t');
+        if (SNPlocus >= atoi(startEndVec[1].c_str()) && SNPlocus <= atoi(startEndVec[2].c_str())) {
+            string thisTranscript = startEndVec[0];
+            int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');
+            SNPcategory = "intron";
+            if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
+            else inGene = thisTranscript;
+            std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
+            for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
+                std::vector<string> exonVec = split(exons[j], '\t');
+                if (SNPlocus >= atoi(exonVec[1].c_str()) && SNPlocus <= atoi(exonVec[2].c_str())) {
+                    SNPcategory = "exon";
+                }
+                break;
+            }
+            if (SNPcategory == "exon") { break; }
+        } //else if (SNPcategory == "intron") { if (inGene != geneFromTranscript(startEndVec[0])) { break; } }
+    }
+    SNPgeneDetails.push_back(inGene); SNPgeneDetails.push_back(SNPcategory);
+    return SNPgeneDetails;
+    }
