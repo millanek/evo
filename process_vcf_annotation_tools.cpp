@@ -52,6 +52,7 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
             std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
             for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
                 std::vector<string> exonVec = split(exons[j], '\t');
+                if (SNPlocus == 20001) { print_vector_stream(exonVec, std::cerr); }
                 if (SNPlocus >= atoi(exonVec[1].c_str()) && SNPlocus <= atoi(exonVec[2].c_str())) {
                     SNPcategory = "exon";
                 }
@@ -63,3 +64,34 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
     SNPgeneDetails.push_back(inGene); SNPgeneDetails.push_back(SNPcategory);
     return SNPgeneDetails;
     }
+
+
+
+void Annotation::annotateGeneStartsEnds() {
+    for (std::map<std::string, std::vector<std::vector<std::string> > >::iterator it = annotationMap.begin(); it != annotationMap.end(); it++) {
+        std::vector<std::vector<std::string> > thisScaffoldAnnotation = it->second;
+        std::vector<std::string> thisScaffoldTranscriptStartEnd;
+        std::map<std::string, std::vector<std::string> > thisScaffoldTranscriptMap;
+        for (std::vector<std::vector<std::string> >::size_type i = 0; i != thisScaffoldAnnotation.size(); i++) {
+            std::vector<string> annotLineVec = split(thisScaffoldAnnotation[i][0], '\t');
+            if (i == 0) { print_vector_stream(annotLineVec, std::cerr); }
+            string transcriptName = annotLineVec[4]; string transcriptStart = annotLineVec[1];
+            annotLineVec = split(thisScaffoldAnnotation[i][thisScaffoldAnnotation[i].size()-1], '\t');
+            if (i == 0) { print_vector_stream(annotLineVec, std::cerr); }
+            string transcriptEnd = annotLineVec[2];
+            string transcriptStartEnd; if (atoi(transcriptStart.c_str()) < atoi(transcriptEnd.c_str())) {
+                transcriptStartEnd = transcriptName + "\t" + transcriptStart + "\t" + transcriptEnd;
+            } else {
+                transcriptStartEnd = transcriptName + "\t" + transcriptEnd + "\t" + transcriptStart;
+            }
+            thisScaffoldTranscriptStartEnd.push_back(transcriptStartEnd);
+            thisScaffoldTranscriptMap[transcriptName] = thisScaffoldAnnotation[i];
+            //std::cerr << "Annotation processed: " << transcriptName << std::endl;
+        }
+        //std::cerr << "Annotation processed: " << it->first << std::endl;
+        annotationMapTranscriptMap[it->first] = thisScaffoldTranscriptMap;
+        transcriptStartEndMap[it->first] = thisScaffoldTranscriptStartEnd;
+        thisScaffoldTranscriptMap.clear();
+        thisScaffoldTranscriptStartEnd.clear();
+        }
+}

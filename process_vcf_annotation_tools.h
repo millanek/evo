@@ -324,34 +324,7 @@ private:
         }
     }
     
-    void annotateGeneStartsEnds() {
-        for (std::map<std::string, std::vector<std::vector<std::string> > >::iterator it = annotationMap.begin(); it != annotationMap.end(); it++) {
-            std::vector<std::vector<std::string> > thisScaffoldAnnotation = it->second;
-            std::vector<std::string> thisScaffoldTranscriptStartEnd;
-            std::map<std::string, std::vector<std::string> > thisScaffoldTranscriptMap;
-            for (std::vector<std::vector<std::string> >::size_type i = 0; i != thisScaffoldAnnotation.size(); i++) {
-                std::vector<string> annotLineVec = split(thisScaffoldAnnotation[i][0], '\t');
-                string transcriptName = annotLineVec[4]; string transcriptStart = annotLineVec[1];
-                annotLineVec = split(thisScaffoldAnnotation[i][thisScaffoldAnnotation[i].size()-1], '\t');
-                string transcriptEnd = annotLineVec[2];
-                string transcriptStartEnd; if (atoi(transcriptStart.c_str()) < atoi(transcriptEnd.c_str())) {
-                    transcriptStartEnd = transcriptName + "\t" + transcriptStart + "\t" + transcriptEnd;
-                } else {
-                    transcriptStartEnd = transcriptName + "\t" + transcriptEnd + "\t" + transcriptStart;
-                }
-                thisScaffoldTranscriptStartEnd.push_back(transcriptStartEnd);
-                thisScaffoldTranscriptMap[transcriptName] = thisScaffoldAnnotation[i];
-                //std::cerr << "Annotation processed: " << transcriptName << std::endl;
-            }
-            //std::cerr << "Annotation processed: " << it->first << std::endl;
-            annotationMapTranscriptMap[it->first] = thisScaffoldTranscriptMap;
-            transcriptStartEndMap[it->first] = thisScaffoldTranscriptStartEnd;
-            thisScaffoldTranscriptMap.clear();
-            thisScaffoldTranscriptStartEnd.clear();
-        }
-    }
-    
-    
+    void annotateGeneStartsEnds();
 };
 
 
