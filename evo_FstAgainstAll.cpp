@@ -246,8 +246,10 @@ int FstGlobalMain(int argc, char** argv) {
             if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] == "" && currentGene != "") {
                 *outFileGenes << currentGene << "\t" << FstGeneNumVectors[0][0].size() << "\t" << FstGeneNumVectors[0][1].size();
                 for (int i = 0; i < populationsToUse.size(); i++) {
-                    *outFileGenes << "\t" << vector_average(FstGeneNumVectors[i][0])/vector_average(FstGeneDenumVectors[i][0]);
-                    *outFileGenes << "\t" << vector_average(FstGeneNumVectors[i][1])/vector_average(FstGeneDenumVectors[i][1]);
+                    double FstExons = vector_average(FstGeneNumVectors[i][0])/vector_average(FstGeneDenumVectors[i][0]);
+                    double FstWithIntrons = vector_average(FstGeneNumVectors[i][1])/vector_average(FstGeneDenumVectors[i][1]);
+                    if (FstExons < 0) FstExons = 0; if (FstWithIntrons < 0) FstWithIntrons = 0;
+                    *outFileGenes << "\t" << FstExons << "\t" << FstWithIntrons;
                     FstGeneNumVectors[i][0].clear(); FstGeneNumVectors[i][1].clear();
                     FstGeneDenumVectors[i][0].clear(); FstGeneDenumVectors[i][1].clear();
                 } *outFileGenes << std::endl;
