@@ -250,8 +250,8 @@ int PBSmain(int argc, char** argv) {
             // find if we are in a gene:
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, atoi(coord.c_str()));
             
-            std::cerr << coord << "\t";
-            print_vector_stream(SNPgeneDetails, std::cerr);
+            // std::cerr << coord << "\t";
+            // print_vector_stream(SNPgeneDetails, std::cerr);
             // Now calculate the PBS stats:
             double p1; double p2; double p3;
             for (int i = 0; i != PBStrios.size(); i++) {
@@ -284,7 +284,8 @@ int PBSmain(int argc, char** argv) {
                         if (currentGene != "NN") {
                             *outFilesGenes[i] << currentGene << "\t" << PBSgeneResults[i][0].size() << "\t" << PBSgeneResults[i][3].size() << "\t" << vector_average(PBSgeneResults[i][0]) << "\t" << vector_average(PBSgeneResults[i][1]) << "\t" << vector_average(PBSgeneResults[i][2]) << "\t" << vector_average(PBSgeneResults[i][3]) << "\t" << vector_average(PBSgeneResults[i][4]) << "\t" << vector_average(PBSgeneResults[i][5]) << std::endl;
                             for (int j = 0; j <= 5; j++) { PBSgeneResults[i][j].clear(); }
-                        } currentGene = SNPgeneDetails[0];
+                        }
+                        if (i == PBStrios.size()-1) { currentGene = SNPgeneDetails[0]; }
                     }
                 }}
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {

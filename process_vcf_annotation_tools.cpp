@@ -50,15 +50,16 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
             if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
             else inGene = thisTranscript;
             std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
+            // std::cerr << exons.size() << std::endl;
             for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
                 std::vector<string> exonVec = split(exons[j], '\t');
-                if (SNPlocus == 20001) { print_vector_stream(exonVec, std::cerr); }
+                //if (SNPlocus == 20001) { print_vector_stream(exonVec, std::cerr); }
                 if (SNPlocus >= atoi(exonVec[1].c_str()) && SNPlocus <= atoi(exonVec[2].c_str())) {
                     SNPcategory = "exon";
                 }
-                break;
+                if (SNPcategory == "exon") { break; }
             }
-            if (SNPcategory == "exon") { break; }
+            break;
         } //else if (SNPcategory == "intron") { if (inGene != geneFromTranscript(startEndVec[0])) { break; } }
     }
     SNPgeneDetails.push_back(inGene); SNPgeneDetails.push_back(SNPcategory);
