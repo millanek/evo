@@ -276,11 +276,10 @@ int PBSmain(int argc, char** argv) {
                 PBSresults[i][0].pop_front(); PBSresults[i][1].pop_front(); PBSresults[i][2].pop_front(); PBSresults[i][3].pop_front();
                 
                 if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
-                    if (SNPgeneDetails[0] == currentGene) {
-                        if (SNPgeneDetails[1] == "exon") {
-                            PBSgeneResults[i][0].push_back(thisSNP_PBS[0]); PBSgeneResults[i][1].push_back(thisSNP_PBS[1]); PBSgeneResults[i][2].push_back(thisSNP_PBS[2]);
-                        } PBSgeneResults[i][3].push_back(thisSNP_PBS[0]); PBSgeneResults[i][4].push_back(thisSNP_PBS[1]); PBSgeneResults[i][5].push_back(thisSNP_PBS[2]);
-                    }
+                    if (SNPgeneDetails[1] == "exon") {
+                        PBSgeneResults[i][0].push_back(thisSNP_PBS[0]); PBSgeneResults[i][1].push_back(thisSNP_PBS[1]); PBSgeneResults[i][2].push_back(thisSNP_PBS[2]);
+                    } PBSgeneResults[i][3].push_back(thisSNP_PBS[0]); PBSgeneResults[i][4].push_back(thisSNP_PBS[1]); PBSgeneResults[i][5].push_back(thisSNP_PBS[2]);
+                    currentGene = SNPgeneDetails[0];
                 }}
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
@@ -288,13 +287,13 @@ int PBSmain(int argc, char** argv) {
                 }
                 // }
             }
-            if (SNPgeneDetails[0] != currentGene && currentGene != "") {
+            if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] == "" && currentGene != "") {
                 for (int i = 0; i != PBStrios.size(); i++) {
                     *outFilesGenes[i] << currentGene << "\t" << PBSgeneResults[i][0].size() << "\t" << PBSgeneResults[i][3].size() << "\t" << vector_average(PBSgeneResults[i][0]) << "\t" << vector_average(PBSgeneResults[i][1]) << "\t" << vector_average(PBSgeneResults[i][2]) << "\t" << vector_average(PBSgeneResults[i][3]) << "\t" << vector_average(PBSgeneResults[i][4]) << "\t" << vector_average(PBSgeneResults[i][5]) << std::endl;
                         for (int j = 0; j <= 5; j++) { PBSgeneResults[i][j].clear(); }
                 }
-                currentGene = SNPgeneDetails[0];
-            }
+                currentGene = "";
+            }}
             durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             delete c;
         }
