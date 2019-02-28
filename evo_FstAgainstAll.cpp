@@ -67,7 +67,6 @@ int FstGlobalMain(int argc, char** argv) {
         Annotation Annot(annotFile, false); // Does not use transcripts annotated as 5' or 3' partial
         wgAnnotation = Annot;
     }
-    std::vector<std::vector<string> > annotation;
     
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
@@ -234,7 +233,7 @@ int FstGlobalMain(int argc, char** argv) {
                 if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
                     if (SNPgeneDetails[1] == "exon") {
                         FstGeneNumVectors[i][0].push_back(FstNum); FstGeneDenumVectors[i][0].push_back(FstDenom);
-                    } FstGeneDenumVectors[i][1].push_back(FstDenom);
+                    } FstGeneNumVectors[i][1].push_back(FstNum); FstGeneDenumVectors[i][1].push_back(FstDenom);
                     currentGene = SNPgeneDetails[0];
                 }}
                 if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {

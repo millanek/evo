@@ -123,7 +123,6 @@ int PBSmain(int argc, char** argv) {
         Annotation Annot(annotFile, false); // Does not use transcripts annotated as 5' or 3' partial
         wgAnnotation = Annot;
     }
-    std::vector<std::vector<string> > annotation;
     
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
     std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
