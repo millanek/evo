@@ -281,11 +281,11 @@ int PBSmain(int argc, char** argv) {
                             PBSgeneResults[i][0].push_back(thisSNP_PBS[0]); PBSgeneResults[i][1].push_back(thisSNP_PBS[1]); PBSgeneResults[i][2].push_back(thisSNP_PBS[2]);
                         } PBSgeneResults[i][3].push_back(thisSNP_PBS[0]); PBSgeneResults[i][4].push_back(thisSNP_PBS[1]); PBSgeneResults[i][5].push_back(thisSNP_PBS[2]);
                     } else {
-                        if (currentGene != "NN") {
+                        if (currentGene != "NN" && i == PBStrios.size()-1) {
                             *outFilesGenes[i] << currentGene << "\t" << PBSgeneResults[i][0].size() << "\t" << PBSgeneResults[i][3].size() << "\t" << vector_average(PBSgeneResults[i][0]) << "\t" << vector_average(PBSgeneResults[i][1]) << "\t" << vector_average(PBSgeneResults[i][2]) << "\t" << vector_average(PBSgeneResults[i][3]) << "\t" << vector_average(PBSgeneResults[i][4]) << "\t" << vector_average(PBSgeneResults[i][5]) << std::endl;
                             for (int j = 0; j <= 5; j++) { PBSgeneResults[i][j].clear(); }
+                            currentGene = SNPgeneDetails[0];
                         }
-                        if (i == PBStrios.size()-1) { currentGene = SNPgeneDetails[0]; }
                     }
                 }}
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {
