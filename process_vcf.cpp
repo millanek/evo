@@ -44,6 +44,7 @@
 #include "evo_Dmin.h"
 #include "evo_Dmin_combine.h"
 #include "evo_PBS.h"
+#include "evo_ABS.h"
 #include "evo_FstAgainstAll.h"
 
 
@@ -194,6 +195,8 @@ int main(int argc, char **argv) {
             DminCombineMain(argc - 1, argv + 1);
         else if (command == "PBS")
             PBSmain(argc - 1, argv + 1);
+        else if (command == "ABS")
+            ABSmain(argc - 1, argv + 1);
         else if (command == "FstGlobal") {
             FstGlobalMain(argc - 1, argv + 1);
         }
