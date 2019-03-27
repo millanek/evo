@@ -86,6 +86,7 @@ static const char *USAGE_MESSAGE =
 "           stats               get various statistics from a vcf file\n"
 "           test                used for testing/developing new programs\n"
 "           VCFfromSequenom     Generate a VCF file from a sequenom output file\n"
+"           vcf-comb            Combine VCF files called against different reference genomes\n"
 " Various utils:    \n"
 "           aa-seq              Final steps in generating an ancestral sequence from a multiple alignment (.maf)\n"
 "           aa-fill             Adding the AA (ancestral allele) info field to a VCF (only for SNPs), given an ancestral sequence from aa-seq\n"

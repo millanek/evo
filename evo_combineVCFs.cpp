@@ -62,12 +62,13 @@ int VCFcombMain(int argc, char** argv) {
     std::map<int,std::vector<string>> VCF1; std::map<int,std::vector<string>> VCF2;
     std::vector<string> header1; std::vector<string> header2;
     std::vector<string> samples1; std::vector<string> samples2;
+    std::vector<std::string> fields;
     // Now go through the vcf and add the AA fields
     while (getline(*vcfFile1, line)) {
         if (line[0] == '#' && line[1] == '#') { header1.push_back(line); }
         else if (line[0] == '#' && line[1] == 'C') { samples1 = split(line, '\t'); }
         else {
-            std::vector<std::string> fields = split(line, '\t');
+            fields = split(line, '\t');
             VCF1[atoi(fields[1].c_str())] = fields;
         }
     }
@@ -75,7 +76,7 @@ int VCFcombMain(int argc, char** argv) {
         if (line[0] == '#' && line[1] == '#') { header2.push_back(line); }
         else if (line[0] == '#' && line[1] == 'C') { samples2 = split(line, '\t'); }
         else {
-            std::vector<std::string> fields = split(line, '\t');
+            fields = split(line, '\t');
             VCF2[atoi(fields[1].c_str())] = fields;
         }
     }
