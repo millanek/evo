@@ -46,20 +46,20 @@
 #include "evo_PBS.h"
 #include "evo_ABS.h"
 #include "evo_FstAgainstAll.h"
+#include "evo_combineVCFs.h"
 
 
 //#define TESTING 1
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r22"
+#define PACKAGE_VERSION "0.1 r23"
 
 
 static const char *VERSION_MESSAGE =
 "evo software Version " PACKAGE_VERSION "\n"
 "Written by Milan Malinsky.\n"
-"\n"
-"Copyright 2013 Wellcome Trust Sanger Institute\n";
+"\n";
 
 static const char *USAGE_MESSAGE =
 "Program: " PROGRAM_BIN "\n"
@@ -197,9 +197,10 @@ int main(int argc, char **argv) {
             PBSmain(argc - 1, argv + 1);
         else if (command == "ABS")
             ABSmain(argc - 1, argv + 1);
-        else if (command == "FstGlobal") {
+        else if (command == "FstGlobal")
             FstGlobalMain(argc - 1, argv + 1);
-        }
+        else if (command == "vcf-comb")
+            VCFcombMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
