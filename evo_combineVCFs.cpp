@@ -59,7 +59,7 @@ int VCFcombMain(int argc, char** argv) {
     while (getline(*refFile2, line)) { refSeq2.append(line); }
     assert(chrRef1.length() == chrRef2.length());
     
-    std::map<int,std::vector<string>> VCF1; std::map<int,std::vector<string>> VCF2;
+    std::map<int,string> VCF1; std::map<int,string> VCF2;
     std::vector<string> header1; std::vector<string> header2;
     std::vector<string> samples1; std::vector<string> samples2;
     std::vector<std::string> fields;
@@ -69,7 +69,7 @@ int VCFcombMain(int argc, char** argv) {
         else if (line[0] == '#' && line[1] == 'C') { samples1 = split(line, '\t'); }
         else {
             fields = split(line, '\t');
-            VCF1[atoi(fields[1].c_str())] = fields;
+            VCF1[atoi(fields[1].c_str())] = line;
         }
     }
     while (getline(*vcfFile2, line)) {
@@ -77,7 +77,7 @@ int VCFcombMain(int argc, char** argv) {
         else if (line[0] == '#' && line[1] == 'C') { samples2 = split(line, '\t'); }
         else {
             fields = split(line, '\t');
-            VCF2[atoi(fields[1].c_str())] = fields;
+            VCF2[atoi(fields[1].c_str())] = line;
         }
     }
     
