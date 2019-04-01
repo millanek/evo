@@ -209,6 +209,6 @@ void parseVCFcombOptions(int argc, char** argv) {
     opt::vcfFile1 = argv[optind++];
     opt::vcfFile2 = argv[optind++];
     opt::refFile1 = argv[optind++];
-    opt::refFile1 = argv[optind++];
+    opt::refFile2 = argv[optind++];
     opt::mappabilityFile = argv[optind++];
 }
