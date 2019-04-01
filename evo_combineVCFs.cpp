@@ -64,6 +64,8 @@ int VCFcombMain(int argc, char** argv) {
     while (getline(*refFile1, line)) { refSeq1.append(line); }
     while (getline(*refFile2, line)) { refSeq2.append(line); }
     assert(chrRef1.length() == chrRef2.length());
+    std::transform(refSeq1.begin(), refSeq1.end(),refSeq1.begin(), ::toupper);
+    std::transform(refSeq2.begin(), refSeq2.end(),refSeq2.begin(), ::toupper);
     
     std::map<int,string> VCF1; std::map<int,string> VCF2;
     std::vector<string> header1; std::vector<string> header2;
