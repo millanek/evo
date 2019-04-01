@@ -108,7 +108,7 @@ int VCFcombMain(int argc, char** argv) {
     
     for (int i = 0; i < chrRef1.length(); i++) {
         int pos = i+1;
-        if (ag->findIfBPaccessible(chrRef1, i+1) == false) continue;
+        if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
         if (refSeq1[i] == 'N' || refSeq2[i] == 'N') {
             *extraMaskFile << chrRef1 << "\t" << i << "\t" << i+1 << std::endl;
             continue;
