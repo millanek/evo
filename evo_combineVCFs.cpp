@@ -106,7 +106,7 @@ int VCFcombMain(int argc, char** argv) {
     std::cout << header1[1] << std::endl;
     std::cout << header1.back(); print_vector_stream(samples2, std::cout);
     
-    for (int i = 0; i < chrRef1.length(); i++) {
+    for (int i = 0; i < refSeq1.length(); i++) {
         int pos = i+1;
         if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
         if (refSeq1[i] == 'N' || refSeq2[i] == 'N') {
