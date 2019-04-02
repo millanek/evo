@@ -101,6 +101,11 @@ int VCFcombMain(int argc, char** argv) {
     std::ifstream* accessibleGenomeBed = new std::ifstream(opt::mappabilityFile.c_str());
     std::cerr << "Loading the accessible genome annotation:" << std::endl;
     AccessibleGenome* ag = new AccessibleGenome(accessibleGenomeBed);
+    std::vector<bool> acc(refSeq1.length(),false);
+    std::vector<std::vector<int>> thisChrMask = ag->BedFeatureMap.at(chrRef1);
+    for (int i = 0; i < thisChrMask[0].size(); i++) {
+        for (int j = thisChrMask[0][i]; j < thisChrMask[1][i]; j++) { acc[j] = true; }
+    }
     std::cerr << "Done" << std::endl;
     
     
@@ -108,9 +113,11 @@ int VCFcombMain(int argc, char** argv) {
     std::cout << header1[1] << std::endl;
     std::cout << header1.back(); print_vector_stream(samples2, std::cout);
     
+    
     for (int i = 0; i < refSeq1.length(); i++) {
         int pos = i+1;
-        if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
+        // if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
+        if (acc[i] == true) continue;
         if (refSeq1[i] == 'N' || refSeq2[i] == 'N') {
             *extraMaskFile << chrRef1 << "\t" << i << "\t" << i+1 << std::endl;
             continue;

@@ -456,7 +456,6 @@ public:
         }
     }
     
-protected:
     std::map<std::string, std::vector<std::vector<int> > > BedFeatureMap;
     
     // Load up the file specifying the genomic coordinates (the bed file needs to be sorted by chromosome)
