@@ -55,6 +55,7 @@ int VCFcombMain(int argc, char** argv) {
     string extraMaskFileName = opt::out + "_extraMask.bed";
     std::ofstream* extraMaskFile = new std::ofstream(extraMaskFileName.c_str());
     
+    
     // Read in the whole reference sequences
     string refSeq1; string refSeq2; refSeq1.reserve(50000000); refSeq2.reserve(50000000);
     getline(*refFile1, line); string chrRef1 = line.substr(1,string::npos);
@@ -111,30 +112,35 @@ int VCFcombMain(int argc, char** argv) {
     
     std::cout << header1[0] << std::endl;
     std::cout << header1[1] << std::endl;
-    std::cout << header1.back(); print_vector_stream(samples2, std::cout);
-    
+    std::cout << header1[2] << std::endl;
+    std::cout << header1.back() << "\t"; print_vector_stream(samples2, std::cout);
+    int inMask = 0; int noAlignment = 0; int notVariable = 0; int becomesMultiallelic = 0;
+    int vcf1Var = 0; int vcf2Var = 0; int sharedVar = 0; int refDifVar = 0;
+    std::cerr << "Length of the chromosome/scaffold: " <<  refSeq1.length() << std::endl;
     
     for (int i = 0; i < refSeq1.length(); i++) {
         int pos = i+1;
         // if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
-        if (acc[i] == true) continue;
+        if (acc[i] == true) inMask++; continue;
         if (refSeq1[i] == 'N' || refSeq2[i] == 'N') {
             *extraMaskFile << chrRef1 << "\t" << i << "\t" << i+1 << std::endl;
-            continue;
+            noAlignment++; continue;
         }
         if (refSeq1[i] == refSeq2[i]) {
-            if (VCF1.count(i) == 0 && VCF2.count(i) == 0) continue;
+            if (VCF1.count(pos) == 0 && VCF2.count(pos) == 0) { notVariable++; continue; }
             else if (VCF1.count(pos) == 1) {
                 if (VCF2.count(pos) == 0) {
                     std::cout << VCF1[pos]; for (int j = 0; j < samples2.size(); j++) { std::cout << "\t" << refAllele; }
-                    std::cout << std::endl;
+                    std::cout << std::endl; vcf1Var++;
                 }
                 if (VCF2.count(pos) == 1) {
                     fields = split(VCF1[pos], '\t'); string altAllele1 = fields[4];
                     fields = split(VCF2[pos], '\t');
                     if (altAllele1 == fields[4]) {
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
-                        std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout);
+                        std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout); sharedVar++;
+                    } else {
+                        becomesMultiallelic++;
                     } // else this would be multiallelic
                 }
             }
@@ -143,7 +149,7 @@ int VCFcombMain(int argc, char** argv) {
                 std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                 for (int j = 0; j < NUM_NON_GENOTYPE_COLUMNS; j++) { std::cout << fields[j] << "\t"; }
                 for (int j = 0; j < samples1.size(); j++) { std::cout << refAllele << "\t"; }
-                print_vector_stream(genotypes,std::cout);
+                print_vector_stream(genotypes,std::cout); vcf2Var++;
             }
         } else // refSeq1[i] != refSeq2[i]
         {
@@ -151,21 +157,23 @@ int VCFcombMain(int argc, char** argv) {
                 std::cout << chrRef1 << "\t" << pos << "\t.\t" << refSeq1[i] << "\t" << refSeq2[i] << "\t1000\tPASS\tAC=" << samples2.size()*2 << "\tGT";
                 for (int j = 0; j < samples1.size(); j++) { std::cout << "\t" << refAllele; }
                 for (int j = 0; j < samples2.size(); j++) { std::cout << "\t" << altAllele; }
-                std::cout << std::endl;
+                std::cout << std::endl; refDifVar++;
             }
             else if (VCF1.count(pos) == 1) {
                 fields = split(VCF1[pos], '\t'); string altAllele1 = fields[4];
-                if (altAllele1[0] != refSeq2[i]) continue; // This would be multiallelic
+                if (altAllele1[0] != refSeq2[i]) { becomesMultiallelic++; continue; } // This would be multiallelic
                 
                 if (VCF2.count(pos) == 0) {
                     std::cout << VCF1[pos]; for (int j = 0; j < samples2.size(); j++) { std::cout << "\t" << refAllele; }
-                    std::cout << std::endl;
+                    std::cout << std::endl; vcf1Var++;
                 }
                 if (VCF2.count(pos) == 1) {
                     fields = split(VCF2[pos], '\t'); string altAllele2 = fields[4];
                     if (altAllele2[0]  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
-                        std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout);
+                        std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout); sharedVar++;
+                    } else {
+                        becomesMultiallelic++;
                     } // else this would be multiallelic
                 }
             }
@@ -175,12 +183,28 @@ int VCFcombMain(int argc, char** argv) {
                     std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                     for (int j = 0; j < NUM_NON_GENOTYPE_COLUMNS; j++) { std::cout << fields[j] << "\t"; }
                     for (int j = 0; j < samples1.size(); j++) { std::cout << refAllele << "\t"; }
-                    print_vector_stream(genotypes,std::cout);
+                    print_vector_stream(genotypes,std::cout); vcf2Var++;
+                } else {
+                    becomesMultiallelic++;
                 }
             }
         }
     }
-    
+    std::cerr << "Base categories not resulting in a variant:" << std::endl;
+    std::cerr << "inMask\t" << inMask << std::endl;
+    std::cerr << "noAlignment\t" << noAlignment << std::endl;
+    std::cerr << "notVariable\t" << notVariable << std::endl;
+    std::cerr << "becomesMultiallelic\t" << becomesMultiallelic << std::endl;
+    std::cerr << "Total non-variant sites:\t" << inMask+noAlignment+notVariable+becomesMultiallelic << std::endl;
+    std::cout << std::endl;
+    std::cerr << "Base categories resulting in a variant:" << std::endl;
+    std::cerr << "Difference between reference sequences:\t" << refDifVar << std::endl;
+    std::cerr << "Variant in vcf1:\t" << vcf1Var << std::endl;
+    std::cerr << "Variant in vcf2:\t" << vcf2Var << std::endl;
+    std::cerr << "Shared vcf1 and vcf2 variant:\t" << sharedVar << std::endl;
+    std::cerr << "Total variant sites:\t" << refDifVar+vcf1Var+vcf2Var+sharedVar << std::endl;
+    std::cout << std::endl;
+    std::cerr << "Total sites:\t" << inMask+noAlignment+notVariable+becomesMultiallelic+refDifVar+vcf1Var+vcf2Var+sharedVar << std::endl;
     return 0;
 }
 
