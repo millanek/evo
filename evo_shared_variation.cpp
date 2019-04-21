@@ -128,7 +128,7 @@ int sharedVarMain(int argc, char** argv) {
     std::vector<std::vector<double> > sharedBetweenGroupsMatrix; std::vector<std::vector<double> > sharedBetweenGroupsMatrixMissing;
     
     int numChromosomes;
-    int totalVariantNumber = 0; int reportProgressEvery = 100000;
+    int totalVariantNumber = 0; int reportProgressEvery = 1000;
     std::vector<string> sampleNames; int numSamples = 0;
     std::vector<string> fields;
     std::map<std::string, double> loc_pval;
@@ -208,18 +208,20 @@ int sharedVarMain(int argc, char** argv) {
             }
             
             // Now look at the numbers a polymorphic sites in groups and shared between groups:
+            std::vector<double> allPs;
             for (int i = 0; i < (int)species.size(); i++) {
-                double p_Si = c->setAAFs.at(species[i]);
+                allPs.push_back(c->setAAFs.at(species[i]));
+                double p_Si = allPs[i];
                 if (p_Si > 0 && p_Si < 1)   // If any member of the trio has entirely missing data, just move on to the next trio
                     sharedBetweenGroupsMatrix[i][i]++;
                 else if (p_Si == -1)
                     sharedBetweenGroupsMatrixMissing[i][i]++;
             }
             for (int i = 0; i < ((int)species.size()-1); i++) {
-                double p_Si = c->setAAFs.at(species[i]);
+                double p_Si = allPs[i];
                 if (p_Si > 0 && p_Si < 1) {
                     for (int j = i+1; j != (int)species.size(); j++) {
-                        double p_Sj = c->setAAFs.at(species[j]);
+                        double p_Sj = allPs[j];
                         if (p_Sj > 0 && p_Sj < 1)
                             sharedBetweenGroupsMatrix[j][i]++;
                         else if (p_Sj == -1)
