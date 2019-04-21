@@ -19,7 +19,7 @@ static const char *PBS_USAGE_MESSAGE =
 "Calculate the PBS statistic from:\n"
 "Sequencing of 50 human exomes reveals adaptation to high altitude. Science 329, 75–78 (2010).\n"
 "The POPULATIONS.txt file should have two columns: SAMPLE_ID    POPULATION_ID\n"
-"The PBS_trios.txt should names of three populations for which the PBS will be calculated:\n"
+"The PBS_trios.txt should contain names of three populations for which the PBS will be calculated:\n"
 "POP1   POP2    POP3\n"
 "There can be multiple lines and then the program generates multiple ouput files, named like POP1_POP2_POP3_PBS_SIZE_STEP.txt\n"
 "\n"
@@ -224,7 +224,6 @@ int PBSmain(int argc, char** argv) {
             }
             fields = split(line, '\t'); chr = fields[0]; coord = fields[1];
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
-            //std::vector<std::string> info = split(fields[7], ';');
             // Only consider biallelic SNPs
             string refAllele = fields[3]; string altAllele = fields[4];
             if (refAllele.length() > 1 || altAllele.length() > 1) {

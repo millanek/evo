@@ -9,29 +9,23 @@
 #include "evo_shared_variation.h"
 #include "process_vcf_stats_utils.h"
 
-#define SUBPROGRAM "fixed-search"
+#define SUBPROGRAM "sharedVariation"
 
-static const char *FIXED_USAGE_MESSAGE =
-"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] FILTERED_VCF_FILE SAMPLE_SETS.txt\n"
-"Search for fixed (or nearly fixed) differences between two sets of samples\n"
-"This will be much faster if singletons (and probably doubletons) are filtered out from the VCF file before running this\n"
-"The SAMPLE_SETS.txt file should have exactly two lines, with each line defining one of the two sample sets\n"
+static const char *SHAREDVAR_USAGE_MESSAGE =
+"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] VCF_FILE.vcf.gz SETS.txt\n"
+"Search for shared polymorphic sites between groups, and also for shared heterozyhous sites\n"
+"The SETS.txt should have two columns: SAMPLE_ID    SPECIES_ID\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
-"       -p, --pval-output-cutoff                maximum p-value for output in the _pvals.txt file; (default 0.01)\n"
-"       -s SAMPLES.txt, --samples=SAMPLES.txt   supply a file of sample identifiers to be used for the VCF file\n"
-"                                               (default: sample ids from the vcf file are used)\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 enum { OPT_HELP = 1 };
 
-static const char* shortopts = "hn:s:p:";
+static const char* shortopts = "hn:";
 
 static const struct option longopts[] = {
-    { "samples",   required_argument, NULL, 's' },
-    { "pval-output-cutoff",   required_argument, NULL, 'p' },
     { "run-name",   required_argument, NULL, 'n' },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -40,10 +34,8 @@ static const struct option longopts[] = {
 namespace opt
 {
     static string vcfFile;
-    static string sampleSets;
-    static string sampleNameFile;
+    static string setsFile;
     static string runName = "";
-    static double pvalCutoff = 0.01;
 }
 
 SetCounts getSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci) {
@@ -94,134 +86,180 @@ int getNumHets(SetCounts& counts) {
 
 int sharedVarMain(int argc, char** argv) {
     parseSharedVarOptions(argc, argv);
-    string fileRoot = stripExtension(opt::sampleSets);
-    GenericSampleSets* sampleSets;
-    std::cerr << "Looking shared variation between samples in: " << opt::vcfFile << std::endl;
-    std::cerr << "The groups are defined in: " << opt::sampleSets << std::endl;
+    string line; // for reading the input files
     
-    // Open connection to read from the vcf file
     std::istream* vcfFile = createReader(opt::vcfFile.c_str());
-    std::ifstream* setsFile = new std::ifstream(opt::sampleSets.c_str());
+    std::ifstream* setsFile = new std::ifstream(opt::setsFile.c_str());
+    string fileRoot = stripExtension(opt::setsFile);
+    std::cerr << "Looking shared variation between samples in: " << opt::vcfFile << std::endl;
+    std::cerr << "The groups are defined in: " << opt::setsFile << std::endl;
+    
+    std::map<string, std::vector<string>> speciesToIDsMap;
+    std::map<string, string> IDsToSpeciesMap;
+    std::map<string, std::vector<size_t>> speciesToPosMap;
+    std::map<size_t, string> posToSpeciesMap;
+    
+    // Get the sample sets
+    while (getline(*setsFile, line)) {
+        std::vector<string> ID_Species = split(line, '\t');
+        speciesToIDsMap[ID_Species[1]].push_back(ID_Species[0]);
+        IDsToSpeciesMap[ID_Species[0]] = ID_Species[1];
+    }
+    
+    // Get a vector of set names (usually species)
+    std::vector<string> species;
+    for(std::map<string,std::vector<string>>::iterator it = speciesToIDsMap.begin(); it != speciesToIDsMap.end(); ++it) {
+        if ((it->first) != "Outgroup" && it->first != "xxx") {
+            species.push_back(it->first);
+            // std::cerr << it->first << std::endl;
+        }
+    } std::cerr << "There are " << species.size() << " sets (excluding the Outgroup)" << std::endl;
+    
+
     string sharedPerIndividualN = opt::runName + "sharedHets_perIndividual.txt";
-    string sharedBetweenGroupsN = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + ".txt";
-    string riverineSharedWithLakesN = "riverineSharedWithLakes_" + fileRoot + "_" + opt::runName + ".txt";
+    string sharedBetweenGroupsN = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + "_scaled.txt";
+    string sharedPerIndividualNscaled = opt::runName + "sharedHets_perIndividual.txt";
+    string sharedBetweenGroupsNscaled = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + "_scaled.txt";
     std::ofstream* sharedPerIndividual = new std::ofstream(sharedPerIndividualN.c_str());
     std::ofstream* sharedBetweenGroups = new std::ofstream(sharedBetweenGroupsN.c_str());
-    std::ofstream* riverineSharedWithLakes;
-    std::vector<std::vector<double> > hetMatrix;
-    std::vector<std::vector<double> > sharedBetweenGroupsMatrix;
-    std::vector<std::vector<double> > riverineWithLakesMatrix;
+    std::ofstream* sharedPerIndividualScaled = new std::ofstream(sharedPerIndividualNscaled.c_str());
+    std::ofstream* sharedBetweenGroupsScaled = new std::ofstream(sharedBetweenGroupsNscaled.c_str());
+    std::vector<std::vector<double> > hetMatrix; std::vector<std::vector<double> > hetMatrixMissing;
+    std::vector<std::vector<double> > sharedBetweenGroupsMatrix; std::vector<std::vector<double> > sharedBetweenGroupsMatrixMissing;
     
     int numChromosomes;
-    int totalVariantNumber = 0;
-    string line;
+    int totalVariantNumber = 0; int reportProgressEvery = 100000;
     std::vector<string> sampleNames; int numSamples = 0;
     std::vector<string> fields;
     std::map<std::string, double> loc_pval;
+    std::clock_t start; double durationOverall;
     while (getline(*vcfFile, line)) {
-        if (line[0] == '#' && line[1] == '#') {
- 
-        } else if (line[0] == '#' && line[1] == 'C') {
-            std::vector<std::string> fields = split(line, '\t');
-            numSamples = (int)fields.size() - NUM_NON_GENOTYPE_COLUMNS;
-            numChromosomes = numSamples * 2;
+        line.erase(std::remove(line.begin(), line.end(), '\r'), line.end()); // Deal with any left over \r from files prepared on Windows
+        if (line[0] == '#' && line[1] == '#')
+            continue;
+        else if (line[0] == '#' && line[1] == 'C') {
+            fields = split(line, '\t');
+            std::vector<std::string> sampleNames(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+            for (std::vector<std::string>::size_type i = 0; i != sampleNames.size(); i++) {
+                posToSpeciesMap[i] = IDsToSpeciesMap[sampleNames[i]];
+            }
+            numSamples = (int)sampleNames.size(); numChromosomes = numSamples * 2;
             //std::cerr << "Number of chromosomes: " << numChromosomes << std::endl;
             
-            if (opt::sampleNameFile.empty()) {
-                for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-                    sampleNames.push_back(fields[i]);
+            // Iterate over all the keys in the map to find the samples in the VCF:
+            // Give an error if no sample is found for a species:
+            for(std::map<string, std::vector<string>>::iterator it = speciesToIDsMap.begin(); it != speciesToIDsMap.end(); ++it) {
+                string sp =  it->first;
+                //std::cerr << "sp " << sp << std::endl;
+                std::vector<string> IDs = it->second;
+                std::vector<size_t> spPos = locateSet(sampleNames, IDs);
+                if (spPos.empty()) {
+                    std::cerr << "Did not find any samples in the VCF for \"" << sp << "\"" << std::endl;
+                    assert(!spPos.empty());
                 }
-            } else {
-                sampleNames = readSampleNamesFromTextFile(opt::sampleNameFile);
+                speciesToPosMap[sp] = spPos;
             }
             
-            // std::cerr << "here: " << std::endl;
-            sampleSets = new GenericSampleSets(setsFile,sampleNames);
-            for (int i = 0; i < (int)sampleSets->sets.size(); i++) {
-                std::cerr << "Set " << sampleSets->allSetNames[i] << " loci: " << std::endl;
-                print_vector_stream(sampleSets->sets[sampleSets->allSetNames[i]], std::cerr);
-            }
-            //std::cerr << "Set " << (++sampleSets->sets.begin())->first << " loci: " << std::endl;
-            //print_vector_stream((++sampleSets->sets.begin())->second, std::cerr);
-            initialize_matrix_double(hetMatrix, numSamples);
-            initialize_matrix_double(sharedBetweenGroupsMatrix, (int)sampleSets->sets.size());
-            if (sampleSets->sets.count("Riverine") == 1) {
-                riverineSharedWithLakes = new std::ofstream(riverineSharedWithLakesN.c_str());
-                initialize_matrix_double(riverineWithLakesMatrix, (int)sampleSets->sets.size()-1, (int)sampleSets->sets["Riverine"].size());
-            }
-            
+            initialize_matrix_double(hetMatrix, numSamples); initialize_matrix_double(hetMatrixMissing, numSamples);
+            initialize_matrix_double(sharedBetweenGroupsMatrix, (int)species.size());
+            initialize_matrix_double(sharedBetweenGroupsMatrixMissing, (int)species.size());
+            start = std::clock();
         } else {
             totalVariantNumber++;
+            if (totalVariantNumber % reportProgressEvery == 0) {
+                durationOverall = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+                std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
+            }
+            fields = split(line, '\t');
+            std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+
+            // Only consider biallelic SNPs
+            string refAllele = fields[3]; string altAllele = fields[4];
+            if (refAllele.length() > 1 || altAllele.length() > 1) {
+                refAllele.clear(); refAllele.shrink_to_fit(); altAllele.clear(); altAllele.shrink_to_fit();
+                genotypes.clear(); genotypes.shrink_to_fit(); continue;
+            }
             
-            std::vector<std::string> fields = split(line, '\t');
-            ManySetCountsGeneric setCounts = getGenericSetVariantCounts(fields, *sampleSets);
+            GeneralSetCounts* c = new GeneralSetCounts(speciesToPosMap, (int)genotypes.size());
+            genotypes.clear(); genotypes.shrink_to_fit();
             
             // Put the number of hets in each sample on the diagonal
             for (int i = 0; i < numSamples; i++) {
-                if (setCounts.individualsWithVariant[i] == 1)
+                if (c->individualsWithVariant[i] == 1)
                     hetMatrix[i][i]++;
+                else if (c->individualsWithVariant[i] == -1) // Missing data for this individual
+                    hetMatrixMissing[i][i]++;
             }
             // Now look if the het is shared between individuals
             for (int i = 0; i < (numSamples-1); i++) {
-                for (int j = i+1; j != numSamples; j++) {
-                    if (setCounts.individualsWithVariant[i] == 1 && setCounts.individualsWithVariant[j] == 1)
-                        hetMatrix[j][i]++;
+                int iAllele = c->individualsWithVariant[i];
+                if (iAllele == 1) {
+                    for (int j = i+1; j != numSamples; j++) {
+                        if (c->individualsWithVariant[j] == 1)
+                            hetMatrix[j][i]++;
+                        else if (c->individualsWithVariant[j] == -1)
+                            hetMatrixMissing[j][i]++;
+                    }
+                } else if (iAllele == -1) {
+                    for (int j = i+1; j != numSamples; j++) {
+                        hetMatrixMissing[j][i]++;
+                    }
                 }
             }
             
             // Now look at the numbers a polymorphic sites in groups and shared between groups:
-            for (int i = 0; i < (int)sampleSets->sets.size(); i++) {
-                if (setCounts.allSetCounts[sampleSets->allSetNames[i]].isPolymorhic())
+            for (int i = 0; i < (int)species.size(); i++) {
+                double p_Si = c->setAAFs.at(species[i]);
+                if (p_Si > 0 && p_Si < 1)   // If any member of the trio has entirely missing data, just move on to the next trio
                     sharedBetweenGroupsMatrix[i][i]++;
+                else if (p_Si == -1)
+                    sharedBetweenGroupsMatrixMissing[i][i]++;
             }
-            for (int i = 0; i < ((int)sampleSets->sets.size()-1); i++) {
-                for (int j = i+1; j != (int)sampleSets->sets.size(); j++) {
-                    if (setCounts.allSetCounts[sampleSets->allSetNames[i]].isPolymorhic() && setCounts.allSetCounts[sampleSets->allSetNames[j]].isPolymorhic())
-                    sharedBetweenGroupsMatrix[j][i]++;
-                }
-            }
-            //std::cerr << "Hello: ";
-            
-            if (sampleSets->sets.count("Riverine") == 1) {
-                // And finally, sharing between riverines and the great lakes:
-                for (int i = 0; i < (int)sampleSets->sets["Riverine"].size(); i++) {
-                    //std::cerr << "Hello: ";
-                    // If this riverine individual is a het:
-                    if (setCounts.individualsWithVariant[sampleSets->sets["Riverine"][i]] == 1) {
-                        //std::cerr << "\tHet\t";
-                        riverineWithLakesMatrix[i][3]++;
-                        if (setCounts.allSetCounts["Malawi"].isPolymorhic())
-                            riverineWithLakesMatrix[i][0]++;
-                        if (setCounts.allSetCounts["Tanganyika"].isPolymorhic())
-                            riverineWithLakesMatrix[i][1]++;
-                        if (setCounts.allSetCounts["Victoria"].isPolymorhic())
-                            riverineWithLakesMatrix[i][2]++;
+            for (int i = 0; i < ((int)species.size()-1); i++) {
+                double p_Si = c->setAAFs.at(species[i]);
+                if (p_Si > 0 && p_Si < 1) {
+                    for (int j = i+1; j != (int)species.size(); j++) {
+                        double p_Sj = c->setAAFs.at(species[j]);
+                        if (p_Sj > 0 && p_Sj < 1)
+                            sharedBetweenGroupsMatrix[j][i]++;
+                        else if (p_Sj == -1)
+                            sharedBetweenGroupsMatrixMissing[j][i]++;
                     }
-                   // std::cerr << "\tBye: " << std::endl;
+                } else if (p_Si == -1) { // Entirely missing data for this species/population
+                    for (int j = i+1; j != (int)species.size(); j++) {
+                        sharedBetweenGroupsMatrixMissing[j][i]++;
+                    }
                 }
             }
-            
-            
-            if (totalVariantNumber % 100000 == 0)
-                std::cerr << "Processed " << totalVariantNumber << " variants" << std::endl;
+            delete c;
         }
     }
     
     // print het sharing per individual
     print_vector(sampleNames, *sharedPerIndividual);
     print_matrix<const std::vector<std::vector<double> >&>(hetMatrix, *sharedPerIndividual);
-    
-    // Print variant sharing between groups
-    print_vector(sampleSets->allSetNames, *sharedBetweenGroups);
-    print_matrix<const std::vector<std::vector<double> >&>(sharedBetweenGroupsMatrix, *sharedBetweenGroups);
-    
-    // Print variant sharing between riverine individuals and each of the great lakes:
-    if (sampleSets->sets.count("Riverine") == 1) {
-        *riverineSharedWithLakes << "Malawi\tTanganyika\tVictoria\tTotalHets" << std::endl;
-        for (int i = 0; i < (int)sampleSets->sets["Riverine"].size(); i++) {
-            *riverineSharedWithLakes << sampleNames[sampleSets->sets["Riverine"][i]] << "\t"; print_vector(riverineWithLakesMatrix[i], *riverineSharedWithLakes);
+    for (int i = 0; i < numSamples; i++) {
+        for (int j = 0; j < numSamples; j++) {
+            double proportionUsed = 1 - (hetMatrixMissing[j][i]/totalVariantNumber);
+            hetMatrix[j][i] = hetMatrix[j][i]/proportionUsed;
         }
     }
+    print_vector(sampleNames, *sharedPerIndividualScaled);
+    print_matrix<const std::vector<std::vector<double> >&>(hetMatrix, *sharedPerIndividualScaled);
+    
+    // Print variant sharing between groups
+    print_vector(species, *sharedBetweenGroups);
+    print_matrix<const std::vector<std::vector<double> >&>(sharedBetweenGroupsMatrix, *sharedBetweenGroups);
+    for (int i = 0; i < (int)species.size(); i++) {
+        for (int j = 0; j < (int)species.size(); j++) {
+            double proportionUsed = 1 - (sharedBetweenGroupsMatrixMissing[j][i]/totalVariantNumber);
+            sharedBetweenGroupsMatrix[j][i] = sharedBetweenGroupsMatrix[j][i]/proportionUsed;
+        }
+    }
+    print_vector(species, *sharedBetweenGroupsScaled);
+    print_matrix<const std::vector<std::vector<double> >&>(sharedBetweenGroupsMatrix, *sharedBetweenGroupsScaled);
+    
+    
     return 0;
 }
 
@@ -232,11 +270,9 @@ void parseSharedVarOptions(int argc, char** argv) {
         std::istringstream arg(optarg != NULL ? optarg : "");
         switch (c)
         {
-            case 's': arg >> opt::sampleNameFile; break;
-            case 'p': arg >> opt::pvalCutoff; break;
             case 'n': arg >> opt::runName; break;
             case '?': die = true; break;
-            case 'h': std::cout << FIXED_USAGE_MESSAGE;
+            case 'h': std::cout << SHAREDVAR_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
         }
     }
@@ -251,11 +287,11 @@ void parseSharedVarOptions(int argc, char** argv) {
     }
     
     if (die) {
-        std::cout << "\n" << FIXED_USAGE_MESSAGE;
+        std::cout << "\n" << SHAREDVAR_USAGE_MESSAGE;
         exit(EXIT_FAILURE);
     }
     
     // Parse the input filenames
     opt::vcfFile = argv[optind++];
-    opt::sampleSets = argv[optind++];
+    opt::setsFile = argv[optind++];
 }

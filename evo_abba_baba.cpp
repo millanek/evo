@@ -24,7 +24,7 @@ static const char *ABBA_USAGE_MESSAGE =
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -f, --frequency                         use allele frequency data instead of single sequences for each of (P1,P2,P3,O)\n"
-"       --AAeqO                                 ancestral allele infor in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
+"       --AAeqO                                 ancestral allele info in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
 "       --NoAaO                                 there is no ancestral allele info in the VCF AA field\n"
 "       -w SIZE, --window=SIZE                  (optional) output D statistics for nonoverlapping windows containing SIZE SNPs with nonzero D (default: 50)\n"
 "       -s SAMPLES.txt, --samples=SAMPLES.txt   (optional) supply a file of sample identifiers\n"

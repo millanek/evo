@@ -61,7 +61,7 @@ public:
             setAAFs[it->first] = -1.0; setDAFs[it->first] = -1.0;
             setSizes.push_back(it->second.size());
         }
-        individualsWithVariant.assign(nSamples, 0);
+        individualsWithVariant.assign(nSamples, -1);
     };
     
     void getSetVariantCountsSimple(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap);
@@ -153,47 +153,6 @@ public:
 };
 
 
-class GenericSampleSets {
-public:
-    GenericSampleSets(): initialised(false) {};
-    
-    GenericSampleSets(std::ifstream*& setFile, std::vector<string>& sampleNames, bool debug = false) {
-        sets = loadSets(setFile, sampleNames, debug);
-        initialised = true;
-    }
-    
-    bool initialised;
-    std::vector<string> allSetNames;
-    std::map<string, std::vector<size_t> > sets;
-private:
-    std::map<string, std::vector<size_t> > loadSets(std::ifstream*& setFile, std::vector<string>& sampleNames, bool debug) {
-        std::map<string, std::vector<size_t> > setNameLoci;
-        string line;
-        int setNum = 0;
-        while (getline(*setFile, line)) {
-            setNum++;
-            string setName; string lociString;
-            std::vector<string> nameLociString = split(line, '\t');
-            assert(nameLociString.size() <= 2);
-            if (nameLociString.size() == 2) {
-                setName = nameLociString[0];
-                lociString = nameLociString[1];
-            }
-            if (nameLociString.size() == 1) {
-                setName = numToString(setNum);
-                lociString = nameLociString[0];
-            }
-            
-            std::vector<string> lociStringSplit = split(lociString, ',');
-            std::sort(lociStringSplit.begin(),lociStringSplit.end());
-            std::vector<size_t> setLoci = locateSet(sampleNames, lociStringSplit);
-            setNameLoci[setName] = setLoci;
-            allSetNames.push_back(setName);
-        }
-        return setNameLoci;
-    }
-    
-};
 
 class SetCountGeneric {
 public:
@@ -210,22 +169,6 @@ public:
             return false;
     }
 };
-
-class ManySetCountsGeneric {
-public:
-    ManySetCountsGeneric (GenericSampleSets& setLoci) {
-        for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
-            SetCountGeneric sc;
-            allSetCounts[it->first] = sc;
-        }
-        numSets = (int)setLoci.sets.size();
-    }
-    // some general stats about the variant;
-    std::vector<int> individualsWithVariant; int overall;
-    // stats about the set
-    int numSets; std::map<string, SetCountGeneric> allSetCounts;
-};
-ManySetCountsGeneric getGenericSetVariantCounts(const std::vector<std::string>& fields, GenericSampleSets& setLoci);
 
 class FourSetCounts {
 public:

@@ -56,20 +56,22 @@ void GeneralSetCounts::getSetVariantCountsSimple(const std::vector<std::string>&
 void GeneralSetCounts::getBasicCounts(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
     // Go through the genotypes - only biallelic markers are allowed
     for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
+        std::string species = posToSpeciesMap.at(i);
         // The first allele in this individual
         if (genotypes[i][0] == '1') {
-            overall++; individualsWithVariant[i]++;
-            setAltCounts[posToSpeciesMap.at(i)]++; setAlleleCounts[posToSpeciesMap.at(i)]++;
+            overall++; individualsWithVariant[i] = 1;
+            setAltCounts[species]++; setAlleleCounts[species]++;
         } else if (genotypes[i][0] == '0') {
-            setAlleleCounts[posToSpeciesMap.at(i)]++; setRefCounts[posToSpeciesMap.at(i)]++;
+            setAlleleCounts[species]++; setRefCounts[species]++;
+            individualsWithVariant[i] = 0;
         }
         // The second allele in this individual
         if (genotypes[i][2] == '1') {
             overall++;
-            setAltCounts[posToSpeciesMap.at(i)]++; setAlleleCounts[posToSpeciesMap.at(i)]++;
+            setAltCounts[species]++; setAlleleCounts[species]++;
             individualsWithVariant[i]++;
-        } else if (genotypes[i][0] == '0') {
-            setAlleleCounts[posToSpeciesMap.at(i)]++; setRefCounts[posToSpeciesMap.at(i)]++;
+        } else if (genotypes[i][2] == '0') {
+            setAlleleCounts[species]++; setRefCounts[species]++;
         }
     }
 }
@@ -473,34 +475,6 @@ ThreeSetCounts getThreeSetVariantCounts(const std::vector<std::string>& fields, 
     
     return thisVariantCounts;
 }
-
-ManySetCountsGeneric getGenericSetVariantCounts(const std::vector<std::string>& fields, GenericSampleSets& setLoci) {
-    ManySetCountsGeneric counts(setLoci);
-    counts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
-    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-        if (fields[i][0] == '1') {
-            counts.overall++;
-            counts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
-            for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
-                if (std::find(it->second.begin(), it->second.end(), i-NUM_NON_GENOTYPE_COLUMNS) != it->second.end()) { counts.allSetCounts[it->first].setAltCount++; }
-            }
-        }
-        if (fields[i][2] == '1') {
-            counts.overall++;
-            counts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
-            for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
-                if (std::find(it->second.begin(), it->second.end(), i-NUM_NON_GENOTYPE_COLUMNS) != it->second.end()) { counts.allSetCounts[it->first].setAltCount++; }
-            }
-        }
-    }
-    for (std::map<string, std::vector<size_t> >::iterator it = setLoci.sets.begin(); it != setLoci.sets.end(); it++) {
-        counts.allSetCounts[it->first].setRefCount = (int)(it->second.size() * 2) - counts.allSetCounts[it->first].setAltCount;
-        counts.allSetCounts[it->first].setAltAF = (double)counts.allSetCounts[it->first].setAltCount/(it->second.size() * 2);
-    }
-    
-    return counts;
-}
-
 
 
 FourSetCounts getFourSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci, const std::vector<size_t>& set3_loci, const std::vector<size_t>& set4_loci, const std::string& AA) {

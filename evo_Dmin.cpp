@@ -20,8 +20,6 @@ static const char *DMIN_USAGE_MESSAGE =
 "The outgroup (can be multiple samples) should be specified by using the keywork Outgroup in place of the SPECIES_ID\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
-"       --AAeqO                                 ancestral allele info in the VCF is from the outgroup (e.g. Pnyererei for Malawi)\n"
-"                                               the Outgroup setting in the SETS.txt file will be ignored\n"
 "       --fixP3=SPECIES                         NOT IMPLEMENTED!! (optional) fix the P3 individual and only claculate the stats for cominations of P1 and P2\n"
 "       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
 "       -w SIZE, --window=SIZE                  (optional) output D statistics for nonoverlapping windows containing SIZE SNPs with nonzero D (default: 50)\n"
@@ -30,8 +28,6 @@ static const char *DMIN_USAGE_MESSAGE =
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 
-enum { OPT_AA_EQ_O };
-
 static const char* shortopts = "hfw:r:n:";
 
 static const int JK_WINDOW = 20000;
@@ -39,7 +35,6 @@ static const int JK_WINDOW = 20000;
 static const struct option longopts[] = {
     { "run-name",   required_argument, NULL, 'n' },
     { "window",   required_argument, NULL, 'w' },
-    { "AAeqO",   no_argument, NULL, OPT_AA_EQ_O },
     { "frequency",   no_argument, NULL, 'f' },
     { "region",   no_argument, NULL, 'r' },
     { "help",   no_argument, NULL, 'h' },
@@ -50,9 +45,7 @@ namespace opt
 {
     static string vcfFile;
     static string setsFile;
-    static string sampleNameFile;
     static string runName = "";
-    static bool bAaEqO = false;
     static int minScLength = 0;
     static int windowSize = 50;
     int jkWindowSize = JK_WINDOW;
@@ -367,7 +360,6 @@ void parseDminOptions(int argc, char** argv) {
             case 'n': arg >> opt::runName; break;
             case 'r': arg >> regionArgString; regionArgs = split(regionArgString, ',');
                 opt::regionStart = (int)stringToDouble(regionArgs[0]); opt::regionLength = (int)stringToDouble(regionArgs[1]);  break;
-            case OPT_AA_EQ_O: opt::bAaEqO = true; break;
             case 'h':
                 std::cout << DMIN_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
