@@ -127,7 +127,6 @@ int sharedVarMain(int argc, char** argv) {
     std::vector<std::vector<double> > hetMatrix; std::vector<std::vector<double> > hetMatrixMissing;
     std::vector<std::vector<double> > sharedBetweenGroupsMatrix; std::vector<std::vector<double> > sharedBetweenGroupsMatrixMissing;
     
-    int numChromosomes;
     int totalVariantNumber = 0; int reportProgressEvery = 1000;
     std::vector<string> sampleNames; int numSamples = 0;
     std::vector<string> fields;
@@ -139,12 +138,12 @@ int sharedVarMain(int argc, char** argv) {
             continue;
         else if (line[0] == '#' && line[1] == 'C') {
             fields = split(line, '\t');
-            std::vector<std::string> sampleNames(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+            std::vector<std::string> sN(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+            sampleNames = sN;
             for (std::vector<std::string>::size_type i = 0; i != sampleNames.size(); i++) {
                 posToSpeciesMap[i] = IDsToSpeciesMap[sampleNames[i]];
             }
-            numSamples = (int)sampleNames.size(); numChromosomes = numSamples * 2;
-            //std::cerr << "Number of chromosomes: " << numChromosomes << std::endl;
+            numSamples = (int)sampleNames.size(); 
             
             // Iterate over all the keys in the map to find the samples in the VCF:
             // Give an error if no sample is found for a species:
