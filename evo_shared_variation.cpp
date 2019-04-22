@@ -117,8 +117,8 @@ int sharedVarMain(int argc, char** argv) {
     
 
     string sharedPerIndividualN = opt::runName + "sharedHets_perIndividual.txt";
-    string sharedBetweenGroupsN = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + "_scaled.txt";
-    string sharedPerIndividualNscaled = opt::runName + "sharedHets_perIndividual.txt";
+    string sharedBetweenGroupsN = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + ".txt";
+    string sharedPerIndividualNscaled = opt::runName + "sharedHets_perIndividual_scaled.txt";
     string sharedBetweenGroupsNscaled = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + "_scaled.txt";
     std::ofstream* sharedPerIndividual = new std::ofstream(sharedPerIndividualN.c_str());
     std::ofstream* sharedBetweenGroups = new std::ofstream(sharedBetweenGroupsN.c_str());
