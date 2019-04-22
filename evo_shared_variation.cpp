@@ -127,7 +127,7 @@ int sharedVarMain(int argc, char** argv) {
     std::vector<std::vector<double> > hetMatrix; std::vector<std::vector<double> > hetMatrixMissing;
     std::vector<std::vector<double> > sharedBetweenGroupsMatrix; std::vector<std::vector<double> > sharedBetweenGroupsMatrixMissing;
     
-    int totalVariantNumber = 0; int reportProgressEvery = 1000;
+    int totalVariantNumber = 0; int reportProgressEvery = 10000;
     std::vector<string> sampleNames; int numSamples = 0;
     std::vector<string> fields;
     std::map<std::string, double> loc_pval;
