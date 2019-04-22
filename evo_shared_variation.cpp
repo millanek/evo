@@ -143,7 +143,7 @@ int sharedVarMain(int argc, char** argv) {
             for (std::vector<std::string>::size_type i = 0; i != sampleNames.size(); i++) {
                 posToSpeciesMap[i] = IDsToSpeciesMap[sampleNames[i]];
             }
-            numSamples = (int)sampleNames.size(); 
+            numSamples = (int)sampleNames.size();
             
             // Iterate over all the keys in the map to find the samples in the VCF:
             // Give an error if no sample is found for a species:
@@ -180,6 +180,7 @@ int sharedVarMain(int argc, char** argv) {
             }
             
             GeneralSetCounts* c = new GeneralSetCounts(speciesToPosMap, (int)genotypes.size());
+            c->getSetVariantCounts(genotypes, posToSpeciesMap);
             genotypes.clear(); genotypes.shrink_to_fit();
             
             // Put the number of hets in each sample on the diagonal
