@@ -277,21 +277,13 @@ template <class T> void print_vector(T vector, std::ostream& outFile, char delim
     for (int i = 0; i < vector.size(); i++) {
         if (i == (vector.size()-1)) {
             if (endLine) outFile << vector[i] << std::endl;
+            else outFile << vector[i];
         } else {
             outFile << vector[i] << delim;
         }
     }
 }
 
-// Print an arbitrary vector to an output stream
-template <class T> void print_vector_stream(T vector, std::ostream& outStream, char delim = '\t') {
-    for (int i = 0; i < vector.size(); i++) {
-        if (i == (vector.size()-1))
-            outStream << vector[i] << std::endl;
-        else
-            outStream << vector[i] << delim;
-    }
-}
 
 template <class T> double vector_sum(T vector) {
     double sum = 0;

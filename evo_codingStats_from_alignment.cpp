@@ -168,7 +168,7 @@ int getCodingStats(int argc, char** argv) {
                     sets->sets1and2vsSet3pN = 0;
                     sets->withinSet1andSet2pN = 0;
                 }
-                print_vector_stream(statsThisGene, std::cout);
+                print_vector(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
                 for (int i = 0; i < combinedVectorForPCA.size() - 1; i++) {
                     for (int j = i+1; j < combinedVectorForPCA.size(); j++) {
@@ -180,7 +180,7 @@ int getCodingStats(int argc, char** argv) {
                 }
             } else {
                 getStatsHaploidSeq(allSeqs,statsThisGene, opt::tStVratio);
-                print_vector_stream(statsThisGene, std::cout);
+                print_vector(statsThisGene, std::cout);
                 print_vector(statsThisGene, *statsFile);
             }
         } else{

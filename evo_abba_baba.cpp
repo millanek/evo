@@ -257,10 +257,10 @@ void doAbbaBaba() {
             P2pos = locateSet(sampleNames, P2); P1pos = locateSet(sampleNames, P1);
             
             
-            if (!opt::bAaEqO) { std::cerr << "Outgroup: "; print_vector_stream(outgroup, std::cerr); } else { std::cerr << "Outgroup: " << outgroupString << std::endl; }
-            std::cerr << "P3: "; print_vector_stream(P3, std::cerr);
-            std::cerr << "P2: "; print_vector_stream(P2, std::cerr);
-            std::cerr << "P1: "; print_vector_stream(P1, std::cerr);
+            if (!opt::bAaEqO) { std::cerr << "Outgroup: "; print_vector(outgroup, std::cerr); } else { std::cerr << "Outgroup: " << outgroupString << std::endl; }
+            std::cerr << "P3: "; print_vector(P3, std::cerr);
+            std::cerr << "P2: "; print_vector(P2, std::cerr);
+            std::cerr << "P1: "; print_vector(P1, std::cerr);
         } else {
             totalVariantNumber++;
             std::vector<std::string> fields = split(line, '\t');

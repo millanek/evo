@@ -198,8 +198,8 @@ void getVariantCountsForPBS(const std::vector<std::string>& fields, ThreeSetCoun
     /*if (fields[1] == "13433") {
      std::cerr << thisVariantCounts.set1Count << std::endl;
      std::cerr << thisVariantCounts.set2Count << std::endl;
-     print_vector_stream(thisVariantCounts.set1individualsWithVariant, std::cerr);
-     print_vector_stream(thisVariantCounts.set2individualsWithVariant, std::cerr);
+     print_vector(thisVariantCounts.set1individualsWithVariant, std::cerr);
+     print_vector(thisVariantCounts.set2individualsWithVariant, std::cerr);
      } */
 }
 
@@ -289,8 +289,8 @@ void getVariantCountsForFst(const std::vector<std::string>& fields, SetCounts* t
     /*if (fields[1] == "13433") {
         std::cerr << thisVariantCounts.set1Count << std::endl;
         std::cerr << thisVariantCounts.set2Count << std::endl;
-        print_vector_stream(thisVariantCounts.set1individualsWithVariant, std::cerr);
-        print_vector_stream(thisVariantCounts.set2individualsWithVariant, std::cerr);
+        print_vector(thisVariantCounts.set1individualsWithVariant, std::cerr);
+        print_vector(thisVariantCounts.set2individualsWithVariant, std::cerr);
     } */
 }
 
@@ -490,17 +490,17 @@ void getFstFromVCF() {
             set2Loci = locateSet(sampleNames, set2);
             n1 = set1Loci.size()*2; n2 = set2Loci.size()*2;
             std::cerr << "Set1 loci: " << std::endl;
-            print_vector_stream(set1Loci, std::cerr);
+            print_vector(set1Loci, std::cerr);
             std::cerr << "Set2 loci: " << std::endl;
-            print_vector_stream(set2Loci, std::cerr);
+            print_vector(set2Loci, std::cerr);
             
             if (!opt::ancSets.empty()) {
                 ancSet1Loci = locateSet(sampleNames, ancSet1);
                 ancSet2Loci = locateSet(sampleNames, ancSet2);
                 std::cerr << "Ancestral Set1 loci: " << std::endl;
-                print_vector_stream(ancSet1Loci, std::cerr);
+                print_vector(ancSet1Loci, std::cerr);
                 std::cerr << "Ancestral Set2 loci: " << std::endl;
-                print_vector_stream(ancSet2Loci, std::cerr);
+                print_vector(ancSet2Loci, std::cerr);
                 n1anc = ancSet1Loci.size() * 2; n2anc = ancSet2Loci.size() * 2;
             }
             
@@ -536,9 +536,9 @@ void getFstFromVCF() {
            // std::cerr << "Got counts for variant N:" << totalVariantNumber << std::endl;
             //std::cerr << "Still here: " << counts.set1HaplotypeVariant.size() << "\t" << counts.set1individualsWithVariant.size() << "\t" << n1 << std::endl;
             //std::cerr << "Still here: " << counts.set2HaplotypeVariant.size() << "\t" << counts.set2individualsWithVariant.size() << "\t" << n2 << std::endl;
-            //print_vector_stream(counts.set1HaplotypeVariant, std::cerr);
-            //print_vector_stream(counts.set1individualsWithVariant, std::cerr);
-            //print_vector_stream(counts.set2HaplotypeVariant, std::cerr);
+            //print_vector(counts.set1HaplotypeVariant, std::cerr);
+            //print_vector(counts.set1individualsWithVariant, std::cerr);
+            //print_vector(counts.set2HaplotypeVariant, std::cerr);
             
             if (counts->n_alt_alleles == 1 && counts->bIndel == false && (counts->set1Count > 0 || counts->set2Count > 0)
                 && (counts->set1Count < counts->set1_n_withoutMissing || counts->set2Count < counts->set2_n_withoutMissing)) {
@@ -760,8 +760,8 @@ void getFstFromMs() {
         }
     }
 
-    std::cerr << "Selected population 1 individuals: "; print_vector_stream(set1_loci, std::cerr);
-    std::cerr << "Selected population 2 individuals: "; print_vector_stream(set2_loci, std::cerr);
+    std::cerr << "Selected population 1 individuals: "; print_vector(set1_loci, std::cerr);
+    std::cerr << "Selected population 2 individuals: "; print_vector(set2_loci, std::cerr);
     
     if (opt::msSet1Size != opt::msSet1FstSample || opt::msSet2Size != opt::msSet2FstSample) {
         std::cerr << "Warning: the Fst column is going to contain '-1' values where the site is not a segregating site in the sampled individuals for Fst calcultation" << std::endl;

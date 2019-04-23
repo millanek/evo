@@ -206,13 +206,13 @@ int getSeqMain(int argc, char** argv) {
                     if (opt::splitNum > 0) {
                         std::vector<string::size_type> scaledSplits = splits;
                         std::cerr << "Splits" << std::endl;
-                        print_vector_stream(splits, std::cerr);
+                        print_vector(splits, std::cerr);
                         if (!opt::accesibleGenBedFile.empty()) { // Need to rescale the splits
                             for (int i = 0; i < splits.size(); i++) {
                                 scaledSplits[i] = ag->getAccessibleBPinRegion(currentScaffoldNum, 0, (int)splits[i]);
                             }
                             std::cerr << "Scaled splits:" << std::endl;
-                            print_vector_stream(scaledSplits, std::cerr);
+                            print_vector(scaledSplits, std::cerr);
                         }
                         
                         

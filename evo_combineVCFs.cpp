@@ -113,7 +113,7 @@ int VCFcombMain(int argc, char** argv) {
     std::cout << header1[0] << std::endl;
     std::cout << header1[1] << std::endl;
     std::cout << header1[2] << std::endl;
-    std::cout << header1.back() << "\t"; print_vector_stream(samples2, std::cout);
+    std::cout << header1.back() << "\t"; print_vector(samples2, std::cout);
     int inMask = 0; int noAlignment = 0; int notVariable = 0; int becomesMultiallelic = 0;
     int vcf1Var = 0; int vcf2Var = 0; int sharedVar = 0; int refDifVar = 0;
     std::cerr << "Length of the chromosome/scaffold: " <<  refSeq1.length() << std::endl;
@@ -142,7 +142,7 @@ int VCFcombMain(int argc, char** argv) {
                     fields = split(VCF2[pos], '\t');
                     if (altAllele1 == fields[4]) {
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
-                        std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout); sharedVar++;
+                        std::cout << VCF1[pos] << "\t"; print_vector(genotypes, std::cout); sharedVar++;
                     } else {
                         becomesMultiallelic++;
                     } // else this would be multiallelic
@@ -153,7 +153,7 @@ int VCFcombMain(int argc, char** argv) {
                 std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                 for (int j = 0; j < NUM_NON_GENOTYPE_COLUMNS; j++) { std::cout << fields[j] << "\t"; }
                 for (int j = 0; j < samples1.size(); j++) { std::cout << refAllele << "\t"; }
-                print_vector_stream(genotypes,std::cout); vcf2Var++;
+                print_vector(genotypes,std::cout); vcf2Var++;
             }
         } else // refSeq1[i] != refSeq2[i]
         {
@@ -181,7 +181,7 @@ int VCFcombMain(int argc, char** argv) {
                     }
                     if (altAllele2[0]  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
-                        std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout); sharedVar++;
+                        std::cout << VCF1[pos] << "\t"; print_vector(genotypes, std::cout); sharedVar++;
                     } else {
                         becomesMultiallelic++;
                     } // else this would be multiallelic
@@ -193,7 +193,7 @@ int VCFcombMain(int argc, char** argv) {
                     std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                     for (int j = 0; j < NUM_NON_GENOTYPE_COLUMNS; j++) { std::cout << fields[j] << "\t"; }
                     for (int j = 0; j < samples1.size(); j++) { std::cout << refAllele << "\t"; }
-                    print_vector_stream(genotypes,std::cout); vcf2Var++;
+                    print_vector(genotypes,std::cout); vcf2Var++;
                 } else {
                     becomesMultiallelic++;
                 }

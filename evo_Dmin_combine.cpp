@@ -147,7 +147,7 @@ int DminCombineMain(int argc, char** argv) {
                         if (!std::isnan(thisABBA_localD)) ABBA_local_Ds.push_back(thisABBA_localD);
                     }
                 } else {
-                    print_vector_stream(localDs,std::cerr);
+                    print_vector(localDs,std::cerr);
                 }
             }
         }
@@ -155,11 +155,11 @@ int DminCombineMain(int argc, char** argv) {
             allDone = true; break;
         }
        // std::cerr << "D1 = " << D1 << std::endl;
-        //print_vector_stream(BBAA_local_Ds, std::cerr);
+        //print_vector(BBAA_local_Ds, std::cerr);
         double BBAAstdErr = jackknive_std_err(BBAA_local_Ds);
-        //print_vector_stream(BABA_local_Ds, std::cerr);
+        //print_vector(BABA_local_Ds, std::cerr);
         double BABAstdErr = jackknive_std_err(BABA_local_Ds);
-        //print_vector_stream(ABBA_local_Ds, std::cerr);
+        //print_vector(ABBA_local_Ds, std::cerr);
         //std::cerr << "D1 = " << D1 << std::endl;
         double ABBAstdErr = jackknive_std_err(ABBA_local_Ds);
         //std::cerr << "D1 = " << D1 << std::endl;
@@ -170,7 +170,7 @@ int DminCombineMain(int argc, char** argv) {
         if (s1 == "Altcal" && s2 == "Altshe" && s3 == "Asplep") {
             std::cerr << "D1_Z = " << D1_Z << std::endl;
             std::cerr << "BBAAstdErr = " << BBAAstdErr << std::endl;
-            print_vector_stream(BBAA_local_Ds, std::cerr);
+            print_vector(BBAA_local_Ds, std::cerr);
             std::cerr << "ABBAstdErr = " << ABBAstdErr << std::endl;
             std::cerr << "BABAstdErr = " << BABAstdErr << std::endl;
             std::cerr << "ABBAtotal = " << ABBAtotal << std::endl;

@@ -197,9 +197,9 @@ int statsMain(int argc, char** argv) {
                 for (int i = 0; i < (int)populationsStrings.size(); i++) {
                     populationsIndicesComplements.push_back(complementIndices(numSamples, populationsIndices[i]));
                     std::cerr << "Pop: " << populationLabels[i] << "\t";
-                    print_vector_stream(populationsIndices[i], std::cerr,',');
+                    print_vector(populationsIndices[i], std::cerr,',');
                     std::cerr << "complement: " << populationLabels[i] << "\t";
-                    print_vector_stream(populationsIndicesComplements[i], std::cerr,',');
+                    print_vector(populationsIndicesComplements[i], std::cerr,',');
                     
                 }
             }

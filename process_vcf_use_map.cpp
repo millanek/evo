@@ -81,12 +81,12 @@ void printProcessedVCFline(std::vector<string>& vcfFields, const bool bInLG, con
     if (bInLG) {
         if (thisScaffoldOrientation == '+') {
             std::cout << thisLG << "\t" << LGsizeUpToHere + pos << "\t";
-            print_vector_stream(vcfFields, std::cout);
+            print_vector(vcfFields, std::cout);
         } else if (thisScaffoldOrientation == '-') {
             std::cout << thisLG << "\t" << LGsizeUpToHere + (thisScaffoldSize - pos + 1) << "\t";
             vcfFields[1] = reverseComplementIUPAC(vcfFields[1]);
             vcfFields[2] = reverseComplementIUPAC(vcfFields[2]);
-            print_vector_stream(vcfFields, std::cout);
+            print_vector(vcfFields, std::cout);
         }
     } else {
         std::cout << line << std::endl;

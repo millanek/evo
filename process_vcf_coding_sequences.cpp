@@ -151,7 +151,7 @@ int getCodingSeqMain(int argc, char** argv) {
     Annotation wgAnnotation(geneFile, opt::bUsePartial);
     std::vector<std::vector<string> > annotation;
     
-    //print_vector_stream(wgAnnotation.annotationMap["scaffold_0"][0], std::cerr);
+    //print_vector(wgAnnotation.annotationMap["scaffold_0"][0], std::cerr);
     
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
@@ -231,12 +231,12 @@ int getCodingSeqMain(int argc, char** argv) {
                                 assert(allSeqsH2[0].length() == refSeq.length());
                                 if (opt::hetTreatment == 'p' || opt::hetTreatment == 'r') {
                                     getStatsHaploidSeq(allSeqs, statsThisGene);
-                                    print_vector_stream(statsThisGene, std::cout);
+                                    print_vector(statsThisGene, std::cout);
                                 } else if (opt::hetTreatment == 'b') {
                                     std::vector<std::vector<double> > combinedVectorForPCA;
                                     pNsets* sets = nullptr;
                                     getStatsBothPhasedHaps(allSeqs, allSeqsH2, statsThisGene, combinedVectorForPCA, sets);
-                                    print_vector_stream(statsThisGene, std::cout);
+                                    print_vector(statsThisGene, std::cout);
                                 } else {
                                     getStatsIUPAC(allSeqs, refSeq, annotLineVec[4], statsThisGene,stopsFile, sampleNames);
                                 }

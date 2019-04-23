@@ -38,9 +38,9 @@ public:
         for (int i = 0; i < set3.size(); i++) {
             set3Loci.insert(atoi(set3[i].c_str()));
         }
-        std::cerr << "set 1: "; print_vector_stream(set1, std::cerr);
-        std::cerr << "set 2: "; print_vector_stream(set2, std::cerr);
-        std::cerr << "set 3: "; print_vector_stream(set3, std::cerr);
+        std::cerr << "set 1: "; print_vector(set1, std::cerr);
+        std::cerr << "set 2: "; print_vector(set2, std::cerr);
+        std::cerr << "set 3: "; print_vector(set3, std::cerr);
         initialised = true;
     }
     
