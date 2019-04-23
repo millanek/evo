@@ -121,9 +121,9 @@ int fillAaMain(int argc, char** argv) {
                 } else {
                     string genotypeToAdd;
                     if (AA == fields[3][0])
-                        genotypeToAdd = "0/0:0:1,0,0";
+                        genotypeToAdd = "0/0";
                     else if (AA == fields[4][0])
-                        genotypeToAdd = "1/1:2:0,0,1";
+                        genotypeToAdd = "1/1";
                     else
                         genotypeToAdd = "./.";
                     fields.push_back(genotypeToAdd);
