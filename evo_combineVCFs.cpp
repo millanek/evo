@@ -120,10 +120,10 @@ int VCFcombMain(int argc, char** argv) {
     
     for (int i = 0; i < refSeq1.length(); i++) {
         int pos = i+1;
-        if (pos == 7801 || pos == 20205) {
+       /* if (pos == 7801 || pos == 20205) {
             std::cerr << "VCF1.count("<< pos<<"): " <<  VCF1.count(pos) << "VCF2.count("<< pos<<"): " <<  VCF2.count(pos) << std::endl;
             std::cerr << "refSeq1[i] " <<  refSeq1[i] << "refSeq2[i] " << refSeq2[i] << std::endl;
-        }
+        }*/
         // if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
         if (acc[i] == true) { inMask++; continue; }
         if (refSeq1[i] == 'N' || refSeq2[i] == 'N') {
@@ -138,9 +138,10 @@ int VCFcombMain(int argc, char** argv) {
                     std::cout << std::endl; vcf1Var++;
                 }
                 if (VCF2.count(pos) == 1) {
-                    fields = split(VCF1[pos], '\t'); string altAllele1 = fields[4];
-                    fields = split(VCF2[pos], '\t');
-                    if (altAllele1 == fields[4]) {
+                    fields = split(VCF1[pos], '\t'); char altAllele1 = fields[4][0];
+                    fields = split(VCF2[pos], '\t'); char refAllele2 = fields[3][0]; char altAllele2 = fields[4][0];
+                    if (refAllele2 != refSeq2[i] && complementIUPAC(refAllele2) == refSeq2[i]) { altAllele2 = complementIUPAC(altAllele2);}
+                    if (altAllele1 == altAllele2) {
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                         std::cout << VCF1[pos] << "\t"; print_vector(genotypes, std::cout); sharedVar++;
                     } else {
@@ -150,6 +151,7 @@ int VCFcombMain(int argc, char** argv) {
             }
             else if (VCF2.count(pos) == 1) {
                 fields = split(VCF2[pos], '\t');
+                if (fields[3][0] != refSeq2[i] && complementIUPAC(fields[3][0]) == refSeq2[i]) { fields[3][0] = complementIUPAC(fields[3][0]);}
                 std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                 for (int j = 0; j < NUM_NON_GENOTYPE_COLUMNS; j++) { std::cout << fields[j] << "\t"; }
                 for (int j = 0; j < samples1.size(); j++) { std::cout << refAllele << "\t"; }
@@ -164,22 +166,23 @@ int VCFcombMain(int argc, char** argv) {
                 std::cout << std::endl; refDifVar++;
             }
             else if (VCF1.count(pos) == 1) {
-                fields = split(VCF1[pos], '\t'); string altAllele1 = fields[4];
-                if (pos == 7801 || pos == 20205) {
+                fields = split(VCF1[pos], '\t'); char altAllele1 = fields[4][0];
+                /*if (pos == 7801 || pos == 20205) {
                     std::cerr << "altAllele1 " <<  altAllele1 << "refSeq2[i] " << refSeq2[i] << std::endl;
-                }
-                if (altAllele1[0] != refSeq2[i]) { becomesMultiallelic++; continue; } // This would be multiallelic
+                }*/
+                if (altAllele1 != refSeq2[i]) { becomesMultiallelic++; continue; } // This would be multiallelic
                 
                 if (VCF2.count(pos) == 0) {
                     std::cout << VCF1[pos]; for (int j = 0; j < samples2.size(); j++) { std::cout << "\t" << refAllele; }
                     std::cout << std::endl; vcf1Var++;
                 }
                 if (VCF2.count(pos) == 1) {
-                    fields = split(VCF2[pos], '\t'); string altAllele2 = fields[4];
-                    if (pos == 7801 || pos == 20205) {
+                    fields = split(VCF2[pos], '\t'); char refAllele2 = fields[3][0]; char altAllele2 = fields[4][0];
+                    if (refAllele2 != refSeq2[i] && complementIUPAC(refAllele2) == refSeq2[i]) { altAllele2 = complementIUPAC(altAllele2);}
+                    /*if (pos == 7801 || pos == 20205) {
                         std::cerr << "altAllele2 " <<  altAllele1 << "refSeq1[i] " << refSeq2[i] << std::endl;
-                    }
-                    if (altAllele2[0]  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
+                    }*/
+                    if (altAllele2  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                         std::cout << VCF1[pos] << "\t"; print_vector(genotypes, std::cout); sharedVar++;
                     } else {
@@ -188,8 +191,9 @@ int VCFcombMain(int argc, char** argv) {
                 }
             }
             else if (VCF2.count(pos) == 1) {
-                fields = split(VCF2[pos], '\t'); string altAllele2 = fields[4];
-                if (altAllele2[0]  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
+                fields = split(VCF2[pos], '\t'); char refAllele2 = fields[3][0]; char altAllele2 = fields[4][0];
+                if (refAllele2 != refSeq2[i] && complementIUPAC(refAllele2) == refSeq2[i]) { altAllele2 = complementIUPAC(altAllele2);}
+                if (altAllele2  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
                     std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                     for (int j = 0; j < NUM_NON_GENOTYPE_COLUMNS; j++) { std::cout << fields[j] << "\t"; }
                     for (int j = 0; j < samples1.size(); j++) { std::cout << refAllele << "\t"; }
