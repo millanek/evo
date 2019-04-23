@@ -120,6 +120,10 @@ int VCFcombMain(int argc, char** argv) {
     
     for (int i = 0; i < refSeq1.length(); i++) {
         int pos = i+1;
+        if (pos == 7801 || pos == 20205) {
+            std::cerr << "VCF1.count("<< pos<<"): " <<  VCF1.count(pos) << "VCF2.count("<< pos<<"): " <<  VCF2.count(pos) << std::endl;
+            std::cerr << "refSeq1[i] " <<  refSeq1[i] << "refSeq2[i] " << refSeq2[i] << std::endl;
+        }
         // if (ag->findIfBPaccessible(chrRef1, i+1) == true) continue; // This assumes a mask file is given
         if (acc[i] == true) { inMask++; continue; }
         if (refSeq1[i] == 'N' || refSeq2[i] == 'N') {
@@ -161,6 +165,9 @@ int VCFcombMain(int argc, char** argv) {
             }
             else if (VCF1.count(pos) == 1) {
                 fields = split(VCF1[pos], '\t'); string altAllele1 = fields[4];
+                if (pos == 7801 || pos == 20205) {
+                    std::cerr << "altAllele1 " <<  altAllele1 << "refSeq2[i] " << refSeq2[i] << std::endl;
+                }
                 if (altAllele1[0] != refSeq2[i]) { becomesMultiallelic++; continue; } // This would be multiallelic
                 
                 if (VCF2.count(pos) == 0) {
@@ -169,6 +176,9 @@ int VCFcombMain(int argc, char** argv) {
                 }
                 if (VCF2.count(pos) == 1) {
                     fields = split(VCF2[pos], '\t'); string altAllele2 = fields[4];
+                    if (pos == 7801 || pos == 20205) {
+                        std::cerr << "altAllele2 " <<  altAllele1 << "refSeq1[i] " << refSeq2[i] << std::endl;
+                    }
                     if (altAllele2[0]  == refSeq1[i]) { // The alternative allele in the simDia called VCF needs to match the AstCal allele
                         std::vector<string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
                         std::cout << VCF1[pos]; print_vector_stream(genotypes, std::cout); sharedVar++;
