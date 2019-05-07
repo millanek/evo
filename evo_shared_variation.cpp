@@ -240,7 +240,7 @@ void parseSharedVarOptions(int argc, char** argv) {
         switch (c)
         {
             case 'n': arg >> opt::runName; break;
-            case 'l': opt::getLocsFor = split(arg.str(), ',');
+            case 'l': opt::getLocsFor = split(arg.str(), ','); break;
             case '?': die = true; break;
             case 'h': std::cout << SHAREDVAR_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
