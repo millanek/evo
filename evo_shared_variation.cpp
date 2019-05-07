@@ -16,17 +16,20 @@ static const char *SHAREDVAR_USAGE_MESSAGE =
 "Search for shared polymorphic sites between groups, and also for shared heterozyhous sites\n"
 "The SETS.txt should have two columns: SAMPLE_ID    SPECIES_ID\n"
 "\n"
-"       -h, --help                              display this help and exit\n"
-"       -n, --run-name                          run-name will be included in the output file name\n"
+"       -h, --help                                  display this help and exit\n"
+"       -l, --sharedVarLocations=S1,S2              (optional) should be a pair of populations for which the location of shared\n"
+"                                                   polymorphic sites will be written into a file\n"
+"       -n, --run-name                              run-name will be included in the output file name\n"
 "\n\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 enum { OPT_HELP = 1 };
 
-static const char* shortopts = "hn:";
+static const char* shortopts = "hn:l:";
 
 static const struct option longopts[] = {
     { "run-name",   required_argument, NULL, 'n' },
+    { "sharedVarLocations",   required_argument, NULL, 'l' },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
 };
@@ -35,53 +38,8 @@ namespace opt
 {
     static string vcfFile;
     static string setsFile;
+    static std::vector<string> getLocsFor;
     static string runName = "";
-}
-
-SetCounts getSetVariantCounts(const std::vector<std::string>& fields, const std::vector<size_t>& set1_loci, const std::vector<size_t>& set2_loci) {
-    SetCounts thisVariantCounts;
-    thisVariantCounts.individualsWithVariant.assign((fields.size()-NUM_NON_GENOTYPE_COLUMNS),0);
-    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
-    for (std::vector<std::string>::size_type i = NUM_NON_GENOTYPE_COLUMNS; i != fields.size(); i++) {
-        if (fields[i][0] == '1') {
-            thisVariantCounts.overall++;
-            if (std::find(set1_loci.begin(), set1_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set1_loci.end()) { thisVariantCounts.set1Count++; }
-            if (std::find(set2_loci.begin(), set2_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set2_loci.end()) { thisVariantCounts.set2Count++; }
-            thisVariantCounts.individualsWithVariant[i- NUM_NON_GENOTYPE_COLUMNS]++;
-        }
-        if (fields[i][2] == '1') {
-            thisVariantCounts.overall++;
-            if (std::find(set1_loci.begin(), set1_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set1_loci.end()) { thisVariantCounts.set1Count++; }
-            if (std::find(set2_loci.begin(), set2_loci.end(), i-NUM_NON_GENOTYPE_COLUMNS) != set2_loci.end()) { thisVariantCounts.set2Count++; }
-            thisVariantCounts.individualsWithVariant[i-NUM_NON_GENOTYPE_COLUMNS]++;
-        }
-    }
-    // std::cerr << fields[0] << "\t" << fields[1] << std::endl;
-    int set1WithoutVariant = (int)(set1_loci.size() * 2) - thisVariantCounts.set1Count;
-    int set2WithoutVariant = (int)(set2_loci.size() * 2) - thisVariantCounts.set2Count;
-    /*
-    if (fields[1] == "2520") {
-        std::cerr << thisVariantCounts.set1Count << "\t" << set1WithoutVariant << "\t" << thisVariantCounts.set2Count << "\t" << set2WithoutVariant << std::endl;
-    }
-     */
-    if ((thisVariantCounts.set1Count != 0 || thisVariantCounts.set2Count != 0) && (set1WithoutVariant != 0 || set2WithoutVariant != 0)) {
-        if ((set1_loci.size() * 2) + (set2_loci.size() * 2) <= 60) {
-            thisVariantCounts.fisher_pval = fisher_exact(thisVariantCounts.set1Count,set1WithoutVariant , thisVariantCounts.set2Count, set2WithoutVariant);
-            thisVariantCounts.chi_sq_pval = pearson_chi_sq_indep(thisVariantCounts.set1Count,set1WithoutVariant , thisVariantCounts.set2Count, set2WithoutVariant);
-        } else {
-            thisVariantCounts.chi_sq_pval = pearson_chi_sq_indep(thisVariantCounts.set1Count,set1WithoutVariant , thisVariantCounts.set2Count, set2WithoutVariant);
-        }
-    }
-    return thisVariantCounts;
-}
-
-int getNumHets(SetCounts& counts) {
-    int num_hets = 0;
-    for (std::vector<std::vector<int> >::size_type i = 0; i < counts.individualsWithVariant.size(); i++) {
-        if (counts.individualsWithVariant[i] == 1)
-            num_hets++;
-    }
-    return num_hets;
 }
 
 int sharedVarMain(int argc, char** argv) {
@@ -115,6 +73,10 @@ int sharedVarMain(int argc, char** argv) {
         }
     } std::cerr << "There are " << species.size() << " sets (excluding the Outgroup)" << std::endl;
     
+    std::ofstream* sharedLocsFile;
+    if (opt::getLocsFor.size() == 2) {
+        sharedLocsFile = new std::ofstream("sharedVariationLocation_" + opt::getLocsFor[0] + "_" + opt::getLocsFor[1] + ".txt");
+    }
 
     string sharedPerIndividualN = opt::runName + "sharedHets_perIndividual.txt";
     string sharedBetweenGroupsN = "sharedVariationBetween_" + fileRoot + "_" + opt::runName + ".txt";
@@ -212,7 +174,7 @@ int sharedVarMain(int argc, char** argv) {
             for (int i = 0; i < (int)species.size(); i++) {
                 allPs.push_back(c->setAAFs.at(species[i]));
                 double p_Si = allPs[i];
-                if (p_Si > 0 && p_Si < 1)   // If any member of the trio has entirely missing data, just move on to the next trio
+                if (p_Si > 0 && p_Si < 1)
                     sharedBetweenGroupsMatrix[i][i]++;
                 else if (p_Si == -1)
                     sharedBetweenGroupsMatrixMissing[i][i]++;
@@ -222,8 +184,13 @@ int sharedVarMain(int argc, char** argv) {
                 if (p_Si > 0 && p_Si < 1) {
                     for (int j = i+1; j != (int)species.size(); j++) {
                         double p_Sj = allPs[j];
-                        if (p_Sj > 0 && p_Sj < 1)
+                        if (p_Sj > 0 && p_Sj < 1) {
                             sharedBetweenGroupsMatrix[j][i]++;
+                            if (opt::getLocsFor.size() == 2) {
+                                if ((species[i] == opt::getLocsFor[0] && species[j] == opt::getLocsFor[1]) || (species[i] == opt::getLocsFor[1] && species[j] == opt::getLocsFor[0]))
+                                    *sharedLocsFile << fields[0] << "\t" << fields[1];
+                            }
+                        }
                         else if (p_Sj == -1)
                             sharedBetweenGroupsMatrixMissing[j][i]++;
                     }
@@ -273,6 +240,7 @@ void parseSharedVarOptions(int argc, char** argv) {
         switch (c)
         {
             case 'n': arg >> opt::runName; break;
+            case 'l': opt::getLocsFor = split(arg.str(), ',');
             case '?': die = true; break;
             case 'h': std::cout << SHAREDVAR_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
