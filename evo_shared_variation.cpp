@@ -188,7 +188,7 @@ int sharedVarMain(int argc, char** argv) {
                             sharedBetweenGroupsMatrix[j][i]++;
                             if (opt::getLocsFor.size() == 2) {
                                 if ((species[i] == opt::getLocsFor[0] && species[j] == opt::getLocsFor[1]) || (species[i] == opt::getLocsFor[1] && species[j] == opt::getLocsFor[0]))
-                                    *sharedLocsFile << fields[0] << "\t" << fields[1];
+                                    *sharedLocsFile << fields[0] << "\t" << fields[1] << std::endl;
                             }
                         }
                         else if (p_Sj == -1)
