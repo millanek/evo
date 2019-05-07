@@ -75,7 +75,7 @@ int sharedVarMain(int argc, char** argv) {
     
     std::ofstream* sharedLocsFile;
     if (opt::getLocsFor.size() == 2) {
-        sharedLocsFile = new std::ofstream("sharedVariationLocation_" + opt::getLocsFor[0] + "_" + opt::getLocsFor[1] + ".txt");
+        sharedLocsFile = new std::ofstream(opt::runName+"sharedVariationLocation_" + opt::getLocsFor[0] + "_" + opt::getLocsFor[1] + ".txt");
     }
 
     string sharedPerIndividualN = opt::runName + "sharedHets_perIndividual.txt";
