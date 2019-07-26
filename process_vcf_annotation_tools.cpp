@@ -57,10 +57,10 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
             }
         }
         if (SNPlocus >= geneStart && SNPlocus <= geneEnd) {
-            int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');
+            //int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');
             SNPcategory = "intron";
-            if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
-            else inGene = thisTranscript;
+            //if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
+            inGene = thisTranscript;
             std::vector<string> exons = annotationMapTranscriptMap[SNPscaffold][thisTranscript];
             // std::cerr << exons.size() << std::endl;
             for (std::vector<string>::size_type j = 0; j != exons.size(); j++) {
