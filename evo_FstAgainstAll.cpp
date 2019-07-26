@@ -100,10 +100,11 @@ int FstGlobalMain(int argc, char** argv) {
     std::ofstream* outFileGenes; if (!opt::annotFile.empty()) {
         outFileGenes = new std::ofstream(opt::runName + "_FstGlobalGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
         // *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons\t" << "numSNPsWith3kbUpstr\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons\t" << threePops[0] << "_w3kbUpstr\t" << threePops[1] << "_w3kbUpstr\t" << threePops[2] << "_w3kbUpstr" << std::endl;
-        *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons";
+        *outFileGenes << "gene\t" << "numSNPsExons\tnumSNPsIntrons\tnumSNPs3kbPromoter";
         for (int i = 0; i < populationsToUse.size(); i++) {
             *outFileGenes << "\t" << populationsToUse[i] << "_exons";
             *outFileGenes << "\t" << populationsToUse[i] << "_wIntrons";
+            *outFileGenes << "\t" << populationsToUse[i] << "_promoter";
         } *outFileGenes << std::endl;
     }
     
@@ -114,7 +115,7 @@ int FstGlobalMain(int argc, char** argv) {
     std::deque<string> coordDeque(opt::windowSize,"0");
     
     // if (!opt::annotFile.empty()) {
-    std::vector<std::vector<double>> initFstNumVectors(2); // In exons and wIntrons
+    std::vector<std::vector<double>> initFstNumVectors(3); // In exons and Introns and Promoters
     std::vector<std::vector<std::vector<double>>> FstGeneNumVectors(populationsToUse.size(),initFstNumVectors); // For the nine PBS columns in the _PBSGenes_ files
     std::vector<std::vector<std::vector<double>>> FstGeneDenumVectors(populationsToUse.size(),initFstNumVectors); // For the nine PBS columns in the _PBSGenes_ files
     std::string currentGene = "";
@@ -233,7 +234,11 @@ int FstGlobalMain(int argc, char** argv) {
                 if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
                     if (SNPgeneDetails[1] == "exon") {
                         FstGeneNumVectors[i][0].push_back(FstNum); FstGeneDenumVectors[i][0].push_back(FstDenom);
-                    } FstGeneNumVectors[i][1].push_back(FstNum); FstGeneDenumVectors[i][1].push_back(FstDenom);
+                    } else if (SNPgeneDetails[1] == "intron") {
+                        FstGeneNumVectors[i][1].push_back(FstNum); FstGeneDenumVectors[i][1].push_back(FstDenom);
+                    } else if (SNPgeneDetails[1] == "promoter") {
+                        FstGeneNumVectors[i][2].push_back(FstNum); FstGeneDenumVectors[i][2].push_back(FstDenom);
+                    }
                     currentGene = SNPgeneDetails[0];
                 }}
                 if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
@@ -244,14 +249,15 @@ int FstGlobalMain(int argc, char** argv) {
                 // }
             }
             if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] == "" && currentGene != "") {
-                *outFileGenes << currentGene << "\t" << FstGeneNumVectors[0][0].size() << "\t" << FstGeneNumVectors[0][1].size();
+                *outFileGenes << currentGene << "\t" << FstGeneNumVectors[0][0].size() << "\t" << FstGeneNumVectors[0][1].size() << "\t" << FstGeneNumVectors[0][2].size();
                 for (int i = 0; i < populationsToUse.size(); i++) {
                     double FstExons = vector_average(FstGeneNumVectors[i][0])/vector_average(FstGeneDenumVectors[i][0]);
                     double FstWithIntrons = vector_average(FstGeneNumVectors[i][1])/vector_average(FstGeneDenumVectors[i][1]);
-                    if (FstExons < 0) FstExons = 0; if (FstWithIntrons < 0) FstWithIntrons = 0;
-                    *outFileGenes << "\t" << FstExons << "\t" << FstWithIntrons;
-                    FstGeneNumVectors[i][0].clear(); FstGeneNumVectors[i][1].clear();
-                    FstGeneDenumVectors[i][0].clear(); FstGeneDenumVectors[i][1].clear();
+                    double FstPromoters = vector_average(FstGeneNumVectors[i][2])/vector_average(FstGeneDenumVectors[i][2]);
+                    if (FstExons < 0) FstExons = 0; if (FstWithIntrons < 0) FstWithIntrons = 0; if (FstPromoters < 0) FstPromoters = 0;
+                    *outFileGenes << "\t" << FstExons << "\t" << FstWithIntrons << "\t" << FstPromoters;
+                    FstGeneNumVectors[i][0].clear(); FstGeneNumVectors[i][1].clear(); FstGeneNumVectors[i][2].clear();
+                    FstGeneDenumVectors[i][0].clear(); FstGeneDenumVectors[i][1].clear(); FstGeneDenumVectors[i][2].clear();
                 } *outFileGenes << std::endl;
                 currentGene = "";
             }}

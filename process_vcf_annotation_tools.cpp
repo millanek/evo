@@ -42,9 +42,21 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
     string inGene = ""; string SNPcategory = "nonCoding";
     for (std::vector<std::vector<string> >::size_type i = 0; i != scaffoldTranscriptStartEnd.size(); i++) {
         std::vector<string> startEndVec = split(scaffoldTranscriptStartEnd[i], '\t');
+        string thisTranscript = startEndVec[0];
+        int geneStart = atoi(startEndVec[1].c_str()); int geneEnd = atoi(startEndVec[2].c_str()); string strand = startEndVec[3];
         //if (SNPlocus == 20001) { print_vector_stream(startEndVec, std::cerr);}
-        if (SNPlocus >= atoi(startEndVec[1].c_str()) && SNPlocus <= atoi(startEndVec[2].c_str())) {
-            string thisTranscript = startEndVec[0];
+        if (strand == "+") {
+            if (SNPlocus >= geneStart-3000 && SNPlocus < geneStart) {
+                SNPcategory = "promoter"; inGene = thisTranscript;
+                break;
+            }
+        } else if (strand == "-") {
+            if (SNPlocus > geneEnd && SNPlocus <= geneStart+3000) {
+                SNPcategory = "promoter"; inGene = thisTranscript;
+                break;
+            }
+        }
+        if (SNPlocus >= geneStart && SNPlocus <= geneEnd) {
             int numDots = (int)std::count(thisTranscript.begin(), thisTranscript.end(), '.');
             SNPcategory = "intron";
             if (numDots == 4)  inGene = geneFromTranscript(thisTranscript);
@@ -60,7 +72,8 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
                 if (SNPcategory == "exon") { break; }
             }
             break;
-        } //else if (SNPcategory == "intron") { if (inGene != geneFromTranscript(startEndVec[0])) { break; } }
+        }
+        //else if (SNPcategory == "intron") { if (inGene != geneFromTranscript(startEndVec[0])) { break; } }
     }
     SNPgeneDetails.push_back(inGene); SNPgeneDetails.push_back(SNPcategory);
     return SNPgeneDetails;
@@ -82,7 +95,7 @@ void Annotation::annotateGeneStartsEnds() {
             annotLineVec = split(thisScaffoldAnnotation[i].back(), '\t');
             if (strand == "+") { transcriptEnd = annotLineVec[2]; } else { transcriptStart = annotLineVec[1]; }
             // if (i == 0) { print_vector_stream(annotLineVec, std::cerr); }
-            string transcriptStartEnd = transcriptName + "\t" + transcriptStart + "\t" + transcriptEnd;
+            string transcriptStartEnd = transcriptName + "\t" + transcriptStart + "\t" + transcriptEnd + "\t" + strand;
             thisScaffoldTranscriptStartEnd.push_back(transcriptStartEnd);
             thisScaffoldTranscriptMap[transcriptName] = thisScaffoldAnnotation[i];
             //std::cerr << "Annotation processed: " << transcriptName << std::endl;

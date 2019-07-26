@@ -161,7 +161,7 @@ int PBSmain(int argc, char** argv) {
         if (!opt::annotFile.empty()) {
             std::ofstream* outFileGenes = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBSGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
            // *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons\t" << "numSNPsWith3kbUpstr\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons\t" << threePops[0] << "_w3kbUpstr\t" << threePops[1] << "_w3kbUpstr\t" << threePops[2] << "_w3kbUpstr" << std::endl;
-            *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons" << std::endl;
+            *outFileGenes << "gene\t" << "numSNPsExons\tnumSNPsIntrons\tnumSNPs3kbPromoter\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons" << threePops[0] << "_promoter\t" << threePops[1] << "_promoter\t" << threePops[2] << "_promoter" << std::endl;
             outFilesGenes.push_back(outFileGenes);
         }
         PBStrios.push_back(threePops);
@@ -276,7 +276,11 @@ int PBSmain(int argc, char** argv) {
                 if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
                     if (SNPgeneDetails[1] == "exon") {
                         PBSgeneResults[i][0].push_back(thisSNP_PBS[0]); PBSgeneResults[i][1].push_back(thisSNP_PBS[1]); PBSgeneResults[i][2].push_back(thisSNP_PBS[2]);
-                    } PBSgeneResults[i][3].push_back(thisSNP_PBS[0]); PBSgeneResults[i][4].push_back(thisSNP_PBS[1]); PBSgeneResults[i][5].push_back(thisSNP_PBS[2]);
+                    } else if (SNPgeneDetails[1] == "intron") {
+                        PBSgeneResults[i][3].push_back(thisSNP_PBS[0]); PBSgeneResults[i][4].push_back(thisSNP_PBS[1]); PBSgeneResults[i][5].push_back(thisSNP_PBS[2]);
+                    } else if (SNPgeneDetails[1] == "promoter") {
+                        PBSgeneResults[i][6].push_back(thisSNP_PBS[0]); PBSgeneResults[i][7].push_back(thisSNP_PBS[1]); PBSgeneResults[i][8].push_back(thisSNP_PBS[2]);
+                    }
                     currentGene = SNPgeneDetails[0];
                 }}
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {
@@ -287,7 +291,7 @@ int PBSmain(int argc, char** argv) {
             }
             if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] == "" && currentGene != "") {
                 for (int i = 0; i != PBStrios.size(); i++) {
-                    *outFilesGenes[i] << currentGene << "\t" << PBSgeneResults[i][0].size() << "\t" << PBSgeneResults[i][3].size() << "\t" << vector_average(PBSgeneResults[i][0]) << "\t" << vector_average(PBSgeneResults[i][1]) << "\t" << vector_average(PBSgeneResults[i][2]) << "\t" << vector_average(PBSgeneResults[i][3]) << "\t" << vector_average(PBSgeneResults[i][4]) << "\t" << vector_average(PBSgeneResults[i][5]) << std::endl;
+                    *outFilesGenes[i] << currentGene << "\t" << PBSgeneResults[i][0].size() << "\t" << PBSgeneResults[i][3].size() << "\t" << PBSgeneResults[i][6].size() << "\t" << vector_average(PBSgeneResults[i][0]) << "\t" << vector_average(PBSgeneResults[i][1]) << "\t" << vector_average(PBSgeneResults[i][2]) << "\t" << vector_average(PBSgeneResults[i][3]) << "\t" << vector_average(PBSgeneResults[i][4]) << "\t" << vector_average(PBSgeneResults[i][5]) << "\t" << vector_average(PBSgeneResults[i][6]) << "\t" << vector_average(PBSgeneResults[i][7]) << "\t" << vector_average(PBSgeneResults[i][8]) << std::endl;
                         for (int j = 0; j <= 5; j++) { PBSgeneResults[i][j].clear(); }
                 }
                 currentGene = "";

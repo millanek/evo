@@ -189,7 +189,6 @@ public:
     
     string getCategoryOfSNP(const string& SNPscaffold, const string& SNPlocus) {
         string SNPcategory = "other non-coding";
-        std::vector<std::vector<string> > scaffoldAnnotation = annotationMap[SNPscaffold];
         std::vector<string> scaffoldTranscriptStartEnd = transcriptStartEndMap[SNPscaffold];
         string inGene = "";
         for (std::vector<std::vector<string> >::size_type i = 0; i != scaffoldTranscriptStartEnd.size(); i++) {
