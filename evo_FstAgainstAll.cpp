@@ -201,7 +201,10 @@ int FstGlobalMain(int argc, char** argv) {
             
             // find if we are in a gene:
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, atoi(coord.c_str()));
-            if (SNPgeneDetails[0] != "") currentGene = SNPgeneDetails[0];
+            if (SNPgeneDetails[0] != "") {
+                currentGene = SNPgeneDetails[0];
+                if (previousGene == "") previousGene = currentGene;
+            }
             
             coordDeque.push_back(coord); coordDeque.pop_front();
             if ((usedVariantNumber > opt::windowSize || opt::windowSize == opt::windowStep) && (usedVariantNumber % opt::windowStep == 0)) {
