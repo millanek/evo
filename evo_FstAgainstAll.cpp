@@ -253,7 +253,7 @@ int FstGlobalMain(int argc, char** argv) {
                 // }
             }
             if (!opt::annotFile.empty()) { if (previousGene != "" && currentGene != previousGene) {
-                *outFileGenes << currentGene << "\t" << FstGeneNumVectors[0][0].size() << "\t" << FstGeneNumVectors[0][1].size() << "\t" << FstGeneNumVectors[0][2].size();
+                *outFileGenes << previousGene << "\t" << FstGeneNumVectors[0][0].size() << "\t" << FstGeneNumVectors[0][1].size() << "\t" << FstGeneNumVectors[0][2].size();
                 for (int i = 0; i < populationsToUse.size(); i++) {
                     double FstExons = vector_average(FstGeneNumVectors[i][0])/vector_average(FstGeneDenumVectors[i][0]);
                     double FstWithIntrons = vector_average(FstGeneNumVectors[i][1])/vector_average(FstGeneDenumVectors[i][1]);
