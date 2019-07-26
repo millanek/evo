@@ -253,13 +253,15 @@ int FstGlobalMain(int argc, char** argv) {
                 // }
             }
             if (!opt::annotFile.empty()) { if (previousGene != "" && currentGene != previousGene) {
-                *outFileGenes << previousGene << "\t" << FstGeneNumVectors[0][0].size() << "\t" << FstGeneNumVectors[0][1].size() << "\t" << FstGeneNumVectors[0][2].size();
+                int nExonSNPs = (int)FstGeneNumVectors[0][0].size(); int nIntronSNPs = (int)FstGeneNumVectors[0][1].size(); int nPromoterSNPs = (int)FstGeneNumVectors[0][2].size();
+                *outFileGenes << previousGene << "\t" << nExonSNPs << "\t" << nIntronSNPs << "\t" << nPromoterSNPs;
+                double FstExons; double FstIntrons; double FstPromoters;
                 for (int i = 0; i < populationsToUse.size(); i++) {
-                    double FstExons = vector_average(FstGeneNumVectors[i][0])/vector_average(FstGeneDenumVectors[i][0]);
-                    double FstWithIntrons = vector_average(FstGeneNumVectors[i][1])/vector_average(FstGeneDenumVectors[i][1]);
-                    double FstPromoters = vector_average(FstGeneNumVectors[i][2])/vector_average(FstGeneDenumVectors[i][2]);
-                    if (FstExons < 0) FstExons = 0; if (FstWithIntrons < 0) FstWithIntrons = 0; if (FstPromoters < 0) FstPromoters = 0;
-                    *outFileGenes << "\t" << FstExons << "\t" << FstWithIntrons << "\t" << FstPromoters;
+                    if (nExonSNPs > 0) { FstExons = vector_average(FstGeneNumVectors[i][0])/vector_average(FstGeneDenumVectors[i][0]); } else { FstExons = 0; }
+                    if (nIntronSNPs > 0) { FstIntrons = vector_average(FstGeneNumVectors[i][1])/vector_average(FstGeneDenumVectors[i][1]); } else { FstIntrons = 0; }
+                    if (nPromoterSNPs > 0) { FstPromoters = vector_average(FstGeneNumVectors[i][2])/vector_average(FstGeneDenumVectors[i][2]); } else { FstPromoters = 0; }
+                    if (FstExons < 0) FstExons = 0; if (FstIntrons < 0) FstIntrons = 0; if (FstPromoters < 0) FstPromoters = 0;
+                    *outFileGenes << "\t" << FstExons << "\t" << FstIntrons << "\t" << FstPromoters;
                     FstGeneNumVectors[i][0].clear(); FstGeneNumVectors[i][1].clear(); FstGeneNumVectors[i][2].clear();
                     FstGeneDenumVectors[i][0].clear(); FstGeneDenumVectors[i][1].clear(); FstGeneDenumVectors[i][2].clear();
                 } *outFileGenes << std::endl;

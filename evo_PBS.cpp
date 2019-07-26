@@ -175,7 +175,7 @@ int PBSmain(int argc, char** argv) {
     // if (!opt::annotFile.empty()) {
     std::vector<std::vector<double>> initGeneVectors(9); // For the nine PBS columns in the _PBSGenes_ files
     std::vector<std::vector<std::vector<double>>> PBSgeneResults(PBStrios.size(),initGeneVectors);
-    std::string currentGene = "";
+    std::string currentGene = ""; std::string previousGene = "";
     //}
     //std::deque<std::vector<double>> regionPBSnums; regionPBSnums.assign(opt::windowSize,init);
     //std::deque<std::vector<double>> regionPBSdenoms; regionPBSdenoms.assign(opt::windowSize,init);
@@ -247,6 +247,10 @@ int PBSmain(int argc, char** argv) {
             
             // find if we are in a gene:
             std::vector<string> SNPgeneDetails = wgAnnotation.getSNPgeneDetails(chr, atoi(coord.c_str()));
+            if (SNPgeneDetails[0] != "") {
+                currentGene = SNPgeneDetails[0];
+                if (previousGene == "") previousGene = currentGene;
+            }
             
             // std::cerr << coord << "\t";
             // print_vector_stream(SNPgeneDetails, std::cerr);
@@ -281,7 +285,6 @@ int PBSmain(int argc, char** argv) {
                     } else if (SNPgeneDetails[1] == "promoter") {
                         PBSgeneResults[i][6].push_back(thisSNP_PBS[0]); PBSgeneResults[i][7].push_back(thisSNP_PBS[1]); PBSgeneResults[i][8].push_back(thisSNP_PBS[2]);
                     }
-                    currentGene = SNPgeneDetails[0];
                 }}
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
@@ -289,12 +292,19 @@ int PBSmain(int argc, char** argv) {
                 }
                 // }
             }
-            if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] == "" && currentGene != "") {
+            if (!opt::annotFile.empty()) { if (previousGene != "" && currentGene != previousGene) {
                 for (int i = 0; i != PBStrios.size(); i++) {
-                    *outFilesGenes[i] << currentGene << "\t" << PBSgeneResults[i][0].size() << "\t" << PBSgeneResults[i][3].size() << "\t" << PBSgeneResults[i][6].size() << "\t" << vector_average(PBSgeneResults[i][0]) << "\t" << vector_average(PBSgeneResults[i][1]) << "\t" << vector_average(PBSgeneResults[i][2]) << "\t" << vector_average(PBSgeneResults[i][3]) << "\t" << vector_average(PBSgeneResults[i][4]) << "\t" << vector_average(PBSgeneResults[i][5]) << "\t" << vector_average(PBSgeneResults[i][6]) << "\t" << vector_average(PBSgeneResults[i][7]) << "\t" << vector_average(PBSgeneResults[i][8]) << std::endl;
-                        for (int j = 0; j <= 5; j++) { PBSgeneResults[i][j].clear(); }
+                    int nExonSNPs = (int)PBSgeneResults[i][0].size(); int nIntronSNPs = (int)PBSgeneResults[i][3].size(); int nPromoterSNPs = (int)PBSgeneResults[i][6].size();
+                    double ExonPBS1 = 0; double ExonPBS2 = 0; double ExonPBS3 = 0;
+                    if (nExonSNPs > 0) { ExonPBS1 = vector_average(PBSgeneResults[i][0]); ExonPBS2 = vector_average(PBSgeneResults[i][1]); ExonPBS3 = vector_average(PBSgeneResults[i][2]);}
+                    double IntronPBS1 = 0; double IntronPBS2 = 0; double IntronPBS3 = 0;
+                    if (nIntronSNPs > 0) { IntronPBS1 = vector_average(PBSgeneResults[i][3]); IntronPBS2 = vector_average(PBSgeneResults[i][4]); IntronPBS3 = vector_average(PBSgeneResults[i][5]);}
+                    double PromoterPBS1 = 0; double PromoterPBS2 = 0; double PromoterPBS3 = 0;
+                    if (nPromoterSNPs > 0) { PromoterPBS1 = vector_average(PBSgeneResults[i][6]); PromoterPBS2 = vector_average(PBSgeneResults[i][7]); PromoterPBS3 = vector_average(PBSgeneResults[i][8]);}
+                    *outFilesGenes[i] << currentGene << "\t" << nExonSNPs << "\t" << nIntronSNPs << "\t" << nPromoterSNPs << "\t" << ExonPBS1 << "\t" << ExonPBS2 << "\t" << ExonPBS3 << "\t" << IntronPBS1 << "\t" << IntronPBS2 << "\t" << IntronPBS3 << "\t" << PromoterPBS1 << "\t" << PromoterPBS2 << "\t" << PromoterPBS3 << std::endl;
+                    for (int j = 0; j <= 8; j++) { PBSgeneResults[i][j].clear(); }
                 }
-                currentGene = "";
+                previousGene = currentGene;
             }}
             durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             delete c;
