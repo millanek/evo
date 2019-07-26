@@ -46,12 +46,12 @@ std::vector<string> Annotation::getSNPgeneDetails(const string& SNPscaffold, con
         int geneStart = atoi(startEndVec[1].c_str()); int geneEnd = atoi(startEndVec[2].c_str()); string strand = startEndVec[3];
         //if (SNPlocus == 20001) { print_vector_stream(startEndVec, std::cerr);}
         if (strand == "+") {
-            if (SNPlocus >= geneStart-3000 && SNPlocus < geneStart) {
+            if (SNPlocus >= (geneStart-3000) && SNPlocus < geneStart) {
                 SNPcategory = "promoter"; inGene = thisTranscript;
                 break;
             }
         } else if (strand == "-") {
-            if (SNPlocus > geneEnd && SNPlocus <= geneStart+3000) {
+            if (SNPlocus > geneEnd && SNPlocus <= (geneEnd+3000)) {
                 SNPcategory = "promoter"; inGene = thisTranscript;
                 break;
             }
