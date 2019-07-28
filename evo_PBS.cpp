@@ -301,7 +301,7 @@ int PBSmain(int argc, char** argv) {
                     if (nIntronSNPs > 0) { IntronPBS1 = vector_average(PBSgeneResults[i][3]); IntronPBS2 = vector_average(PBSgeneResults[i][4]); IntronPBS3 = vector_average(PBSgeneResults[i][5]);}
                     double PromoterPBS1 = 0; double PromoterPBS2 = 0; double PromoterPBS3 = 0;
                     if (nPromoterSNPs > 0) { PromoterPBS1 = vector_average(PBSgeneResults[i][6]); PromoterPBS2 = vector_average(PBSgeneResults[i][7]); PromoterPBS3 = vector_average(PBSgeneResults[i][8]);}
-                    *outFilesGenes[i] << currentGene << "\t" << nExonSNPs << "\t" << nIntronSNPs << "\t" << nPromoterSNPs << "\t" << ExonPBS1 << "\t" << ExonPBS2 << "\t" << ExonPBS3 << "\t" << IntronPBS1 << "\t" << IntronPBS2 << "\t" << IntronPBS3 << "\t" << PromoterPBS1 << "\t" << PromoterPBS2 << "\t" << PromoterPBS3 << std::endl;
+                    *outFilesGenes[i] << previousGene << "\t" << nExonSNPs << "\t" << nIntronSNPs << "\t" << nPromoterSNPs << "\t" << ExonPBS1 << "\t" << ExonPBS2 << "\t" << ExonPBS3 << "\t" << IntronPBS1 << "\t" << IntronPBS2 << "\t" << IntronPBS3 << "\t" << PromoterPBS1 << "\t" << PromoterPBS2 << "\t" << PromoterPBS3 << std::endl;
                     for (int j = 0; j <= 8; j++) { PBSgeneResults[i][j].clear(); }
                 }
                 previousGene = currentGene;
