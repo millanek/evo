@@ -156,7 +156,7 @@ int PBSmain(int argc, char** argv) {
         // std::cerr << line << std::endl;
         std::vector<string> threePops = split(line, '\t'); assert(threePops.size() == 3);
         std::ofstream* outFile = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
-        *outFile << "chr\t" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
+        *outFile << "chr\twStart\twEnd" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
         outFiles.push_back(outFile);
         if (!opt::annotFile.empty()) {
             std::ofstream* outFileGenes = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBSGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
