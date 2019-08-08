@@ -156,12 +156,12 @@ int PBSmain(int argc, char** argv) {
         // std::cerr << line << std::endl;
         std::vector<string> threePops = split(line, '\t'); assert(threePops.size() == 3);
         std::ofstream* outFile = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
-        *outFile << "chr\twStart\twEnd" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
+        *outFile << "chr\twStart\twEnd\t" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
         outFiles.push_back(outFile);
         if (!opt::annotFile.empty()) {
             std::ofstream* outFileGenes = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBSGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
            // *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons\t" << "numSNPsWith3kbUpstr\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons\t" << threePops[0] << "_w3kbUpstr\t" << threePops[1] << "_w3kbUpstr\t" << threePops[2] << "_w3kbUpstr" << std::endl;
-            *outFileGenes << "gene\t" << "numSNPsExons\tnumSNPsIntrons\tnumSNPs3kbPromoter\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons" << threePops[0] << "_promoter\t" << threePops[1] << "_promoter\t" << threePops[2] << "_promoter" << std::endl;
+            *outFileGenes << "gene\t" << "numSNPsExons\tnumSNPsIntrons\tnumSNPs3kbPromoter\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons\t" << threePops[0] << "_promoter\t" << threePops[1] << "_promoter\t" << threePops[2] << "_promoter" << std::endl;
             outFilesGenes.push_back(outFileGenes);
         }
         PBStrios.push_back(threePops);
