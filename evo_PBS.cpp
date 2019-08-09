@@ -157,7 +157,7 @@ int PBSmain(int argc, char** argv) {
         std::vector<string> threePops = split(line, '\t'); assert(threePops.size() == 3);
         std::ofstream* outFile = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
         *outFile << "chr\twStart\twEnd\t" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
-        outFile->setf(std::ios_base::fixed); // Avoid scientific notation in the coordinates
+        //outFile->setf(std::ios_base::fixed); // Avoid scientific notation in the coordinates
         outFiles.push_back(outFile);
         if (!opt::annotFile.empty()) {
             std::ofstream* outFileGenes = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBSGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
@@ -289,7 +289,7 @@ int PBSmain(int argc, char** argv) {
                 }}
                 if (usedVars[i] > opt::windowSize && (usedVars[i] % opt::windowStep == 0)) {
                     // std::cerr << PBSresults[i][0][0] << std::endl;
-                    *outFiles[i] << chr << "\t" << PBSresults[i][3][0] << "\t" << coord << "\t" << vector_average(PBSresults[i][0]) << "\t" << vector_average(PBSresults[i][1]) << "\t" << vector_average(PBSresults[i][2]) << std::endl;
+                    *outFiles[i] << chr << "\t" << (int)PBSresults[i][3][0] << "\t" << coord << "\t" << vector_average(PBSresults[i][0]) << "\t" << vector_average(PBSresults[i][1]) << "\t" << vector_average(PBSresults[i][2]) << std::endl;
                 }
                 // }
             }
