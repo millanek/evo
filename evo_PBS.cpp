@@ -24,6 +24,7 @@ static const char *PBS_USAGE_MESSAGE =
 "There can be multiple lines and then the program generates multiple ouput files, named like POP1_POP2_POP3_PBS_SIZE_STEP.txt\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
+"       -f, --fixedW sizeKb                     fixed window size (default: 10kb)\n"
 "       -w SIZE,STEP --window=SIZE,STEP         the parameters of the sliding window: contains SIZE SNPs and move by STEP (default: 20,10)\n"
 "       --annot=ANNOTATION.gffExtract           (optional)gene annotation in the same format as for the 'getCodingSeq' subprogram\n"
 "                                               outputs PBS per gene (only exons, with introns, and with 3kb upstream)\n"
@@ -32,11 +33,12 @@ static const char *PBS_USAGE_MESSAGE =
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hw:n:";
+static const char* shortopts = "hw:n:f:";
 
 enum { OPT_ANNOT  };
 
 static const struct option longopts[] = {
+    { "fixedW",   required_argument, NULL, 'f' },
     { "window",   required_argument, NULL, 'w' },
     { "annot",   required_argument, NULL, OPT_ANNOT },
     { "help",   no_argument, NULL, 'h' },
@@ -51,6 +53,7 @@ namespace opt
     static string PBStriosFile;
     static string annotFile;
     static string runName = "";
+    static int fixedWindowSize = 10000;
     static int windowSize = 20;
     static int windowStep = 10;
 }
@@ -150,15 +153,18 @@ int PBSmain(int argc, char** argv) {
     
     // Get the PBS trios
     std::vector<std::ofstream*> outFiles;
+    std::vector<std::ofstream*> outFilesFixedWindow;
     std::vector<std::ofstream*> outFilesGenes;
     std::vector<std::vector<string> > PBStrios;
     while (getline(*PBStriosFile,line)) {
         // std::cerr << line << std::endl;
         std::vector<string> threePops = split(line, '\t'); assert(threePops.size() == 3);
         std::ofstream* outFile = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
+        std::ofstream* outFileFixedWindow = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBS_" + opt::runName + "_FW" + numToString(opt::fixedWindowSize) + ".txt");
         *outFile << "chr\twStart\twEnd\t" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << std::endl;
+        *outFileFixedWindow << "chr\twStart\twEnd\t" << threePops[0] << "\t" << threePops[1] << "\t" << threePops[2] << "\t" << "nFwSNPs1" << "\t" << "nFwSNPs2" << "\t" << "nFwSNPs3" << std::endl;
         //outFile->setf(std::ios_base::fixed); // Avoid scientific notation in the coordinates
-        outFiles.push_back(outFile);
+        outFiles.push_back(outFile); outFilesFixedWindow.push_back(outFileFixedWindow);
         if (!opt::annotFile.empty()) {
             std::ofstream* outFileGenes = new std::ofstream(threePops[0] + "_" + threePops[1] + "_" + threePops[2]+ "_PBSGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
            // *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons\t" << "numSNPsWith3kbUpstr\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons\t" << threePops[0] << "_w3kbUpstr\t" << threePops[1] << "_w3kbUpstr\t" << threePops[2] << "_w3kbUpstr" << std::endl;
@@ -172,6 +178,10 @@ int PBSmain(int argc, char** argv) {
     std::deque<double> initDeq(opt::windowSize,0.0); // deque to initialise per-site PBS values
     std::vector<std::deque<double>> initThreeDeques(4,initDeq); // vector of three per-site PBS deques - for each population in the trio, and the fourth is for the coordinates
     std::vector<std::vector<std::deque<double>>> PBSresults(PBStrios.size(),initThreeDeques);
+    // Fixed window size vectors:
+    std::vector<std::vector<double>> initVectorFixed(3);
+    std::vector<std::vector<std::vector<double>>> PBSfixedWindowResults(PBStrios.size(),initVectorFixed);
+    int currentWindowStart = 0; int currentWindowEnd = currentWindowStart + opt::fixedWindowSize;
     
     // if (!opt::annotFile.empty()) {
     std::vector<std::vector<double>> initGeneVectors(9); // For the nine PBS columns in the _PBSGenes_ files
@@ -278,6 +288,23 @@ int PBSmain(int argc, char** argv) {
                 PBSresults[i][3].push_back(stringToDouble(coord));
                 PBSresults[i][0].pop_front(); PBSresults[i][1].pop_front(); PBSresults[i][2].pop_front(); PBSresults[i][3].pop_front();
                 
+                
+                
+                if (atoi(coord.c_str()) > currentWindowEnd || atoi(coord.c_str()) < currentWindowStart) {
+                    int nFwSNPs1 = (int)PBSfixedWindowResults[i][0].size(); int nFwSNPs2 = (int)PBSfixedWindowResults[i][3].size(); int nFwSNPs3 = (int)PBSfixedWindowResults[i][6].size();
+                    double PBSfw1 = 0; if (nFwSNPs1 > 0) { PBSfw1 = vector_average(PBSfixedWindowResults[i][0]); }
+                    double PBSfw2 = 0; if (nFwSNPs2 > 0) { PBSfw2 = vector_average(PBSfixedWindowResults[i][1]); }
+                    double PBSfw3 = 0; if (nFwSNPs3 > 0) { PBSfw3 = vector_average(PBSfixedWindowResults[i][2]); }
+                    *outFilesFixedWindow[i] << chr << "\t" << currentWindowStart << "\t" << currentWindowEnd << "\t" << PBSfw1 << "\t" << PBSfw2 << "\t" << PBSfw3 << "\t" << nFwSNPs1 << "\t" << nFwSNPs2 << "\t" << nFwSNPs3 << std::endl;
+                    PBSfixedWindowResults[i][0].clear(); PBSfixedWindowResults[i][1].clear(); PBSfixedWindowResults[i][2].clear();
+                    if (atoi(coord.c_str()) > currentWindowEnd) {
+                        currentWindowStart = currentWindowStart + opt::fixedWindowSize; currentWindowEnd = currentWindowEnd + opt::fixedWindowSize;
+                    } else if (atoi(coord.c_str()) < currentWindowStart) {
+                        currentWindowStart = 0; currentWindowEnd = 0 + opt::fixedWindowSize;
+                    }
+                }
+                PBSfixedWindowResults[i][0].push_back(thisSNP_PBS[0]); PBSfixedWindowResults[i][1].push_back(thisSNP_PBS[1]); PBSfixedWindowResults[i][2].push_back(thisSNP_PBS[2]);
+                
                 if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
                     if (SNPgeneDetails[1] == "exon") {
                         PBSgeneResults[i][0].push_back(thisSNP_PBS[0]); PBSgeneResults[i][1].push_back(thisSNP_PBS[1]); PBSgeneResults[i][2].push_back(thisSNP_PBS[2]);
@@ -307,6 +334,8 @@ int PBSmain(int argc, char** argv) {
                 }
                 previousGene = currentGene;
             }}
+            
+            
             durationCalculation = ( std::clock() - startCalculation ) / (double) CLOCKS_PER_SEC;
             delete c;
         }
@@ -327,6 +356,7 @@ void parsePBSoptions(int argc, char** argv) {
         switch (c)
         {
             case '?': die = true; break;
+            case 'f': arg >> opt::fixedWindowSize; break;
             case 'w':
                 windowSizeStep = split(arg.str(), ',');
                 opt::windowSize = atoi(windowSizeStep[0].c_str());
