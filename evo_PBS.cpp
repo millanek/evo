@@ -194,7 +194,7 @@ int PBSmain(int argc, char** argv) {
     int totalVariantNumber = 0;
     std::vector<int> usedVars(PBStrios.size(),0); // Will count the number of used variants for each trio
     std::vector<string> sampleNames; std::vector<std::string> fields;
-    int reportProgressEvery = 1000; string chr; string coord;
+    int reportProgressEvery = 1000; string chr; string coord; double coordDouble;
     std::clock_t start; std::clock_t startGettingCounts; std::clock_t startCalculation;
     double durationOverall; double durationGettingCounts; double durationCalculation;
     
@@ -233,7 +233,7 @@ int PBSmain(int argc, char** argv) {
                 std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
                 std::cerr << "GettingCounts " << durationGettingCounts << " calculation " << durationCalculation << "secs" << std::endl;
             }
-            fields = split(line, '\t'); chr = fields[0]; coord = fields[1];
+            fields = split(line, '\t'); chr = fields[0]; coord = fields[1]; coordDouble = stringToDouble(coord);
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             // Only consider biallelic SNPs
             string refAllele = fields[3]; string altAllele = fields[4];
@@ -290,16 +290,16 @@ int PBSmain(int argc, char** argv) {
                 
                 
                 
-                if (atoi(coord.c_str()) > currentWindowEnd || atoi(coord.c_str()) < currentWindowStart) {
+                if (coordDouble > currentWindowEnd || coordDouble < currentWindowStart) {
                     int nFwSNPs1 = (int)PBSfixedWindowResults[i][0].size(); int nFwSNPs2 = (int)PBSfixedWindowResults[i][1].size(); int nFwSNPs3 = (int)PBSfixedWindowResults[i][2].size();
                     double PBSfw1 = 0; if (nFwSNPs1 > 0) { PBSfw1 = vector_average(PBSfixedWindowResults[i][0]); }
                     double PBSfw2 = 0; if (nFwSNPs2 > 0) { PBSfw2 = vector_average(PBSfixedWindowResults[i][1]); }
                     double PBSfw3 = 0; if (nFwSNPs3 > 0) { PBSfw3 = vector_average(PBSfixedWindowResults[i][2]); }
                     *outFilesFixedWindow[i] << chr << "\t" << currentWindowStart << "\t" << currentWindowEnd << "\t" << PBSfw1 << "\t" << PBSfw2 << "\t" << PBSfw3 << "\t" << nFwSNPs1 << "\t" << nFwSNPs2 << "\t" << nFwSNPs3 << std::endl;
                     PBSfixedWindowResults[i][0].clear(); PBSfixedWindowResults[i][1].clear(); PBSfixedWindowResults[i][2].clear();
-                    if (atoi(coord.c_str()) > currentWindowEnd) {
+                    if (coordDouble > currentWindowEnd) {
                         currentWindowStart = currentWindowStart + opt::fixedWindowSize; currentWindowEnd = currentWindowEnd + opt::fixedWindowSize;
-                    } else if (atoi(coord.c_str()) < currentWindowStart) {
+                    } else if (coordDouble < currentWindowStart) {
                         currentWindowStart = 0; currentWindowEnd = 0 + opt::fixedWindowSize;
                     }
                 }
