@@ -291,7 +291,7 @@ int PBSmain(int argc, char** argv) {
                 
                 
                 if (atoi(coord.c_str()) > currentWindowEnd || atoi(coord.c_str()) < currentWindowStart) {
-                    int nFwSNPs1 = (int)PBSfixedWindowResults[i][0].size(); int nFwSNPs2 = (int)PBSfixedWindowResults[i][3].size(); int nFwSNPs3 = (int)PBSfixedWindowResults[i][6].size();
+                    int nFwSNPs1 = (int)PBSfixedWindowResults[i][0].size(); int nFwSNPs2 = (int)PBSfixedWindowResults[i][1].size(); int nFwSNPs3 = (int)PBSfixedWindowResults[i][2].size();
                     double PBSfw1 = 0; if (nFwSNPs1 > 0) { PBSfw1 = vector_average(PBSfixedWindowResults[i][0]); }
                     double PBSfw2 = 0; if (nFwSNPs2 > 0) { PBSfw2 = vector_average(PBSfixedWindowResults[i][1]); }
                     double PBSfw3 = 0; if (nFwSNPs3 > 0) { PBSfw3 = vector_average(PBSfixedWindowResults[i][2]); }
