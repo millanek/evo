@@ -263,6 +263,23 @@ int PBSmain(int argc, char** argv) {
                 if (previousGene == "") previousGene = currentGene;
             }
             
+            // Check if we are still in the same physical window...
+            if (coordDouble > currentWindowEnd || coordDouble < currentWindowStart) {
+                for (int i = 0; i != PBStrios.size(); i++) {
+                    int nFwSNPs1 = (int)PBSfixedWindowResults[i][0].size(); int nFwSNPs2 = (int)PBSfixedWindowResults[i][1].size(); int nFwSNPs3 = (int)PBSfixedWindowResults[i][2].size();
+                    double PBSfw1 = 0; if (nFwSNPs1 > 0) { PBSfw1 = vector_average(PBSfixedWindowResults[i][0]); }
+                    double PBSfw2 = 0; if (nFwSNPs2 > 0) { PBSfw2 = vector_average(PBSfixedWindowResults[i][1]); }
+                    double PBSfw3 = 0; if (nFwSNPs3 > 0) { PBSfw3 = vector_average(PBSfixedWindowResults[i][2]); }
+                    *outFilesFixedWindow[i] << chr << "\t" << currentWindowStart << "\t" << currentWindowEnd << "\t" << PBSfw1 << "\t" << PBSfw2 << "\t" << PBSfw3 << "\t" << nFwSNPs1 << "\t" << nFwSNPs2 << "\t" << nFwSNPs3 << std::endl;
+                    PBSfixedWindowResults[i][0].clear(); PBSfixedWindowResults[i][1].clear(); PBSfixedWindowResults[i][2].clear();
+                }
+                if (coordDouble > currentWindowEnd) {
+                    currentWindowStart = currentWindowStart + opt::fixedWindowSize; currentWindowEnd = currentWindowEnd + opt::fixedWindowSize;
+                } else if (coordDouble < currentWindowStart) {
+                    currentWindowStart = 0; currentWindowEnd = 0 + opt::fixedWindowSize;
+                }
+            }
+            
             // std::cerr << coord << "\t";
             // print_vector_stream(SNPgeneDetails, std::cerr);
             // Now calculate the PBS stats:
@@ -289,20 +306,6 @@ int PBSmain(int argc, char** argv) {
                 PBSresults[i][0].pop_front(); PBSresults[i][1].pop_front(); PBSresults[i][2].pop_front(); PBSresults[i][3].pop_front();
                 
                 
-                
-                if (coordDouble > currentWindowEnd || coordDouble < currentWindowStart) {
-                    int nFwSNPs1 = (int)PBSfixedWindowResults[i][0].size(); int nFwSNPs2 = (int)PBSfixedWindowResults[i][1].size(); int nFwSNPs3 = (int)PBSfixedWindowResults[i][2].size();
-                    double PBSfw1 = 0; if (nFwSNPs1 > 0) { PBSfw1 = vector_average(PBSfixedWindowResults[i][0]); }
-                    double PBSfw2 = 0; if (nFwSNPs2 > 0) { PBSfw2 = vector_average(PBSfixedWindowResults[i][1]); }
-                    double PBSfw3 = 0; if (nFwSNPs3 > 0) { PBSfw3 = vector_average(PBSfixedWindowResults[i][2]); }
-                    *outFilesFixedWindow[i] << chr << "\t" << currentWindowStart << "\t" << currentWindowEnd << "\t" << PBSfw1 << "\t" << PBSfw2 << "\t" << PBSfw3 << "\t" << nFwSNPs1 << "\t" << nFwSNPs2 << "\t" << nFwSNPs3 << std::endl;
-                    PBSfixedWindowResults[i][0].clear(); PBSfixedWindowResults[i][1].clear(); PBSfixedWindowResults[i][2].clear();
-                    if (coordDouble > currentWindowEnd) {
-                        currentWindowStart = currentWindowStart + opt::fixedWindowSize; currentWindowEnd = currentWindowEnd + opt::fixedWindowSize;
-                    } else if (coordDouble < currentWindowStart) {
-                        currentWindowStart = 0; currentWindowEnd = 0 + opt::fixedWindowSize;
-                    }
-                }
                 PBSfixedWindowResults[i][0].push_back(thisSNP_PBS[0]); PBSfixedWindowResults[i][1].push_back(thisSNP_PBS[1]); PBSfixedWindowResults[i][2].push_back(thisSNP_PBS[2]);
                 
                 if (!opt::annotFile.empty()) { if (SNPgeneDetails[0] != "") {
