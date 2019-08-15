@@ -25,6 +25,7 @@ static const char *FSTGLOBAL_USAGE_MESSAGE =
 "The program generates one ouput file, named like RUN_NAME_FstGlobal_SIZE_STEP.txt\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
+"       -f, --fixedW sizeKb                     fixed window size (default: 10kb)\n"
 "       -w SIZE,STEP --window=SIZE,STEP         the parameters of the sliding window: contains SIZE SNPs and move by STEP (default: 20,10)\n"
 "       --annot=ANNOTATION.gffExtract           (optional)gene annotation in the same format as for the 'getCodingSeq' subprogram\n"
 "                                               outputs PBS per gene (only exons, with introns, and with 3kb upstream)\n"
@@ -33,11 +34,12 @@ static const char *FSTGLOBAL_USAGE_MESSAGE =
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hw:n:";
+static const char* shortopts = "hw:n:f:";
 
 enum { OPT_ANNOT  };
 
 static const struct option longopts[] = {
+    { "fixedW",   required_argument, NULL, 'f' },
     { "window",   required_argument, NULL, 'w' },
     { "annot",   required_argument, NULL, OPT_ANNOT },
     { "help",   no_argument, NULL, 'h' },
@@ -52,6 +54,7 @@ namespace opt
     static string PBStriosFile;
     static string annotFile;
     static string runName = "";
+    static int fixedWindowSize = 10000;
     static int windowSize = 20;
     static int windowStep = 10;
 }
@@ -97,6 +100,10 @@ int FstGlobalMain(int argc, char** argv) {
     std::ofstream* outFile = new std::ofstream(opt::runName + "_FstGlobal_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
     *outFile << "chr\tpos1\tpos2\tFstGlobal"; for (int i = 0; i < populationsToUse.size(); i++) { *outFile << "\t" << populationsToUse[i];}
     *outFile << std::endl;
+    std::ofstream* outFileFixedWindow = new std::ofstream(opt::runName + "_FstGlobal_FW" + numToString(opt::fixedWindowSize) + ".txt");
+    *outFileFixedWindow << "chr\tpos1\tpos2\tnSNPs"; for (int i = 0; i < populationsToUse.size(); i++) { *outFile << "\t" << populationsToUse[i];}
+    *outFileFixedWindow << std::endl;
+    
     std::ofstream* outFileGenes; if (!opt::annotFile.empty()) {
         outFileGenes = new std::ofstream(opt::runName + "_FstGlobalGenes_" + opt::runName + "_" + numToString(opt::windowSize) + "_" + numToString(opt::windowStep) + ".txt");
         // *outFileGenes << "gene\t" << "numSNPsExons\t" << "numSNPsWithIntrons\t" << "numSNPsWith3kbUpstr\t" << threePops[0] << "_exons\t" << threePops[1] << "_exons\t" << threePops[2] << "_exons\t" << threePops[0] << "_wIntrons\t" << threePops[1] << "_wIntrons\t" << threePops[2] << "_wIntrons\t" << threePops[0] << "_w3kbUpstr\t" << threePops[1] << "_w3kbUpstr\t" << threePops[2] << "_w3kbUpstr" << std::endl;
@@ -113,17 +120,22 @@ int FstGlobalMain(int argc, char** argv) {
     std::vector<std::deque<double>> FstNumDeques(populationsToUse.size()+1,initFst); // Fst numerators for each population, and one for the global Fst
     std::vector<std::deque<double>> FstDenomDeques(populationsToUse.size()+1,initFst); // Fst denominators for each population, and one for the global Fst
     std::deque<string> coordDeque(opt::windowSize,"0");
+    // Fixed window size vectors:
+
+    std::vector<std::vector<double>> FstFixedWindowNums(populationsToUse.size());
+    std::vector<std::vector<double>> FstFixedWindowDenoms(populationsToUse.size());
+    int currentWindowStart = 0; int currentWindowEnd = currentWindowStart + opt::fixedWindowSize;
     
     // if (!opt::annotFile.empty()) {
-    std::vector<std::vector<double>> initFstNumVectors(3); // In exons and Introns and Promoters
-    std::vector<std::vector<std::vector<double>>> FstGeneNumVectors(populationsToUse.size(),initFstNumVectors); // For the nine PBS columns in the _PBSGenes_ files
-    std::vector<std::vector<std::vector<double>>> FstGeneDenumVectors(populationsToUse.size(),initFstNumVectors); // For the nine PBS columns in the _PBSGenes_ files
+    std::vector<std::vector<double>> initFstVectors(3);
+    std::vector<std::vector<std::vector<double>>> FstGeneNumVectors(populationsToUse.size(),initFstVectors); // For the nine PBS columns in the _PBSGenes_ files
+    std::vector<std::vector<std::vector<double>>> FstGeneDenumVectors(populationsToUse.size(),initFstVectors); // For the nine PBS columns in the _PBSGenes_ files
     std::string currentGene = ""; std::string previousGene = "";
     //}
     //std::deque<std::vector<double>> regionPBSnums; regionPBSnums.assign(opt::windowSize,init);
     //std::deque<std::vector<double>> regionPBSdenoms; regionPBSdenoms.assign(opt::windowSize,init);
     //std::vector<double> allPs(populations.size(),0.0);
-    int totalVariantNumber = 0; int usedVariantNumber = 0;
+    int totalVariantNumber = 0; int usedVariantNumber = 0; double coordDouble = 0;
     //std::vector<int> usedVars(PBStrios.size(),0); // Will count the number of used variants for each trio
     std::vector<string> sampleNames; std::vector<std::string> fields;
     int reportProgressEvery = 10000; string chr; string coord;
@@ -165,7 +177,7 @@ int FstGlobalMain(int argc, char** argv) {
                 std::cerr << "Processed " << totalVariantNumber << " variants in " << durationOverall << "secs" << std::endl;
                 std::cerr << "GettingCounts " << durationGettingCounts << " calculation " << durationCalculation << "secs" << std::endl;
             }
-            fields = split(line, '\t'); chr = fields[0]; coord = fields[1];
+            fields = split(line, '\t'); chr = fields[0]; coord = fields[1]; coordDouble = stringToDouble(coord);
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
             //std::vector<std::string> info = split(fields[7], ';');
             // Only consider biallelic SNPs
@@ -204,6 +216,22 @@ int FstGlobalMain(int argc, char** argv) {
             if (SNPgeneDetails[0] != "") {
                 currentGene = SNPgeneDetails[0];
                 if (previousGene == "") previousGene = currentGene;
+            }
+            
+            // Check if we are still in the same physical window...
+            if (coordDouble > currentWindowEnd || coordDouble < currentWindowStart) {
+                int wSNP1 = (int)FstFixedWindowNums[0].size();
+                *outFileFixedWindow << chr << "\t" << currentWindowStart << "\t" << currentWindowEnd << "\t" << wSNP1;
+                for (int i = 0; i != populationsToUse.size(); i++) {
+                    double FstFW = 0; if (wSNP1 > 0) { FstFW = vector_average(FstFixedWindowNums[i])/vector_average(FstFixedWindowDenoms[i]); }
+                    *outFileFixedWindow << "\t" << FstFW;
+                    FstFixedWindowNums[i].clear(); FstFixedWindowDenoms[i].clear();
+                } *outFileFixedWindow << std::endl;
+                if (coordDouble > currentWindowEnd) {
+                    currentWindowStart = currentWindowStart + opt::fixedWindowSize; currentWindowEnd = currentWindowEnd + opt::fixedWindowSize;
+                } else if (coordDouble < currentWindowStart) {
+                    currentWindowStart = 0; currentWindowEnd = 0 + opt::fixedWindowSize;
+                }
             }
             
             coordDeque.push_back(coord); coordDeque.pop_front();
@@ -290,6 +318,7 @@ void parseFstGlobaloptions(int argc, char** argv) {
         switch (c)
         {
             case '?': die = true; break;
+            case 'f': arg >> opt::fixedWindowSize; break;
             case 'w':
                 windowSizeStep = split(arg.str(), ',');
                 opt::windowSize = atoi(windowSizeStep[0].c_str());
