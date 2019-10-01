@@ -6,9 +6,7 @@ compiler:
 
 install: 
   - sudo apt update -qq
-  # Boost
   - sudo apt install -qq libboost-all-dev
 
 script: 
-  - qmake
   - make --silent
