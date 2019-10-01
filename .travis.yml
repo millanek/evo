@@ -1,0 +1,9 @@
+language: cpp
+dist: bionic
+compiler: 
+  - gcc
+  - clang
+
+script: 
+  - qmake
+  - make --silent
