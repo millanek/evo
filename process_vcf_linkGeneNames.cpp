@@ -268,7 +268,7 @@ int linkGNMain(int argc, char** argv) {
                 }
             } else {
                 //std::cerr << ensGene.size() << std::endl;
-                print_vector_stream(ensGene, std::cerr);
+                print_vector(ensGene, std::cerr);
             }
            // std::cout << ensGene[0] << "\t" << ensGene[2] << std::endl;
         }
