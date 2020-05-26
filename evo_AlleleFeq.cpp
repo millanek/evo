@@ -74,6 +74,7 @@ int AFmain(int argc, char** argv) {
     int reportProgressEvery = 10000; string chr; string coord; double coordDouble;
     std::clock_t start; std::clock_t startGettingCounts;
     double durationOverall; double durationGettingCounts; double durationCalculation;
+    std::ofstream* outFileAF = new std::ofstream(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt");
     
     while (getline(*vcfFile, line)) {
         line.erase(std::remove(line.begin(), line.end(), '\r'), line.end()); // Deal with any left over \r from files prepared on Windows
@@ -124,7 +125,6 @@ int AFmain(int argc, char** argv) {
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
             // std::cerr << "Here:" << totalVariantNumber << std::endl;
 
-            std::ofstream* outFileAF = new std::ofstream(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt");
             *outFileAF << chr << "\t" << coord << "\t" << refAllele << "\t" << altAllele;
             for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
                 *outFileAF << "\t" << iter->second;
