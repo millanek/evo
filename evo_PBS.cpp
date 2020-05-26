@@ -26,6 +26,7 @@ static const char *PBS_USAGE_MESSAGE =
 "       -h, --help                              display this help and exit\n"
 "       -f, --fixedW sizeKb                     fixed window size (default: 10kb)\n"
 "       -w SIZE,STEP --window=SIZE,STEP         the parameters of the sliding window: contains SIZE SNPs and move by STEP (default: 20,10)\n"
+"       --af                                    (optional) output a file with allele frequencies per-population\n"
 "       --annot=ANNOTATION.gffExtract           (optional)gene annotation in the same format as for the 'getCodingSeq' subprogram\n"
 "                                               outputs PBS per gene (only exons, with introns, and with 3kb upstream)\n"
 "       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
@@ -35,12 +36,13 @@ static const char *PBS_USAGE_MESSAGE =
 
 static const char* shortopts = "hw:n:f:";
 
-enum { OPT_ANNOT  };
+enum { OPT_ANNOT, OPT_AF  };
 
 static const struct option longopts[] = {
     { "fixedW",   required_argument, NULL, 'f' },
     { "window",   required_argument, NULL, 'w' },
     { "annot",   required_argument, NULL, OPT_ANNOT },
+    { "af",   required_argument, NULL, OPT_AF },
     { "help",   no_argument, NULL, 'h' },
     { "run-name",   required_argument, NULL, 'n' },
     { NULL, 0, NULL, 0 }
@@ -56,6 +58,7 @@ namespace opt
     static int fixedWindowSize = 10000;
     static int windowSize = 20;
     static int windowStep = 10;
+    static bool af = false;
 }
 
 inline std::vector<double> calculatePBSfromAFs(double p1, double p2, double p3, double p1AlleleCount, double p2AlleleCount, double p3AlleleCount) {
@@ -247,6 +250,14 @@ int PBSmain(int argc, char** argv) {
             genotypes.clear(); genotypes.shrink_to_fit();
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
             // std::cerr << "Here:" << totalVariantNumber << std::endl;
+            if (opt::af) {
+                std::ofstream* outFileAF = new std::ofstream(stripExtension(opt::setsFile) + "_AF" + ".txt");
+                *outFileAF << chr << "\t" << coord << "\t" << refAllele << "\t" << altAllele;
+                for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
+                    *outFileAF << "\t" << iter->second;
+                }
+                *outFileAF << "\n";
+            }
             
             startCalculation = std::clock();
             
@@ -367,6 +378,7 @@ void parsePBSoptions(int argc, char** argv) {
                 break;
             case 'n': arg >> opt::runName; break;
             case OPT_ANNOT: arg >> opt::annotFile; break;
+            case OPT_AF: opt::af = true; break;
             case 'h':
                 std::cout << PBS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);

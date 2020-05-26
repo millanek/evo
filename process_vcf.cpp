@@ -47,6 +47,7 @@
 #include "evo_ABS.h"
 #include "evo_FstAgainstAll.h"
 #include "evo_combineVCFs.h"
+#include "evo_AlleleFeq.h"
 
 
 //#define TESTING 1
@@ -68,6 +69,7 @@ static const char *USAGE_MESSAGE =
 "Usage: " PROGRAM_BIN " <command> [options]\n\n"
 "Commands:\n"
 "           abba-baba           Perform the abba-baba test\n"
+"           alleleFreq          Calculate allele frequencies per population\n"
 "           cbs                 calculate the lenghts of tracts of 'compatibility by sequence' (cbs) between samples from genotypes\n"
 "           codingStats         claculate various interesting statistics about protein coding sequences given multiple alignment\n"
 "           Dmin                calculate the minimum value of the D statistic (ABBA-BABA) for all possible trios of samples\n"
@@ -202,6 +204,8 @@ int main(int argc, char **argv) {
             FstGlobalMain(argc - 1, argv + 1);
         else if (command == "vcf-comb")
             VCFcombMain(argc - 1, argv + 1);
+        else if (command == "alleleFreq")
+            AFmain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
