@@ -125,6 +125,12 @@ int AFmain(int argc, char** argv) {
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
             // std::cerr << "Here:" << totalVariantNumber << std::endl;
 
+            if (totalVariantNumber == 1) {
+                *outFileAF << "chr" << "\t" << "coord" << "\t" << "ref" << "\t" << "alt";
+                for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
+                    *outFileAF << "\t" << iter->first;
+                }
+            }
             *outFileAF << chr << "\t" << coord << "\t" << refAllele << "\t" << altAllele;
             for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
                 *outFileAF << "\t" << iter->second;
