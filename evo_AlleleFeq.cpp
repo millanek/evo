@@ -130,6 +130,7 @@ int AFmain(int argc, char** argv) {
                 for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
                     *outFileAF << "\t" << iter->first;
                 }
+                *outFileAF << "\n";
             }
             *outFileAF << chr << "\t" << coord << "\t" << refAllele << "\t" << altAllele;
             for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
