@@ -37,7 +37,7 @@ enum { OPT_ANC_FROM_MAF };
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
     { "anc-from-maf",   required_argument, NULL, OPT_ANC_FROM_MAF },
-    { "out",   no_argument, NULL, 'o' },
+    { "out",   required_argument, NULL, 'o' },
     { NULL, 0, NULL, 0 }
 };
 
