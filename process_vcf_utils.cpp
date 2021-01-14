@@ -12,6 +12,12 @@
 
 
 
+void printMissingLikelihoodsWarning(const string& chr, const string& pos) {
+    std::cerr << "WARNING: Could not fing genotype likelihoods/probabilities (GP, PL, or GL fields) for variant at " << chr << " " << pos << std::endl;
+    std::cerr << "WARNING: Did you really mean to use the -g option? Reverting to using called genotypes." << std::endl;
+}
+
+
 // Works only on biallelic markers
 void GeneralSetCounts::getSetVariantCounts(const std::vector<std::string>& genotypes, const std::map<size_t, string>& posToSpeciesMap) {
     
@@ -101,6 +107,20 @@ void split(const std::string &s, char delim, std::vector<std::string> &elems) {
     while (std::getline(ss, item, delim)) {
         elems.push_back(item);
     }
+}
+
+void splitToDouble(const std::string &s, char delim, std::vector<double> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(stringToDouble(item));
+    }
+}
+
+std::vector<double> splitToDouble(const std::string &s, char delim) {
+    std::vector<double> elems;
+    splitToDouble(s, delim, elems);
+    return elems;
 }
 
 std::vector<std::string> split(const std::string &s, char delim) {
@@ -646,7 +666,7 @@ std::map<int, int> tabulateVector(std::vector<int>& vec) {
         //pos = pos + mycount;
     }
     return table;
-}    
+}
 
 
 
@@ -899,6 +919,140 @@ std::string readMultiFastaToOneString(const string& fileName, int bytes) {
         }
     }
     return fastaSeqs;
+}
+
+
+double getExpectedGenotype(const std::vector<double>& thisProbabilities) {
+    double Egenotype = thisProbabilities[1] + 2*thisProbabilities[2];
+    return Egenotype;
+}
+
+void transformFromPhred(std::vector<double>& thisLikelihoods) {
+
+    thisLikelihoods[0] = pow(10,-(thisLikelihoods[0]/10.0));
+    thisLikelihoods[1] = pow(10,-(thisLikelihoods[1]/10.0));
+    thisLikelihoods[2] = pow(10,-(thisLikelihoods[2]/10.0));
+}
+
+void transformFromGL(std::vector<double>& thisLikelihoods) {
+
+    thisLikelihoods[0] = pow(10,(thisLikelihoods[0]/10.0));
+    thisLikelihoods[1] = pow(10,(thisLikelihoods[1]/10.0));
+    thisLikelihoods[2] = pow(10,(thisLikelihoods[2]/10.0));
+}
+
+
+std::vector<double> GeneralSetCounts::probabilitiesFromLikelihoods(const std::vector<double>& thisLikelihoods, const string& species) {
+    std::vector<double> thisProbabilities; thisProbabilities.assign(3, 0.0);
+    double multiple0 = thisLikelihoods[0]*setHWEpriorsFromAAFfromGT[species][0];
+    double multiple1 = thisLikelihoods[1]*setHWEpriorsFromAAFfromGT[species][1];
+    double multiple2 = thisLikelihoods[2]*setHWEpriorsFromAAFfromGT[species][2];
+    double sum = multiple0 + multiple1 + multiple2;
+    
+    thisProbabilities[0] = multiple0/sum;
+    thisProbabilities[1] = multiple1/sum;
+    thisProbabilities[2] = multiple2/sum;
+    
+    return thisProbabilities;
+}
+
+
+void GeneralSetCounts::setHWEpriorsFromAFfromGT() {
+    double AF;
+    // Alternative allele frequencies
+    for(std::map<string,double>::iterator it = setAAFs.begin(); it != setAAFs.end(); ++it) {
+        if (it->second >= 0) AF = it->second; else AF = averageAAF; // This should be average of AFs across populations where it is known
+        setHWEpriorsFromAAFfromGT[it->first][0] = pow((1-AF),2);
+        setHWEpriorsFromAAFfromGT[it->first][1] = AF*(1-AF);
+        setHWEpriorsFromAAFfromGT[it->first][2] = pow(AF,2);
+    }
+    // Derived allele frequencies
+    for(std::map<string,double>::iterator it = setDAFs.begin(); it != setDAFs.end(); ++it) {
+        if (it->second >= 0) AF = it->second; else AF = averageDAF; // This should be average of AFs across populations
+        setHWEpriorsFromDAFfromGT[it->first][0] = pow((1-AF),2);
+        setHWEpriorsFromDAFfromGT[it->first][1] = AF*(1-AF);
+        setHWEpriorsFromDAFfromGT[it->first][2] = pow(AF,2);
+    }
+}
+
+void GeneralSetCounts::getAFsFromGenotypeLikelihoodsOrProbabilities(const std::vector<std::string>& genotypeFields, const std::map<size_t, string>& posToSpeciesMap, const int likelihoodsOrProbabilitiesTagPosition) {
+    if (likelihoodsProbabilitiesType == LikelihoodsProbabilitiesPL || likelihoodsProbabilitiesType == LikelihoodsProbabilitiesGL) {
+        setHWEpriorsFromAFfromGT();
+    }
+    
+    for (std::vector<std::string>::size_type i = 0; i < genotypeFields.size(); i++) {
+        std::string species; try { species = posToSpeciesMap.at(i); } catch (const std::out_of_range& oor) {
+            continue;
+        }
+       // std::cerr << genotypeFields[i] << std::endl;
+        std::string thisLikelihoodsOrProbabilitiesString = split(genotypeFields[i], ':')[likelihoodsOrProbabilitiesTagPosition];
+        if (thisLikelihoodsOrProbabilitiesString == ".") continue;
+        
+        else {
+            setAlleleProbCounts.at(species) += 2;
+            std::vector<double> thisLikelihoodsOrProbabilities = splitToDouble(thisLikelihoodsOrProbabilitiesString,',');
+            std::vector<double> thisProbabilities;
+            switch (likelihoodsProbabilitiesType)
+            {
+                case LikelihoodsProbabilitiesPL:
+                    transformFromPhred(thisLikelihoodsOrProbabilities);
+                   // print_vector(thisLikelihoodsOrProbabilities, std::cerr);
+                    thisProbabilities = probabilitiesFromLikelihoods(thisLikelihoodsOrProbabilities,species);
+                    break;
+                case LikelihoodsProbabilitiesGL: transformFromGL(thisLikelihoodsOrProbabilities);
+                    thisProbabilities = probabilitiesFromLikelihoods(thisLikelihoodsOrProbabilities,species);
+                    break;
+                case LikelihoodsProbabilitiesGP:
+                    thisProbabilities = thisLikelihoodsOrProbabilities;
+                    break;
+            }
+            if (setAAFsFromLikelihoods.at(species) == -1) setAAFsFromLikelihoods.at(species) = 0;
+            setAAFsFromLikelihoods.at(species) += getExpectedGenotype(thisProbabilities);
+        }
+    }
+    
+    for(std::map<string,double>::iterator it = setAAFsFromLikelihoods.begin(); it != setAAFsFromLikelihoods.end(); ++it) {
+        if (setAAFsFromLikelihoods.at(it->first) != -1) {
+            double AF = it->second/setAlleleProbCounts.at(it->first);
+            it->second = AF;
+            if (AAint == AncestralAlleleRef) {
+                setDAFsFromLikelihoods.at(it->first) = AF;
+            } else if (AAint == AncestralAlleleAlt) {
+                setDAFsFromLikelihoods.at(it->first) = (1 - AF);
+            }
+        }
+    }
+     
+}
+
+int GeneralSetCounts::returnFormatTagPosition(std::vector<std::string>& format, const std::string& tag) {
+    // Find the position of GQ (genotype quality) in the genotypeData vector below
+    std::vector<std::string>::iterator TAGit; int TAGi = std::numeric_limits<int>::min();
+    TAGit = find (format.begin(), format.end(), tag);
+    if (TAGit == format.end()) {
+        // std::cerr << "This variant hasn't got associated per-sample GQ info" << std::endl;
+    } else {
+        TAGi = (int)std::distance( format.begin(), TAGit );
+        //hasGQ = true;
+    }
+    return TAGi;
+}
+
+int GeneralSetCounts::checkForGenotypeLikelihoodsOrProbabilities(const std::vector<std::string>& vcfLineFields) {
+    std::vector<std::string> format = split(vcfLineFields[8], ':');
+    if (format.size() == 1) return LikelihoodsProbabilitiesAbsent; // The GT tag must be present in the first place
+    
+    int likelihoodsOrProbabilitiesTagPosition = returnFormatTagPosition(format, "GP");
+    if (likelihoodsOrProbabilitiesTagPosition != std::numeric_limits<int>::min()) { likelihoodsProbabilitiesType = LikelihoodsProbabilitiesGP; }
+    else {
+        likelihoodsOrProbabilitiesTagPosition = returnFormatTagPosition(format, "GL");
+        if (likelihoodsOrProbabilitiesTagPosition != std::numeric_limits<int>::min()) { likelihoodsProbabilitiesType = LikelihoodsProbabilitiesGL; }
+        else {
+            likelihoodsOrProbabilitiesTagPosition = returnFormatTagPosition(format, "PL");
+            if (likelihoodsOrProbabilitiesTagPosition != std::numeric_limits<int>::min()) { likelihoodsProbabilitiesType = LikelihoodsProbabilitiesPL; }
+        }
+    }
+    return likelihoodsOrProbabilitiesTagPosition;
 }
 
 

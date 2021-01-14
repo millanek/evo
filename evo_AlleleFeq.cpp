@@ -20,6 +20,8 @@ static const char *AF_USAGE_MESSAGE =
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
+"       -g, --use-genotype-probabilities        (optional) use probabilities (GP tag) or calculate them from likelihoods (GL or PL tags) using a Hardy-Weinberg prior\n"
+"                                               the probabilities are used to estimate allele frequencies in each population/species\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
@@ -29,6 +31,7 @@ static const char* shortopts = "hn:";
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
     { "run-name",   required_argument, NULL, 'n' },
+    { "use-genotype-probabilities", no_argument, NULL, 'g'},
     { NULL, 0, NULL, 0 }
 };
 
@@ -37,6 +40,7 @@ namespace opt
     static string vcfFile;
     static string setsFile;
     static string runName = "out";
+    static bool useGenotypeProbabilities = false;
 }
 
 
@@ -134,8 +138,20 @@ int AFmain(int argc, char** argv) {
 
             
             *outFileAF << chr << "\t" << coord << "\t" << refAllele << "\t" << altAllele;
-            for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
-                *outFileAF << "\t" << iter->second;
+            if (opt::useGenotypeProbabilities) {
+                int likelihoodsOrProbabilitiesTagPosition = c->checkForGenotypeLikelihoodsOrProbabilities(fields);
+                if (likelihoodsOrProbabilitiesTagPosition == LikelihoodsProbabilitiesAbsent) {
+                    printMissingLikelihoodsWarning(fields[0], fields[1]);
+                    opt::useGenotypeProbabilities = false;
+                } else c->getAFsFromGenotypeLikelihoodsOrProbabilities(genotypes,posToPopMap,likelihoodsOrProbabilitiesTagPosition);
+                for(std::map<string,double>::iterator iter =  c->setAAFsFromLikelihoods.begin(); iter != c->setAAFsFromLikelihoods.end(); ++iter) {
+                    *outFileAF << "\t" << iter->second;
+                }
+            
+            } else {
+                for(std::map<string,double>::iterator iter =  c->setAAFs.begin(); iter != c->setAAFs.end(); ++iter) {
+                    *outFileAF << "\t" << iter->second;
+                }
             }
             *outFileAF << "\n";
 
@@ -161,6 +177,7 @@ void parseAFoptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 'n': arg >> opt::runName; break;
+            case 'g': opt::useGenotypeProbabilities = true; break;
             case 'h':
                 std::cout << AF_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
