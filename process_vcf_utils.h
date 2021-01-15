@@ -73,6 +73,7 @@ public:
             setRefCounts[it->first] = 0; setAltCounts[it->first] = 0; setAlleleCounts[it->first] = 0;
             setAlleleProbCounts[it->first] = 0;
             setAAFs[it->first] = -1.0; setDAFs[it->first] = -1.0;
+            setAAFsFromLikelihoods[it->first] = -1.0; setDAFsFromLikelihoods[it->first] = -1.0;
             setSizes.push_back(it->second.size());
             setHWEpriorsFromAAFfromGT[it->first].assign(3, -1.0);
             setHWEpriorsFromDAFfromGT[it->first].assign(3, -1.0);
