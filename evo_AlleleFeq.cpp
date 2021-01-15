@@ -132,7 +132,6 @@ int AFmain(int argc, char** argv) {
             startGettingCounts = std::clock();
             GeneralSetCounts* c = new GeneralSetCounts(popToPosMap, (int)genotypes.size());
             c->getSetVariantCountsSimple(genotypes, posToPopMap);
-            genotypes.clear(); genotypes.shrink_to_fit();
             durationGettingCounts = ( std::clock() - startGettingCounts ) / (double) CLOCKS_PER_SEC;
             // std::cerr << "Here:" << totalVariantNumber << std::endl;
 
@@ -155,7 +154,7 @@ int AFmain(int argc, char** argv) {
             }
             *outFileAF << "\n";
 
-
+            genotypes.clear(); genotypes.shrink_to_fit();
             
             delete c;
         }

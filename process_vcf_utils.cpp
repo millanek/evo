@@ -981,7 +981,9 @@ void GeneralSetCounts::getAFsFromGenotypeLikelihoodsOrProbabilities(const std::v
     }
     
     for (std::vector<std::string>::size_type i = 0; i < genotypeFields.size(); i++) {
+       // std::cerr << "Here posToSpeciesMap.at(i): " << posToSpeciesMap.at(i) << std::endl;
         std::string species; try { species = posToSpeciesMap.at(i); } catch (const std::out_of_range& oor) {
+            // std::cerr << "Here the species is not in the map" << std::endl;
             continue;
         }
        // std::cerr << genotypeFields[i] << std::endl;
