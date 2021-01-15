@@ -986,7 +986,7 @@ void GeneralSetCounts::getAFsFromGenotypeLikelihoodsOrProbabilities(const std::v
         }
        // std::cerr << genotypeFields[i] << std::endl;
         std::string thisLikelihoodsOrProbabilitiesString = split(genotypeFields[i], ':')[likelihoodsOrProbabilitiesTagPosition];
-        if (thisLikelihoodsOrProbabilitiesString == ".") continue;
+        if (thisLikelihoodsOrProbabilitiesString == "." || thisLikelihoodsOrProbabilitiesString == "0,0,0") continue;
         
         else {
             setAlleleProbCounts.at(species) += 2;
