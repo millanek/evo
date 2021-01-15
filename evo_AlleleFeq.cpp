@@ -77,8 +77,9 @@ int AFmain(int argc, char** argv) {
     std::vector<string> sampleNames; std::vector<std::string> fields;
     int reportProgressEvery = 10000; string chr; string coord; double coordDouble;
     std::clock_t start; std::clock_t startGettingCounts;
-    double durationOverall; double durationGettingCounts; double durationCalculation;
-    std::ofstream* outFileAF = new std::ofstream(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt");
+    double durationOverall; double durationGettingCounts; 
+    //std::ofstream* outFileAF = new std::ofstream(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt");
+    std::ostream* outFileAF = createWriter(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt.gz");
     
     while (getline(*vcfFile, line)) {
         line.erase(std::remove(line.begin(), line.end(), '\r'), line.end()); // Deal with any left over \r from files prepared on Windows
