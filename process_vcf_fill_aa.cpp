@@ -7,6 +7,7 @@
 //
 
 #include "process_vcf_fill_aa.h"
+#include "process_vcf_IUPAC.h"
 
 #define SUBPROGRAM "aa-fill"
 
@@ -62,7 +63,7 @@ int fillAaMain(int argc, char** argv) {
     if (opt::out == "") {
         outFile = &std::cout;
     } else {
-        string outFN = refFastaFileRoot + "_AAfilled.vcf";
+        string outFN = refFastaFileRoot + "_AAfilled.vcf.gz";
         outFile = createWriter(outFN.c_str());
     }
     
@@ -83,7 +84,7 @@ int fillAaMain(int argc, char** argv) {
     
     // Now go through the vcf and add the AA fields
     int totalVariantNumber = 0;
-    int aaDashCount = 0; int aaRefCount = 0; int aaAltCount = 0; int aaDiffCount = 0; int aaNcount = 0;
+    int aaDashCount = 0; int aaRefCount = 0; int aaAltCount = 0; int aaDiffCount = 0; int aaNcount = 0; int aaHetCount = 0;
     while (getline(*vcfFile, line)) {
         if (line[0] == '#' && line[1] == '#')
             *outFile << line << std::endl;
@@ -95,7 +96,7 @@ int fillAaMain(int argc, char** argv) {
                 *outFile << line << "\t" << opt::IndividualName << std::endl;
             }
         } else {
-            totalVariantNumber++;
+            totalVariantNumber++; string genotypeToAdd;
             std::vector<std::string> fields = split(line, '\t');
             std::vector<std::string> info = split(fields[7], ';');
             if (info[0] != "INDEL") {
@@ -104,28 +105,32 @@ int fillAaMain(int argc, char** argv) {
                 if (ancSeqs[fields[0]].length() == 0) {
                     AA = 'N';
                 } else {
-                    AA = ancSeqs[fields[0]][atoi(fields[1].c_str())-1];
-                    if (AA == '-') { aaDashCount++; }
-                    else if (AA == 'N') { aaNcount++; }
-                    else if (AA == fields[3][0]) { aaRefCount++; }
-                    else if (AA == fields[4][0]) { aaAltCount++; }
-                    else if (!((AA == fields[3][0]) || (AA == fields[4][0]))) {
-                        aaDiffCount++;
-                        // std::cerr << fields[0] << "\t" << fields[1] << "\t" << fields[3] << "\t" << fields[4] << "\t" << AA << std::endl;
+                    AA = std::toupper(ancSeqs[fields[0]][atoi(fields[1].c_str())-1]);
+                    if (AA == '-') { aaDashCount++; genotypeToAdd = "./."; }
+                    else if (AA == 'N') { aaNcount++; genotypeToAdd = "./."; }
+                    else if (isDNAonly(AA)) {
+                         if (AA == fields[3][0]) { aaRefCount++; genotypeToAdd = "0/0"; }
+                        else if (AA == fields[4][0]) { aaAltCount++; genotypeToAdd = "1/1"; }
+                        else if (!((AA == fields[3][0]) || (AA == fields[4][0]))) {
+                            aaDiffCount++; genotypeToAdd = "./.";
+                        }
+                    } else {
+                        aaHetCount++; string AAhetBases = returnHetIUPAC(AA);
+                        if ((AAhetBases[0] == fields[3][0]) && (AAhetBases[1] == fields[4][0])) {
+                            genotypeToAdd = "1/0";
+                        } else if ((AAhetBases[1] == fields[3][0]) && (AAhetBases[0] == fields[4][0])) {
+                            genotypeToAdd = "1/0";
+                        } else {
+                            genotypeToAdd = "./.";
+                        }
                     }
+                    // std::cerr << fields[0] << "\t" << fields[1] << "\t" << fields[3] << "\t" << fields[4] << "\t" << AA << std::endl;
                     // assert((AA == fields[3][0]) || (AA == fields[4][0]));
                 }
                 if (opt::IndividualName == "") {
                     fields[7] += ";AA="; fields[7] += AA;
                     print_vector(fields, *outFile, '\t');
                 } else {
-                    string genotypeToAdd;
-                    if (AA == fields[3][0])
-                        genotypeToAdd = "0/0";
-                    else if (AA == fields[4][0])
-                        genotypeToAdd = "1/1";
-                    else
-                        genotypeToAdd = "./.";
                     fields.push_back(genotypeToAdd);
                     print_vector(fields, *outFile, '\t');
                 }

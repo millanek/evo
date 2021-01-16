@@ -36,6 +36,25 @@ inline char disambiguateIUPAC(char refBase, char IUPACbase) {
     return altBase;
 }
 
+// Returns both DNA bases for het ambiguous codes
+inline std::string returnHetIUPAC(char IUPACbase) {
+    char firstBase; char secondBase;
+    switch (std::toupper(IUPACbase))
+    {
+        case 'K': firstBase = 'T'; secondBase = 'G'; break;
+        case 'M': firstBase = 'C'; secondBase = 'A'; break;
+        case 'R': firstBase = 'G'; secondBase = 'A'; break;
+        case 'S': firstBase = 'G'; secondBase = 'C'; break;
+        case 'W': firstBase = 'T'; secondBase = 'A'; break;
+        case 'Y': firstBase = 'T'; secondBase = 'C'; break;
+        default: assert(false);
+    }
+    std::string bases = ""; bases = firstBase + secondBase;
+    return bases;
+}
+
+
+
 inline bool isDNAonly(char base) {
     bool DNAonly;
     switch (base)
