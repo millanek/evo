@@ -161,8 +161,8 @@ int AFmain(int argc, char** argv) {
         }
     }
     
+    outFileAF->flush();
     return 0;
-    
 }
 
 
