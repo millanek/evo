@@ -79,7 +79,7 @@ int AFmain(int argc, char** argv) {
     std::clock_t start; std::clock_t startGettingCounts;
     double durationOverall; double durationGettingCounts; 
     //std::ofstream* outFileAF = new std::ofstream(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt");
-    std::ostream* outFileAF = createWriter(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt.gz");
+    std::ostream* outFileAF = createWriter(stripExtension(opt::setsFile) + "_" + opt::runName + "_AF" + ".txt");
     
     while (getline(*vcfFile, line)) {
         line.erase(std::remove(line.begin(), line.end(), '\r'), line.end()); // Deal with any left over \r from files prepared on Windows
