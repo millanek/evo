@@ -134,7 +134,7 @@ inline std::string readScaffold(std::ifstream*& genomeFile, std::string& nextSca
         scaffoldString.append(line);
     }
     if (line[0] == '>')
-        nextScaffoldName = line;
+        nextScaffoldName = split(line,' ')[0];
     else
         nextScaffoldName = "";
     return scaffoldString;
