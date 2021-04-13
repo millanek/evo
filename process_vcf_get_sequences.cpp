@@ -251,12 +251,6 @@ int getSeqMain(int argc, char** argv) {
                                 }
                             }
                             currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
-                            if (opt::bWholeGenome) {
-                                for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
-                                    wgFiles[i] << ">" << sampleNames[i-NUM_NON_GENOTYPE_COLUMNS] << std::endl;
-                                    print80bpPerLine(wgFiles, i, currentScaffoldReference);
-                                }
-                            }
                             std::cerr << "Finished reading" << std::endl;
                             thisScaffoldName.erase(0,1);
                             
