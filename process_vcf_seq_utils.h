@@ -14,6 +14,7 @@
 #include <sstream>
 #include <fstream>
 #include "process_vcf_IUPAC.h"
+#include "process_vcf_utils.h"
 
 
 inline void appendGenotypeBaseToString(std::string& toExtend, const std::string& ref, const std::string& alt, const std::vector<char>& genotype, char hetTreatment) {
