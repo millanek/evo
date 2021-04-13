@@ -158,7 +158,7 @@ int getSeqMain(int argc, char** argv) {
                 if (!opt::bSVD) {
                     if (opt::bWholeGenome) {
                         wgFiles[i-NUM_NON_GENOTYPE_COLUMNS].open(sampleNames[i-NUM_NON_GENOTYPE_COLUMNS].c_str());
-                        wgFiles[i-NUM_NON_GENOTYPE_COLUMNS] << ">" << sampleNames[i-NUM_NON_GENOTYPE_COLUMNS] << std::endl;
+                        //wgFiles[i-NUM_NON_GENOTYPE_COLUMNS] << ">" << sampleNames[i-NUM_NON_GENOTYPE_COLUMNS] << std::endl;
                     }
                 }
             }
@@ -172,17 +172,14 @@ int getSeqMain(int argc, char** argv) {
                         for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
                             scaffoldStrings[i].append(currentScaffoldReference.substr(inStrPos, string::npos));
                         }
-                        
     #ifdef DEBUG
                         if (scaffoldStrings[0].length() != currentScaffoldReference.length()) {
                             std::cerr << "Error!!! Reference scaffold/LG length: " << currentScaffoldReference.length() << " vcf scaffold length: " << scaffoldStrings[0].length() << std::endl;
                         }
 #endif
                     }
-                    
                     std::ofstream* scaffoldFile;
                     if (opt::splitNum == 0 && !opt::bWholeGenome) scaffoldFile = new std::ofstream(currentScaffoldNum.c_str());
-                    
                     
                     std::cerr << currentScaffoldNum << " processed. Total variants: " << processedVariantCounter << std::endl;
                     if (!opt::bSVD) {
@@ -202,7 +199,6 @@ int getSeqMain(int argc, char** argv) {
                             outgroupSeqs[currentScaffoldNum] = ag->getAccessibleSeqForScaffold(currentScaffoldNum,outgroupSeqs[currentScaffoldNum]);
                         }
                     }
-                    
                     if (opt::splitNum > 0) {
                         std::vector<string::size_type> scaledSplits = splits;
                         std::cerr << "Splits" << std::endl;
@@ -214,7 +210,6 @@ int getSeqMain(int argc, char** argv) {
                             std::cerr << "Scaled splits:" << std::endl;
                             print_vector(scaledSplits, std::cerr);
                         }
-                        
                         
                         if (!opt::outgroupFile.empty()) {
                             print_split_incl_outgroup(currentScaffoldNum, splits, sampleNames, numSamples, scaffoldStrings, processedVariantCounter, outgroupSeqs, "Outgroup",scaledSplits,fullScaffoldLengths[currentScaffoldNum]);
@@ -236,7 +231,6 @@ int getSeqMain(int argc, char** argv) {
                                     print80bpPerLine(wgFiles, i, scaffoldStrings[i]);
                                     scaffoldStrings[i] = "";
                                 }
-
                             }
                         }
                     }
@@ -251,10 +245,15 @@ int getSeqMain(int argc, char** argv) {
                             std::cerr << "Starting to read " << thisScaffoldName << std::endl;
                             std::cerr << "No variants in " << thisScaffoldName << std::endl;
                             std::cerr << "currentScaffoldNum " << currentScaffoldNum << std::endl;
-                            
+                            for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                                if (!opt::bSVD) {
+                                    wgFiles[i] << ">" << thisScaffoldName << std::endl;
+                                }
+                            }
                             currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
                             if (opt::bWholeGenome) {
                                 for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                                    wgFiles[i] << ">" << sampleNames[i-NUM_NON_GENOTYPE_COLUMNS] << std::endl;
                                     print80bpPerLine(wgFiles, i, currentScaffoldReference);
                                 }
                             }
@@ -274,6 +273,11 @@ int getSeqMain(int argc, char** argv) {
                 inStrPos = 0;
                              
                 std::cerr << "Starting to read " << thisScaffoldName << std::endl;
+                for (std::vector<std::string>::size_type i = 0; i != numSamples; i++) {
+                    if (!opt::bSVD) {
+                        wgFiles[i] << ">" << thisScaffoldName << std::endl;
+                    }
+                }
                 if (opt::genomeFile != "") {
                     currentScaffoldReference = readScaffold(genomeFile, thisScaffoldName);
                 }
@@ -439,9 +443,11 @@ int getSeqMain(int argc, char** argv) {
                     std::cout << editedSnVector[i] << "\t" << scaffoldStrings[i] << std::endl;
                 }
             }
-            std::cout << ";" << std::endl;
-            std::cout << "end;" << std::endl;
-        
+            if (opt::bSVD) {
+                std::cout << ";" << std::endl;
+                std::cout << "end;" << std::endl;
+            }
+                
             if (!opt::bootSVDnameRoot.empty()) { // Output bootstrap sequences
                 int totalLength = (int)scaffoldStrings[0].length();
                 std::cerr << totalLength << "=totalLength;" << std::endl;
