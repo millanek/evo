@@ -330,9 +330,9 @@ int getSeqMain(int argc, char** argv) {
                                     std::string currentFastaBaseStr(1, currentFastaBase);
                                     string VCFref = fields[3];
                                     string VCFalt = fields[4];
-                                    std::cerr << "currentFastaBaseStr: " << currentFastaBaseStr << std::endl;
-                                    std::cerr << "VCFref: " << VCFref << std::endl;
-                                    std::cerr << "VCFalt: " << VCFalt << std::endl;
+                                   // std::cerr << "currentFastaBaseStr: " << currentFastaBaseStr << std::endl;
+                                   // std::cerr << "VCFref: " << VCFref << std::endl;
+                                   // std::cerr << "VCFalt: " << VCFalt << std::endl;
                                     if (currentFastaBaseStr == "C" && VCFref == "G") {
                                         fields[3] = "G";
                                         fields[4] = "A";
