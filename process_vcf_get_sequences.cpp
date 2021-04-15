@@ -326,14 +326,15 @@ int getSeqMain(int argc, char** argv) {
                             } else {
                                 if (opt::methylome) {
                                     char currentFastaBase = currentScaffoldReference[atoi(fields[1].c_str())-1];
-                                    char VCFref = fields[3][0];
-                                    char VCFalt = fields[4][0];
-                                    if (currentFastaBase == 'C' && VCFref == 'G') {
-                                        fields[3][0] = complementIUPAC(VCFref);
-                                        fields[4][0] = complementIUPAC(VCFalt);
-                                    } else if (currentFastaBase == 'G' && VCFref == 'C') {
-                                        fields[3][0] = complementIUPAC(VCFref);
-                                        fields[4][0] = complementIUPAC(VCFalt);
+                                    std::string currentFastaBaseStr(1, currentFastaBase);
+                                    string VCFref = fields[3];
+                                    string VCFalt = fields[4];
+                                    if (currentFastaBaseStr == "C" && currentFastaBaseStr == "G") {
+                                        fields[3][0] = complementIUPAC(VCFref[0]);
+                                        fields[4][0] = complementIUPAC(VCFalt[0]);
+                                    } else if (currentFastaBaseStr == "G" && VCFref == "C") {
+                                        fields[3][0] = complementIUPAC(VCFref[0]);
+                                        fields[4][0] = complementIUPAC(VCFalt[0]);
                                     }
                                 }
                                 appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
