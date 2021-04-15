@@ -33,6 +33,7 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "       --by-scaffold                               output by scaffold/LG (each scaffold/LG) has its own file with sequences\n"
 "                                                   for all samples\n"
 "       --whole-genome                              output is one file with the whole genome concatenated for all samples\n"
+"       --methylome                                 This is for Greg's study - C->T and G->A and VCF with .fa can be revesrse strands\n"
 "       -H,   --het-treatment <r|p|b|i>             r: assign het bases randomly (default); p: use the phase information in a VCF outputting\n"
 "                                                   haplotype 1 for each individual; b: use both haplotypes as phased; i: use IUPAC codes\n"
 "       --split NUM                                 split output into sequences containing approx. NUM segregating sites\n"
@@ -50,7 +51,7 @@ static const char *GETSEQ_USAGE_MESSAGE =
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD, OPT_SVD_BOOT };
+enum { OPT_LDHAT, OPT_BY_SCAFFOLD, OPT_SPLIT, OPT_WG, OPT_PN, OPT_ACC_GEN_BED, OPT_SVD, OPT_SVD_BOOT, OPT_METH };
 
 static const char* shortopts = "hs:H:";
 
@@ -64,6 +65,7 @@ static const struct option longopts[] = {
     { "incl-Pn",   required_argument, NULL, OPT_PN },
     { "accessibleGenomeBED", required_argument, NULL, OPT_ACC_GEN_BED },
     { "makeSVDinput", no_argument, NULL, OPT_SVD },
+    { "methylome", no_argument, NULL, OPT_METH },
     { "makeBootstrapSeqs", required_argument, NULL, OPT_SVD_BOOT },
     { "help",   no_argument, NULL, 'h' },
     { NULL, 0, NULL, 0 }
@@ -83,6 +85,7 @@ namespace opt
     static bool bSVD = false;
     static string bootSVDnameRoot;
     static string accesibleGenBedFile;
+    static bool methylome = false;
 
 }
 
@@ -321,6 +324,18 @@ int getSeqMain(int argc, char** argv) {
                                 appendVector[i- NUM_NON_GENOTYPE_COLUMNS] = genotypeAndZeroOne[0];
                                 appendVectorInt[i- NUM_NON_GENOTYPE_COLUMNS] = (int)stringToDouble(genotypeAndZeroOne[1].c_str());
                             } else {
+                                if (opt::methylome) {
+                                    char currentFastaBase = currentScaffoldReference[atoi(fields[1].c_str())-1];
+                                    char VCFref = fields[3][0];
+                                    char VCFalt = fields[4][0];
+                                    if (currentFastaBase == 'C' && VCFref == 'G') {
+                                        fields[3][0] = complementIUPAC(VCFref);
+                                        fields[4][0] = complementIUPAC(VCFalt);
+                                    } else if (currentFastaBase == 'G' && VCFref == 'C') {
+                                        fields[3][0] = complementIUPAC(VCFref);
+                                        fields[4][0] = complementIUPAC(VCFalt);
+                                    }
+                                }
                                 appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
                             }
                         }
@@ -682,6 +697,7 @@ void parseGetSeqOptions(int argc, char** argv) {
             case OPT_ACC_GEN_BED: arg >> opt::accesibleGenBedFile; break;
             case OPT_SVD: opt::bSVD = true; break;
             case OPT_SVD_BOOT: arg >> opt::bootSVDnameRoot; break;
+            case OPT_METH: opt::methylome = true; break;
             case 'h':
                 std::cout << GETSEQ_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
