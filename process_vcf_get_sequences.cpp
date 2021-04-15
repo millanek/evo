@@ -325,11 +325,14 @@ int getSeqMain(int argc, char** argv) {
                                 appendVectorInt[i- NUM_NON_GENOTYPE_COLUMNS] = (int)stringToDouble(genotypeAndZeroOne[1].c_str());
                             } else {
                                 if (opt::methylome) {
-                                    std::cerr << "Here: " << std::endl;
+                                    
                                     char currentFastaBase = currentScaffoldReference[atoi(fields[1].c_str())-1];
                                     std::string currentFastaBaseStr(1, currentFastaBase);
                                     string VCFref = fields[3];
                                     string VCFalt = fields[4];
+                                    std::cerr << "currentFastaBaseStr: " << currentFastaBaseStr << std::endl;
+                                    std::cerr << "VCFref: " << VCFref << std::endl;
+                                    std::cerr << "VCFalt: " << VCFalt << std::endl;
                                     if (currentFastaBaseStr == "C" && VCFref == "G") {
                                         fields[3] = "G";
                                         fields[4] = "A";
