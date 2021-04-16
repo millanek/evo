@@ -333,10 +333,10 @@ int getSeqMain(int argc, char** argv) {
                                    // std::cerr << "currentFastaBaseStr: " << currentFastaBaseStr << std::endl;
                                    // std::cerr << "VCFref: " << VCFref << std::endl;
                                    // std::cerr << "VCFalt: " << VCFalt << std::endl;
-                                    if (currentFastaBaseStr == "C" && VCFref == "G") {
+                                    if ((currentFastaBaseStr == "C" || currentFastaBaseStr == "c")  && VCFref == "G") {
                                         fields[3] = "G";
                                         fields[4] = "A";
-                                    } else if (currentFastaBaseStr == "G" && VCFref == "C") {
+                                    } else if ((currentFastaBaseStr == "G" || currentFastaBaseStr == "g") && VCFref == "C") {
                                         fields[3] = "C";
                                         fields[4] = "T";
                                     }
