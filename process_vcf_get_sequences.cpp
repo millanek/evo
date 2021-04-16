@@ -334,11 +334,11 @@ int getSeqMain(int argc, char** argv) {
                                    // std::cerr << "VCFref: " << VCFref << std::endl;
                                    // std::cerr << "VCFalt: " << VCFalt << std::endl;
                                     if ((currentFastaBaseStr == "C" || currentFastaBaseStr == "c")  && VCFref == "G") {
-                                        fields[3] = "G";
-                                        fields[4] = "A";
-                                    } else if ((currentFastaBaseStr == "G" || currentFastaBaseStr == "g") && VCFref == "C") {
                                         fields[3] = "C";
                                         fields[4] = "T";
+                                    } else if ((currentFastaBaseStr == "G" || currentFastaBaseStr == "g") && VCFref == "C") {
+                                        fields[3] = "G";
+                                        fields[4] = "A";
                                     }
                                 }
                                 appendGenotypeBaseToString(scaffoldStrings[i- NUM_NON_GENOTYPE_COLUMNS], fields[3], fields[4], genotype, opt::hetTreatment);
