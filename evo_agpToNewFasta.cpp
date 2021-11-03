@@ -83,7 +83,7 @@ int agpFastaMain(int argc, char** argv) {
         
         for (std::vector<std::string>::size_type i = 0; i != processedScaffoldStructure.size(); i++) {
             string toAdd;
-            if (processedScaffoldStructure[i][5] == "scaffold") {
+            if (processedScaffoldStructure[i][6] == "scaffold") {
                 toAdd = HUNDRED_Ns;
             } else {
                 string originScaffold = processedScaffoldStructure[i][5];
@@ -97,6 +97,7 @@ int agpFastaMain(int argc, char** argv) {
     
     for(std::map<string,std::vector<std::vector<string> > >::iterator it = newAgpStructure.begin(); it != newAgpStructure.end(); ++it) {
         string processedScaffold = it->first;
+        std::cerr << "New scaffold " << processedScaffold << " length: " << outputSeqs[processedScaffold].length() << std::endl;
         std::cout << ">" << processedScaffold << std::endl;
         print80bpPerLineStdOut(std::cout, outputSeqs[processedScaffold]);
     }
