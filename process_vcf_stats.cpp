@@ -98,24 +98,40 @@ namespace opt
 
 int statsMain(int argc, char** argv) {
     parseStatsOptions(argc, argv);
+    string line; // for reading the input files
+    
     string fileName = opt::vcfFile;
     string fileRoot = stripExtension(fileName);
-    std::ifstream* popFile;
+    std::ifstream* setsFile;
     std::ifstream* accessibleGenomeBed;
     
     // Data structures to hold individual and population identifiers
-    std::vector<std::string> sampleNames; std::vector<string> populationLabels;
-    std::vector<std::string> populationsStrings;
-    std::vector<std::vector<size_t> > populationsIndices; std::vector<std::vector<size_t> > populationsIndicesComplements;
+    std::vector<std::string> sampleNames;
+    std::map<string, std::vector<string>> popToIDsMap;
+    std::map<string, string> IDsToPopMap;
+    std::map<string, std::vector<size_t>> popToPosMap;
+    std::map<size_t, string> posToPopMap;
+    std::vector<string> populations; std::vector<string> populationsToUse;
     // Read in the POPULATIONS_FILE if supplied
     if (!opt::populationsFile.empty()) {
-        popFile = new std::ifstream(opt::populationsFile.c_str());
-        string line;
-        while (getline(*popFile, line)) {
-            std::vector<std::string> popnamePopstring = split(line, '\t');
-            populationLabels.push_back(popnamePopstring[0]);
-            populationsStrings.push_back(popnamePopstring[1]);
+        std::ifstream* setsFile = new std::ifstream(opt::populationsFile.c_str());
+    
+        // Get the sample sets
+        while (getline(*setsFile, line)) {
+            // std::cerr << line << std::endl;
+            std::vector<string> ID_Pop = split(line, '\t');
+            popToIDsMap[ID_Pop[1]].push_back(ID_Pop[0]);
+            IDsToPopMap[ID_Pop[0]] = ID_Pop[1];
+            //std::cerr << ID_Species[1] << "\t" << ID_Species[0] << std::endl;
         }
+        // Get a vector of set names (usually populations/species)
+        for(std::map<string,std::vector<string>>::iterator it = popToIDsMap.begin(); it != popToIDsMap.end(); ++it) {
+            populations.push_back(it->first);
+            if (it->first != "Outgroup" && it->first != "xxx") {
+                populationsToUse.push_back(it->first);
+            }
+            // std::cerr << it->first << std::endl;
+        } std::cerr << "There are " << populations.size() << " populations " << std::endl;
     }
     
     // Data structures to hold the results
@@ -165,7 +181,7 @@ int statsMain(int argc, char** argv) {
     // Start reading from the vcf file
     std::istream* inFile = createReader(fileName.c_str());
     int numSamples; int numChromosomes; int totalVariantNumber = 0;
-    string line; int bootstrapBlockNum = 0; std::vector<std::string> fields;
+    int bootstrapBlockNum = 0; std::vector<std::string> fields;
     while (getline(*inFile, line)) {
         if (line[0] == '#' && line[1] == '#')
             continue;
@@ -180,28 +196,35 @@ int statsMain(int argc, char** argv) {
                 sampleNames = readSampleNamesFromTextFile(opt::sampleNameFile);
             } numSamples = (int)sampleNames.size(); numChromosomes = (int)numSamples * 2;
             std::cerr << "Number of chromosomes: " << numChromosomes << std::endl;
+            
+           // print_vector_stream(sampleNames, std::cerr);
+           for (std::vector<std::string>::size_type i = 0; i != sampleNames.size(); i++) {
+               posToPopMap[i] = IDsToPopMap[sampleNames[i]];
+           }
+           // Iterate over all the keys in the map to find the samples in the VCF:
+           // Give an error if no sample is found for a species:
+           for(std::map<string, std::vector<string>>::iterator it = popToIDsMap.begin(); it != popToIDsMap.end(); ++it) {
+               string sp =  it->first;
+               //std::cerr << "sp " << sp << std::endl;
+               std::vector<string> IDs = it->second;
+               std::vector<size_t> spPos = locateSet(sampleNames, IDs);
+               if (spPos.empty()) {
+                   std::cerr << "Did not find any samples in the VCF for \"" << sp << "\"" << std::endl;
+                   assert(!spPos.empty());
+               }
+               popToPosMap[sp] = spPos;
+           }
+            
             initialize_matrix_double(diffMatrix, numSamples); initialize_matrix_double(diffMatrixMe, numSamples);
             initialize_matrix_double(diffMatrixHetsVsHomDiff, numSamples);
             initialize_matrix_double(diffMatrixH1, numSamples); initialize_matrix_double(diffMatrixAllH, numSamples);
             initialize_matrix_double(thisBootstrapBlock, numSamples);
             initialize_matrix_int(pairwiseMissingness, numSamples);
             initialize_matrix_int(thisBootstrapBlockMissingness, numSamples);
-            privateVarCounts.assign(populationLabels.size(), 0); hetCounts.assign(numSamples, 0); hetsSharedWithOthers.assign(numSamples, 0);
-            if (!populationsStrings.empty()) {
-                for (int i = 0; i != (int)populationsStrings.size(); i++) {
-                    std::vector<size_t> thisIndices = locateSet(sampleNames, split(populationsStrings[i],','));
-                    populationsIndices.push_back(thisIndices);
-                }
-            }
-            if (opt::countPrivateVars) {
-                for (int i = 0; i < (int)populationsStrings.size(); i++) {
-                    populationsIndicesComplements.push_back(complementIndices(numSamples, populationsIndices[i]));
-                    std::cerr << "Pop: " << populationLabels[i] << "\t";
-                    print_vector(populationsIndices[i], std::cerr,',');
-                    std::cerr << "complement: " << populationLabels[i] << "\t";
-                    print_vector(populationsIndicesComplements[i], std::cerr,',');
-                    
-                }
+            hetCounts.assign(numSamples, 0); hetsSharedWithOthers.assign(numSamples, 0);
+            
+            if (!opt::populationsFile.empty()) {
+                privateVarCounts.assign(populationsToUse.size(), 0);
             }
             
         } else {
@@ -218,7 +241,8 @@ int statsMain(int argc, char** argv) {
                     het_analysis(hetCounts, hetsSharedWithOthers, *result);
                 }
                 if (opt::countPrivateVars) {
-                    privateVars_analysis(privateVarCounts,*result,populationsIndices, populationsIndicesComplements);
+                    // This needs updating 
+                    //privateVars_analysis(privateVarCounts,*result,populationsIndices, populationsIndicesComplements);
                 }
                 if (opt::bDoubleton) {
                 //    doubleton_analysis(doubletons,result,numChromosomes,indPopVector, fieldsPopMap);
@@ -314,7 +338,7 @@ int statsMain(int argc, char** argv) {
     
     // Printing statistics for private variants
     if (opt::countPrivateVars)
-    print_privateFixedVarsSummary(fileRoot, populationLabels, opt::populationsFile, privateVarCounts);
+        print_privateFixedVarsSummary(fileRoot, populationsToUse, opt::populationsFile, privateVarCounts);
     
     // Printing pairwise difference statistics
     if (opt::bDiffs) {

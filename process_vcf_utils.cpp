@@ -889,7 +889,8 @@ std::map<string,string> readMultiFastaToMap(const string& fileName) {
     string line;
     std::ifstream* fastaFile = new std::ifstream(fileName.c_str());
     getline(*fastaFile, line);
-    string currentScaffold = line.substr(1,string::npos);
+    std::vector<std::string> fields = split(line, ' ');
+    string currentScaffold = fields[0].substr(1,string::npos);
     fastaSeqs[currentScaffold] = ""; fastaSeqs[currentScaffold].reserve(50000000);
     while (getline(*fastaFile, line)) {
         if (line[0] != '>') {
@@ -902,6 +903,7 @@ std::map<string,string> readMultiFastaToMap(const string& fileName) {
             fastaSeqs[currentScaffold] = ""; fastaSeqs[currentScaffold].reserve(50000000);
         }
     }
+    std::cerr << currentScaffold << " length: " << (int)fastaSeqs[currentScaffold].length() << std::endl;
     return fastaSeqs;
 }
 

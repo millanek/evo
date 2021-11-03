@@ -48,13 +48,14 @@
 #include "evo_FstAgainstAll.h"
 #include "evo_combineVCFs.h"
 #include "evo_AlleleFeq.h"
+#include "evo_agpToNewFasta.h"
 
 
 //#define TESTING 1
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r24"
+#define PACKAGE_VERSION "0.1 r25"
 
 
 static const char *VERSION_MESSAGE =
@@ -89,6 +90,7 @@ static const char *USAGE_MESSAGE =
 "           test                used for testing/developing new programs\n"
 "           VCFfromSequenom     Generate a VCF file from a sequenom output file\n"
 "           vcf-comb            Combine VCF files called against different reference genomes\n"
+"           agpToNewFasta       Make a new reference fasta file with rearrangements specified in an agp file\n"
 " Various utils:    \n"
 "           aa-seq              Final steps in generating an ancestral sequence from a multiple alignment (.maf)\n"
 "           aa-fill             Adding the AA (ancestral allele) info field to a VCF (only for SNPs), given an ancestral sequence from aa-seq\n"
@@ -206,6 +208,8 @@ int main(int argc, char **argv) {
             VCFcombMain(argc - 1, argv + 1);
         else if (command == "alleleFreq")
             AFmain(argc - 1, argv + 1);
+        else if (command == "agpToNewFasta")
+            agpFastaMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
