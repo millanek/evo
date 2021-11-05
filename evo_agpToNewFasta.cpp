@@ -90,6 +90,9 @@ int agpFastaMain(int argc, char** argv) {
                 int originStart = atoi(processedScaffoldStructure[i][6].c_str()); int originEnd = atoi(processedScaffoldStructure[i][7].c_str());
                 int originLength = originEnd - originStart;
                 toAdd = fastaSeqs.at(originScaffold).substr(originStart-1,originLength);
+                if (processedScaffoldStructure[i][8] == "-") {
+                    std::reverse(toAdd.begin(), toAdd.end());
+                }
             }
             outputSeqs[processedScaffold].append(toAdd);
         }
