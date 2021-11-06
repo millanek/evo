@@ -90,8 +90,20 @@ int agpFastaMain(int argc, char** argv) {
                 int originStart = atoi(processedScaffoldStructure[i][6].c_str()); int originEnd = atoi(processedScaffoldStructure[i][7].c_str());
                 int originLength = originEnd - originStart;
                 toAdd = fastaSeqs.at(originScaffold).substr(originStart-1,originLength);
+                // If the sequence should be inverted, get its reverse complement
                 if (processedScaffoldStructure[i][8] == "-") {
                     std::reverse(toAdd.begin(), toAdd.end());
+                    // complement
+                    for (std::string::size_type j = 0; j != toAdd.length(); j++) {
+                        switch (toAdd[j]) {
+                            case 'A': toAdd[j] = 'T'; break;
+                            case 'T': toAdd[j] = 'A'; break;
+                            case 'C': toAdd[j] = 'G'; break;
+                            case 'G': toAdd[j] = 'C'; break;
+                            default:
+                                break;
+                        }
+                    }
                 }
             }
             outputSeqs[processedScaffold].append(toAdd);
