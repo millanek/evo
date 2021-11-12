@@ -105,6 +105,7 @@ int agpFastaMain(int argc, char** argv) {
                         }
                     }
                 }
+                std::cerr << "Added " << originScaffold << " coords: " << originStart << " " << originEnd << std::endl;
             }
             outputSeqs[processedScaffold].append(toAdd);
         }
