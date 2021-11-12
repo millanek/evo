@@ -88,7 +88,7 @@ int agpFastaMain(int argc, char** argv) {
             } else {
                 string originScaffold = processedScaffoldStructure[i][5];
                 int originStart = atoi(processedScaffoldStructure[i][6].c_str()); int originEnd = atoi(processedScaffoldStructure[i][7].c_str());
-                int originLength = originEnd - originStart;
+                int originLength = (originEnd - originStart) + 1;
                 toAdd = fastaSeqs.at(originScaffold).substr(originStart-1,originLength);
                 // If the sequence should be inverted, get its reverse complement
                 if (processedScaffoldStructure[i][8] == "-") {
