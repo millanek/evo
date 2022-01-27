@@ -33,7 +33,7 @@ static const char *FST_USAGE_MESSAGE =
 "                                               outputs the location of SNPs with particular Fst levels with respect to exons, introns, UTRs, non-coding regions\n\n"
 "       --regions-above=minFst                  (optional, requires -w) outputs the boundaries of regions whose Fst in windows of size set in -w is at least minFst\n"
 "                                               the output file has the suffix '_fst_above_minFst.txt'\n"
-"       --physicalWindowSize=SIZE               (optional; default 10000bp) The size of windows in bp for calculating Fst and Dxy (output in the file with 'dXY_fixedWindow.txt' suffix\n"
+"       --physicalWindowSize=SIZE               (optional; default 10000bp) The size of windows in bp for calculating Fst and Dxy (output in the file with '_fixedWindowStats.txt' suffix\n"
 "       --accessibleGenomeBED=BEDfile.bed       (optional) a bed file specifying the regions of the genome where we could call SNPs\n:"
 "                                               this is used when calculating nucleotide diversity (pi) and absolute sequence divergence (d_XY) in fixed windows\n"
 "       To calculate Fst statistics from ms simulation output:\n"
@@ -426,7 +426,7 @@ void getFstFromVCF() {
     
     string FstResultsFileName = fileRoot + opt::runName + "_w_" + numToString(opt::windowSize) + "_fst.txt";
     std::ofstream* pFst = new std::ofstream(FstResultsFileName.c_str());
-    string fstDxyFixedWindowFileName = fileRoot + opt::runName + "dXY_fixedWindow.txt";
+    string fstDxyFixedWindowFileName = fileRoot + opt::runName + "_w_" + numToString(opt::physicalWindowSize) + "_fixedWindowStats.txt";
     fstDxyFixedWindowFile = new std::ofstream(fstDxyFixedWindowFileName.c_str());
     string heterozygositySetsFileName = fileRoot + opt::runName + "_w_" + numToString(opt::windowSize) + "_heterozygosity.txt";
     if (opt::accesibleGenBedFile.empty()) {
@@ -674,6 +674,7 @@ void getFstFromVCF() {
                     double windowHetPi1 = vector_average_withRegion(windowHetPi1Vec, windowEnd-windowStart);
                     std::vector<double> windowHetPi2Vec(set2heterozygositiesPi.end()-opt::windowSize, set2heterozygositiesPi.end());
                     double windowHetPi2 = vector_average_withRegion(windowHetPi2Vec, windowEnd-windowStart);
+                    
                     if (opt::windowSize == opt::windowStep) {
                         std::vector<string> s = split(windowStartEnd, '\t');
                         if (s[0] == scaffold) {
