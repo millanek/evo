@@ -849,7 +849,6 @@ std::vector<size_t> locateSet(std::vector<std::string>& sample_names, const std:
         std::vector<std::string>::iterator it = std::find(sample_names.begin(), sample_names.end(), set[i]);
         if (it == sample_names.end()) {
             std::cerr << "Did not find the sample: \"" << set[i] << "\"" << std::endl;
-            std::cerr << "Did not find the sample: \"" << sample_names[43] << "\"" << std::endl;
             print_vector(sample_names, std::cerr,',');
         } else {
             size_t loc = std::distance(sample_names.begin(), it);
