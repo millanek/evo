@@ -49,13 +49,14 @@
 #include "evo_combineVCFs.h"
 #include "evo_AlleleFeq.h"
 #include "evo_agpToNewFasta.h"
+#include "evo_distanceToOutgroups.h"
 
 
 //#define TESTING 1
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r25"
+#define PACKAGE_VERSION "0.1 r26"
 
 
 static const char *VERSION_MESSAGE =
@@ -91,6 +92,7 @@ static const char *USAGE_MESSAGE =
 "           VCFfromSequenom     Generate a VCF file from a sequenom output file\n"
 "           vcf-comb            Combine VCF files called against different reference genomes\n"
 "           agpToNewFasta       Make a new reference fasta file with rearrangements specified in an agp file\n"
+"           DistOutgroups       Calculate the genetic distance of populations to given outgroups\n"
 " Various utils:    \n"
 "           aa-seq              Final steps in generating an ancestral sequence from a multiple alignment (.maf)\n"
 "           aa-fill             Adding the AA (ancestral allele) info field to a VCF (only for SNPs), given an ancestral sequence from aa-seq\n"
@@ -210,6 +212,8 @@ int main(int argc, char **argv) {
             AFmain(argc - 1, argv + 1);
         else if (command == "agpToNewFasta")
             agpFastaMain(argc - 1, argv + 1);
+        else if (command == "DistOutgroups")
+            DistOutMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

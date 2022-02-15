@@ -29,12 +29,15 @@ static const char *PBS_USAGE_MESSAGE =
 "       --af                                    (optional) output a file with allele frequencies per-population\n"
 "       --annot=ANNOTATION.gffExtract           (optional)gene annotation in the same format as for the 'getCodingSeq' subprogram\n"
 "                                               outputs PBS per gene (only exons, with introns, and with 3kb upstream)\n"
+"       -i, --allow-indels-and-multiallelics   (optional) also calculate the PBS score for indels, and multiallelics\n"
+"                                               for multiallelics, the first alternate allele is considered\n"
+"                                               sites where the ALT allele is simply '*' are ignored\n"
 "       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hw:n:f:";
+static const char* shortopts = "hw:n:f:i";
 
 enum { OPT_ANNOT, OPT_AF  };
 
@@ -45,6 +48,7 @@ static const struct option longopts[] = {
     { "af",   required_argument, NULL, OPT_AF },
     { "help",   no_argument, NULL, 'h' },
     { "run-name",   required_argument, NULL, 'n' },
+    { "allow-indels-and-multiallelics",   no_argument, NULL, 'i' },
     { NULL, 0, NULL, 0 }
 };
 
@@ -59,6 +63,7 @@ namespace opt
     static int windowSize = 20;
     static int windowStep = 10;
     static bool af = false;
+    static bool allowIndels = false;
 }
 
 inline std::vector<double> calculatePBSfromAFs(double p1, double p2, double p3, double p1AlleleCount, double p2AlleleCount, double p3AlleleCount) {
@@ -238,12 +243,18 @@ int PBSmain(int argc, char** argv) {
             }
             fields = split(line, '\t'); chr = fields[0]; coord = fields[1]; coordDouble = stringToDouble(coord);
             std::vector<std::string> genotypes(fields.begin()+NUM_NON_GENOTYPE_COLUMNS,fields.end());
+            
             // Only consider biallelic SNPs
-            string refAllele = fields[3]; string altAllele = fields[4];
-            if (refAllele.length() > 1 || altAllele.length() > 1 || altAllele == "*") {
+            string refAllele = fields[3]; string altAllele = fields[4]; bool ignoreSite = false;
+            if (altAllele == "*") ignoreSite = true;
+            if (!opt::allowIndels) {
+                if (refAllele.length() > 1 || altAllele.length() > 1) ignoreSite = true;
+            }
+            if (ignoreSite) {
                 refAllele.clear(); refAllele.shrink_to_fit(); altAllele.clear(); altAllele.shrink_to_fit();
                 genotypes.clear(); genotypes.shrink_to_fit(); continue;
             }
+            
             startGettingCounts = std::clock();
             GeneralSetCounts* c = new GeneralSetCounts(popToPosMap, (int)genotypes.size());
             c->getSetVariantCountsSimple(genotypes, posToPopMap);
@@ -377,6 +388,7 @@ void parsePBSoptions(int argc, char** argv) {
                 opt::windowStep = atoi(windowSizeStep[1].c_str());
                 break;
             case 'n': arg >> opt::runName; break;
+            case 'i': opt::allowIndels = true; break;
             case OPT_ANNOT: arg >> opt::annotFile; break;
             case OPT_AF: opt::af = true; break;
             case 'h':
