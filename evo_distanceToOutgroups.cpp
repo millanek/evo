@@ -26,8 +26,9 @@ static const char *DISTOUT_USAGE_MESSAGE =
 "       -i, --allow-indels-and-multiallelics   (optional) also calculate the PBS score for indels, and multiallelics\n"
 "                                               for multiallelics, the first alternate allele is considered\n"
 "                                               sites where the ALT allele is simply '*' are ignored\n"
-"       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
+// "       -r , --region=start,length              (optional) only process a subset of the VCF file\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
+//"       --no-scaling                            (optional) do not scale distances by the proportion of missing data in the ingroup (default: scale)\n"
 "       --accessibleGenomeBED=BEDfile.bed           (optional) a bed file specifying the regions of the genome where we could call SNPs\n"
 "                                                   the program will calculate the number of accessible bases from this\n"
 "\n"
@@ -232,16 +233,32 @@ int DistOutMain(int argc, char** argv) {
                     for (int j = 0; j != ingroups.size(); j++) {
                         int nSNPs = (int)DxyFixedWindowPerSNP[i][j].size();
                         if (nSNPs > 0) {
-                            DxyFixedWindowAveraged[i][j] = vector_average_withRegion(DxyFixedWindowPerSNP[i][j], accessibleInThisWindow);
+                            double missingProportion = (double)missingDist[i][j]/(nSNPs + missingDist[i][j]);
+                            if (missingProportion > 0.5) {
+                                DxyFixedWindowAveraged[i][j] = NAN;
+                            } else {
+                                DxyFixedWindowAveraged[i][j] = vector_average_withRegion(DxyFixedWindowPerSNP[i][j], accessibleInThisWindow);
+                                // Scale by the number of SNPs missing for the ingroup
+                                double nonMissingProportion = (double)nSNPs/(nSNPs + missingDist[i][j]);
+                                double scalingFactor = 1 + (missingProportion / nonMissingProportion);
+                                DxyFixedWindowAveraged[i][j] = DxyFixedWindowAveraged[i][j] * scalingFactor;
+                            }
                         } else {
-                            DxyFixedWindowAveraged[i][j] = 0.0;
+                            DxyFixedWindowAveraged[i][j] = NAN;
                         }
                         DxyFixedWindowPerSNP[i][j].clear();
                     }
                     
                     *outFilesFixedWindow[i] << chr << "\t" << currentWindowStart << "\t" << currentWindowEnd << "\t" << usedVars[i] << "\t" << missingVars[i] << "\t" << accessibleInThisWindow << "\t";
                     print_vector(DxyFixedWindowAveraged[i], *outFilesFixedWindow[i]);
+                }
+                
+                // Reset missing data counters for the next window
+                for (int i = 0; i != outgroups.size(); i++) {
                     usedVars[i] = 0; missingVars[i] = 0;
+                    for (int j = 0; j != ingroups.size(); j++) {
+                        missingDist[i][j] = 0;
+                    }
                 }
                 
                 if (coordDouble > currentWindowEnd) {
@@ -260,7 +277,7 @@ int DistOutMain(int argc, char** argv) {
                 AFout = c->setAAFs.at(outgroups[i]);
                 if (AFout == -1) {
                     missingVars[i]++;
-                    for (int j = 0; j != ingroups.size(); j++) { missingDist[i][j]++; }
+                    // for (int j = 0; j != ingroups.size(); j++) { missingDist[i][j]++; }
                     continue;  // If the outgroup has entirely missing data, just move on to the next one
                 }
                 usedVars[i]++;
