@@ -100,6 +100,10 @@ int agpFastaMain(int argc, char** argv) {
                             case 'T': toAdd[j] = 'A'; break;
                             case 'C': toAdd[j] = 'G'; break;
                             case 'G': toAdd[j] = 'C'; break;
+                            case 'a': toAdd[j] = 't'; break;
+                            case 't': toAdd[j] = 'a'; break;
+                            case 'c': toAdd[j] = 'g'; break;
+                            case 'g': toAdd[j] = 'c'; break;
                             default:
                                 break;
                         }

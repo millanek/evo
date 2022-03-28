@@ -278,6 +278,83 @@ void randomisePhase(char& v1, char& v2) {
 
 
 
+void MultiallelicCounts::getMultiallelicCounts(const std::vector<std::string>& genotypes) {
+    
+  /*  std::cerr << "genotypes.size(): " << genotypes.size() << std::endl;
+    std::cerr << "missingIndividualsDot.size(): " << missingIndividualsDot.size() << std::endl;
+    std::cerr << "missingIndividualsAny.size(): " << missingIndividualsAny.size() << std::endl;
+    std::cerr << "missingHaplotypesDot.size(): " << missingHaplotypesDot.size() << std::endl;
+    std::cerr << "starpos: " << starPos << std::endl;
+   */
+    
+    for (std::vector<std::string>::size_type i = 0; i != genotypes.size(); i++) {
+     //   std::cerr << "genotypes[i]: " << genotypes[i] << std::endl;
+        
+        
+        if (genotypes[i][0] == '.' || genotypes[i][2] == '.') { missingIndividualsDot[i] = 1; missingIndividualsAny[i] = 1; }
+     //   std::cerr << "Missing individuals assigned: " << std::endl;
+        if (genotypes[i][0] == starPos || genotypes[i][2] == starPos) missingIndividualsAny[i] = 1;
+          
+        if (genotypes[i][0] == '.') { missingHaplotypesDot[2*i] = 1;}
+        else if (genotypes[i][0] == starPos) { missingHaplotypesStar[2*i] = 1; }
+        else haplotypeVariants[2*i] = genotypes[i][0];
+        
+        if (genotypes[i][1] == '.')  { missingHaplotypesDot[(2*i)+1] = 1;}
+        else if (genotypes[i][1] == starPos) { missingHaplotypesStar[(2*i)+1] = 1; }
+        else haplotypeVariants[(2*i)+1] = genotypes[i][2];
+        
+        if (missingIndividualsAny[i] == 0 && genotypes[i][0] != genotypes[i][2]) {
+            individualsHets[i] = 1;
+        }
+        
+        if (missingIndividualsAny[i] == 0 && genotypes[i][0] == genotypes[i][2]) {
+            individualsHets[i] = 0;
+        }
+        
+    }
+}
+
+
+
+double MultiallelicCounts::getHeterozygosityThisVariant() {
+    
+    std::vector<int> nonMissingHets = individualsHets;
+    nonMissingHets.erase(std::remove(nonMissingHets.begin(), nonMissingHets.end(), -1), nonMissingHets.end());
+    
+    int numNonMisInds = (int) nonMissingHets.size();
+    int numHets = vector_sum(nonMissingHets);
+    
+    double hetThisVar = (double)numHets/(double)numNonMisInds;
+    return hetThisVar;
+}
+
+
+
+
+double MultiallelicCounts::getPiThisVariant() {
+    
+    std::vector<int> nonMissingHaplotypeVars = haplotypeVariants;
+    nonMissingHaplotypeVars.erase(std::remove(nonMissingHaplotypeVars.begin(), nonMissingHaplotypeVars.end(), -1), nonMissingHaplotypeVars.end());
+    
+    int countedNumComparisons = 0;  // TEST
+    int numDiffs = 0; int numHaplotypes = (int) nonMissingHaplotypeVars.size();
+    for (std::vector<std::string>::size_type i = 0; i !=  numHaplotypes - 1; i++) {
+        for (std::vector<std::string>::size_type j = i+1; j != numHaplotypes; j++) {
+            if (nonMissingHaplotypeVars[i] != nonMissingHaplotypeVars[j]) {
+                numDiffs++;
+            }
+            countedNumComparisons++;
+        }
+    }
+    int numComparisons = (numHaplotypes * (numHaplotypes -1)) / 2;
+    assert(numComparisons == countedNumComparisons);
+    
+    double piThisVar = (double)numDiffs/(double)numComparisons;
+    
+    return piThisVar;
+}
+
+
 void getThisVariantCountsSimple(const std::vector<std::string>& fields, Counts* thisVariantCounts) {
     int numSamples = (int)fields.size()-NUM_NON_GENOTYPE_COLUMNS;
     thisVariantCounts->individualsWithVariant.assign(numSamples,0);

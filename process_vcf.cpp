@@ -50,6 +50,7 @@
 #include "evo_AlleleFeq.h"
 #include "evo_agpToNewFasta.h"
 #include "evo_distanceToOutgroups.h"
+#include "evo_diversityFromHaps.h"
 
 
 //#define TESTING 1
@@ -84,6 +85,7 @@ static const char *USAGE_MESSAGE =
 "           massoko             filtering and getting fixed (and nearly fixed) variants from the Lake Massoko VCF file\n"
 "           PBS                 Calculating the population branch statistics (looking for positive selection)\n"
 "           RegionsDxy          Dxy (or other statistics) for regions in a .bed file; optional subsampling\n"
+"           RegionsPiGeneral    Pi for regions in a .bed file; can deal with multiallelic sites and missigness\n"
 "           SeqFromGenomes      Get subsequences (usually genes) from whole genome sequences\n"
 "           sequenom            prepare a variant list for a sequenom assay in the format used at the Sanger Institute\n"
 "           sharing             find out how Massoko variants segregate in Lake Malawi\n"
@@ -214,6 +216,8 @@ int main(int argc, char **argv) {
             agpFastaMain(argc - 1, argv + 1);
         else if (command == "DistOutgroups")
             DistOutMain(argc - 1, argv + 1);
+        else if (command == "RegionsPiGeneral")
+            regionPiMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

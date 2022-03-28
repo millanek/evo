@@ -148,6 +148,40 @@ public:
     bool bIsMultiallelic;
 };
 
+
+class MultiallelicCounts {
+public:
+    MultiallelicCounts(int nSamples, int starPosInput) : inbreedingCoefficient(0), chiSqPvalForInbreeding(1), bPhased(false) {
+        individualsHets.assign(nSamples, -1);
+        missingIndividualsDot.assign(nSamples, 0);
+        missingIndividualsAny.assign(nSamples, 0);
+        missingHaplotypesDot.assign(2*nSamples, 0);
+        
+        missingHaplotypesStar.assign(2*nSamples, 0);
+        haplotypeVariants.assign(2*nSamples, -1);
+        starPos = starPosInput;
+    };
+    
+    int starPos;
+    double inbreedingCoefficient;
+    double chiSqPvalForInbreeding;
+    bool bPhased;
+    std::vector<int> individualsHets;
+    std::vector<int> haplotypeVariants;
+    
+    std::vector<int> missingIndividualsDot;  // Individuals which are denoted in the VCF as missing data ./.
+    std::vector<int> missingIndividualsAny;  // Individuals with missing data (as above) or which have either haplotype denoted in the VCF as * alleles (missing at the site because of an indel nearby)
+    
+    std::vector<int> missingHaplotypesDot;  // Haplotypes which are denoted in the VCF as missing data ./.
+    std::vector<int> missingHaplotypesStar;   // Haplotypes which are denoted in the VCF as * alleles (missing at the site because of an indel nearby)
+    
+    void getMultiallelicCounts(const std::vector<string>& genotypes);
+    double getPiThisVariant();
+    double getHeterozygosityThisVariant();
+    
+};
+
+
 class SingleSetCounts {
 public:
     SingleSetCounts() : overall(0), setCount(0) {};

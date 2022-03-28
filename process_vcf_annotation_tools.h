@@ -117,7 +117,7 @@ public:
         return elementNames;
     }
     
-    std::vector<double> getDxyPerElement(std::unordered_map<string, double>& posDxyMap) {
+    std::vector<double> getMeanPerElement(std::unordered_map<string, double>& posDxyMap) {
         std::vector<double> elementDxyValues;
         for (int i = 0; i < (int)elementCoordsVector.size(); i++) {
             std::vector<std::vector<string> > thisElement = elementCoordsVector[i];

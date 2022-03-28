@@ -145,7 +145,7 @@ int subsamplingDxy(int argc, char** argv) {
         } std::ofstream* outDxyFile = new std::ofstream(outDxyFileName.c_str());
         
         std::cerr << "Now calculating Dxy values per element to be written out into: " << outDxyFileName << std::endl;
-        std::vector<double> elementDxyValues = coords.getDxyPerElement(vcfDxyMap);
+        std::vector<double> elementDxyValues = coords.getMeanPerElement(vcfDxyMap);
         std::cerr << "Calculations done" << std::endl;
         std::vector<string> elementNames = coords.getElementNames();
         std::vector<std::vector<string> > elementOuterBounds = coords.getElementOuterBoundaries();
