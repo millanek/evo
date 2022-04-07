@@ -220,6 +220,8 @@ int main(int argc, char **argv) {
             DistOutMain(argc - 1, argv + 1);
         else if (command == "RegionsPiGeneral")
             regionPiMain(argc - 1, argv + 1);
+        else if (command == "InfoPairs")
+            InfoPairsMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
