@@ -51,13 +51,14 @@
 #include "evo_agpToNewFasta.h"
 #include "evo_distanceToOutgroups.h"
 #include "evo_diversityFromHaps.h"
+#include "evo_getInformativePairs.h"
 
 
 //#define TESTING 1
 
 
 #define AUTHOR "Milan Malinsky"
-#define PACKAGE_VERSION "0.1 r27"
+#define PACKAGE_VERSION "0.1 r28"
 
 
 static const char *VERSION_MESSAGE =
@@ -111,6 +112,7 @@ static const char *USAGE_MESSAGE =
 "           multi-fasta         A utility tool for dealing with a multi-fasta file (e.g. join all sequences)\n"
 "           statsTest           Testing statistical routines in development\n"
 "           AnnotationPreformat Extract CDS coordinates from ANNOTATION.gtf for use in 'getCodingSeq'\n"
+"           InfoPairs           \n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 int main(int argc, char **argv) {

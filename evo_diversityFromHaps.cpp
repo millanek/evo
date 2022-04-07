@@ -47,7 +47,7 @@ int regionPiMain(int argc, char** argv) {
     std::map<int, string> linearToGenomeMap;
     
     std::cerr << "Loading coordinates from the bed file " << opt::bedFile << std::endl;
-    LinkedCoordsBed coords = LinkedCoordsBed(bedFile);              // The bed file needs element names in the fourth column
+    LinkedCoordsBed coords = LinkedCoordsBed(bedFile);          // The bed file needs element names in the fourth column
     std::cerr << "Done" << std::endl;
     
     // Load up the VCF file:
