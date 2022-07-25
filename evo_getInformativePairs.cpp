@@ -68,9 +68,11 @@ int InfoPairsMain(int argc, char** argv) {
             }
         }
     } else {
-        std::vector<string> phasedSNPdetails = split(line, '\t');
-        int snpPos = atoi(phasedSNPdetails[1].c_str());
-        phasedHetsPos.insert(snpPos);
+        while (getline(*hetFile, line)) {
+            std::vector<string> phasedSNPdetails = split(line, '\t');
+            int snpPos = atoi(phasedSNPdetails[1].c_str());
+            phasedHetsPos.insert(snpPos);
+        }
     }
     
     // Now parse the pairtools file to find read pairs that can be informative about the phasing and recombination
