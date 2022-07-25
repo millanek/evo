@@ -32,13 +32,15 @@ static const char *DISCORDPAIRS_USAGE_MESSAGE =
 "       -n, --run-name                          run-name will be included in the output file name\n"
 "       -m, --min-MQ                            (default: 20) the minimum mapping quality for a read to be considered\n"
 "       -b, --min-BQ                            (default: 30) the minimum base quality for assesssing discordant phase\n"
-"       -p, --min-PQ                            (default: 30) the minimum phase quality for assesssing discordant phase\n"
+"       -p, --min-PQ                            (default: 30) the minimum phase quality for assesssing discordant phase (relevant with the --hapCut option)\n"
+"       --hapCut                                the het positions come from HapCut output\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 static const char* shortopts = "hn:b:m:p:";
 
 //enum { OPT_ANNOT, OPT_AF  };
+enum { OPT_HAPCUT  };
 
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
@@ -46,12 +48,14 @@ static const struct option longopts[] = {
     { "min-MQ",   required_argument, NULL, 'm' },
     { "min-BQ",   required_argument, NULL, 'b' },
     { "min-PQ",   required_argument, NULL, 'p' },
+    { "hapCut",   no_argument, NULL, OPT_HAPCUT },
     { NULL, 0, NULL, 0 }
 };
 
 namespace opt
 {
-    static string hapcutFile;
+    static bool hapcutFormat = false;
+    static string hetsFile;
     static string samFile;
     static string pairtoolsFile;
     static string runName = "";
@@ -67,7 +71,7 @@ int DiscordPairsMain(int argc, char** argv) {
     parseDiscordPairsOptions(argc, argv);
     string line; // for reading the input files
     
-    std::istream* hapcutFile = createReader(opt::hapcutFile.c_str());
+    std::istream* hetsFile = createReader(opt::hetsFile.c_str());
     std::ifstream* pairtoolsFile = new std::ifstream(opt::pairtoolsFile.c_str());
     std::ifstream* samFile = new std::ifstream(opt::samFile.c_str());
     
@@ -79,32 +83,48 @@ int DiscordPairsMain(int argc, char** argv) {
     
     std::map<string,std::vector<RecombRead*>> samNameToReads;
     
-    // Parse the Hapcut blocks file
-    while (getline(*hapcutFile, line)) {
-        if (line[0] == '*') {
-        
-        } else if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
+    if (opt::hapcutFormat) {
+        // Parse the Hapcut blocks file
+        while (getline(*hetsFile, line)) {
+            if (line[0] == '*') {
             
-        } else {
-            std::vector<string> phasedSNPdetails = split(line, '\t');
-            int snpPos = atoi(phasedSNPdetails[4].c_str());
-            int H1phase = atoi(phasedSNPdetails[1].c_str());
-            int H2phase = atoi(phasedSNPdetails[2].c_str());
-            //std::cout << "line: " << line << std::endl;
-            // std::cout << "phasedSNPdetails[5]: " << phasedSNPdetails[5] << std::endl;
-            assert(phasedSNPdetails[5].length() == 1); assert(phasedSNPdetails[6].length() == 1);
-            char refBase = phasedSNPdetails[5][0];
-            char altBase = phasedSNPdetails[6][0];
-            double phaseQual = stringToDouble(phasedSNPdetails[10].c_str());
-            int snpCoverage = atoi(phasedSNPdetails[11].c_str());
-            std::vector<char> phasedVars;
-            if (H1phase == 0 && H2phase == 1) {
-                phasedVars.push_back(refBase); phasedVars.push_back(altBase);
-            } else if (H1phase == 1 && H2phase == 0) {
-                phasedVars.push_back(altBase); phasedVars.push_back(refBase);
-            } else{
-                continue;
+            } else if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
+                
+            } else {
+                std::vector<string> phasedSNPdetails = split(line, '\t');
+                int snpPos = atoi(phasedSNPdetails[4].c_str());
+                int H1phase = atoi(phasedSNPdetails[1].c_str());
+                int H2phase = atoi(phasedSNPdetails[2].c_str());
+                //std::cout << "line: " << line << std::endl;
+                // std::cout << "phasedSNPdetails[5]: " << phasedSNPdetails[5] << std::endl;
+                assert(phasedSNPdetails[5].length() == 1); assert(phasedSNPdetails[6].length() == 1);
+                char refBase = phasedSNPdetails[5][0];
+                char altBase = phasedSNPdetails[6][0];
+                double phaseQual = stringToDouble(phasedSNPdetails[10].c_str());
+                int snpCoverage = atoi(phasedSNPdetails[11].c_str());
+                std::vector<char> phasedVars;
+                if (H1phase == 0 && H2phase == 1) {
+                    phasedVars.push_back(refBase); phasedVars.push_back(altBase);
+                } else if (H1phase == 1 && H2phase == 0) {
+                    phasedVars.push_back(altBase); phasedVars.push_back(refBase);
+                } else{
+                    continue;
+                }
+                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
+                positionToPhase[snpPos] = thisPhase;
             }
+        }
+    } else {
+        while (getline(*hetsFile, line)) {
+            std::vector<string> phasedSNPdetails = split(line, '\t');
+            int snpPos = atoi(phasedSNPdetails[1].c_str());
+            assert(phasedSNPdetails[2].length() == 1); assert(phasedSNPdetails[3].length() == 1);
+            char refBase = phasedSNPdetails[2][0];
+            char altBase = phasedSNPdetails[3][0];
+            
+            std::vector<char> phasedVars;
+            phasedVars.push_back(refBase); phasedVars.push_back(altBase);
+            double phaseQual = 0; int snpCoverage = 0;
             PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
             positionToPhase[snpPos] = thisPhase;
         }
@@ -356,6 +376,7 @@ void parseDiscordPairsOptions(int argc, char** argv) {
             case 'n': arg >> opt::runName; break;
             case 'b': arg >> opt::minBQ; break;
             case 'm': arg >> opt::minMQ; break;
+            case OPT_HAPCUT: opt::hapcutFormat = true; break;
             case 'h':
                 std::cout << DISCORDPAIRS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
@@ -378,7 +399,7 @@ void parseDiscordPairsOptions(int argc, char** argv) {
     }
     
     // Parse the input filenames
-    opt::hapcutFile = argv[optind++];
+    opt::hetsFile = argv[optind++];
     opt::pairtoolsFile = argv[optind++];
     opt::samFile = argv[optind++];
 }
