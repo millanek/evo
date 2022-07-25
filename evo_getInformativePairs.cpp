@@ -30,7 +30,7 @@ enum { OPT_HAPCUT  };
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
     { "run-name",   required_argument, NULL, 'n' },
-    { "hapCut",   required_argument, NULL, OPT_HAPCUT },
+    { "hapCut",   no_argument, NULL, OPT_HAPCUT },
     { NULL, 0, NULL, 0 }
 };
 
