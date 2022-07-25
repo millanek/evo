@@ -14,27 +14,30 @@
 #define DEBUG 1
 
 static const char *INFOPAIRS_USAGE_MESSAGE =
-"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] hapcutBlockFile.txt PAIRTOOLS_FILE.pairs\n"
+"Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] hetPosFile.txt PAIRTOOLS_FILE.pairs\n"
 "Select reads/fragments from the PAIRTOOLS_FILE which could be informative about recombination:\n"
 "\n"
 "       -h, --help                              display this help and exit\n"
 "       -n, --run-name                          run-name will be included in the output file name\n"
+"       --hapCut                                the het positions come from HapCut output"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 static const char* shortopts = "hn:";
 
-//enum { OPT_ANNOT, OPT_AF  };
+enum { OPT_HAPCUT  };
 
 static const struct option longopts[] = {
     { "help",   no_argument, NULL, 'h' },
     { "run-name",   required_argument, NULL, 'n' },
+    { "hapCut",   required_argument, NULL, OPT_HAPCUT },
     { NULL, 0, NULL, 0 }
 };
 
 namespace opt
 {
-    static string hapcutFile;
+    static string hetFile;
+    static bool hapcutFormat = false;
     static string pairtoolsFile;
     static string runName = "";
 }
@@ -46,22 +49,28 @@ int InfoPairsMain(int argc, char** argv) {
     parseInfoPairsOptions(argc, argv);
     string line; // for reading the input files
     
-    std::istream* hapcutFile = createReader(opt::hapcutFile.c_str());
+    std::istream* hetFile = createReader(opt::hetFile.c_str());
     std::ifstream* pairtoolsFile = new std::ifstream(opt::pairtoolsFile.c_str());
     
     std::unordered_set<int> phasedHetsPos;
     
     
-    // Parse the Hapcut blocks file
-    while (getline(*hapcutFile, line)) {
-        if (line == "********") continue;
-        if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
-            
-        } else {
-            std::vector<string> phasedSNPdetails = split(line, '\t');
-            int snpPos = atoi(phasedSNPdetails[4].c_str());
-            phasedHetsPos.insert(snpPos);
+    if (opt::hapcutFormat) {
+        // Parse the Hapcut blocks file
+        while (getline(*hetFile, line)) {
+            if (line == "********") continue;
+            if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
+                
+            } else {
+                std::vector<string> phasedSNPdetails = split(line, '\t');
+                int snpPos = atoi(phasedSNPdetails[4].c_str());
+                phasedHetsPos.insert(snpPos);
+            }
         }
+    } else {
+        std::vector<string> phasedSNPdetails = split(line, '\t');
+        int snpPos = atoi(phasedSNPdetails[1].c_str());
+        phasedHetsPos.insert(snpPos);
     }
     
     // Now parse the pairtools file to find read pairs that can be informative about the phasing and recombination
@@ -113,6 +122,7 @@ void parseInfoPairsOptions(int argc, char** argv) {
         {
             case '?': die = true; break;
             case 'n': arg >> opt::runName; break;
+            case OPT_HAPCUT: opt::hapcutFormat = true; break;
             case 'h':
                 std::cout << INFOPAIRS_USAGE_MESSAGE;
                 exit(EXIT_SUCCESS);
@@ -135,6 +145,6 @@ void parseInfoPairsOptions(int argc, char** argv) {
     }
     
     // Parse the input filenames
-    opt::hapcutFile = argv[optind++];
+    opt::hetFile = argv[optind++];
     opt::pairtoolsFile = argv[optind++];
 }

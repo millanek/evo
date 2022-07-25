@@ -52,6 +52,7 @@
 #include "evo_distanceToOutgroups.h"
 #include "evo_diversityFromHaps.h"
 #include "evo_getInformativePairs.h"
+#include "evo_findDiscordantPairs.h"
 
 
 //#define TESTING 1
@@ -113,6 +114,7 @@ static const char *USAGE_MESSAGE =
 "           statsTest           Testing statistical routines in development\n"
 "           AnnotationPreformat Extract CDS coordinates from ANNOTATION.gtf for use in 'getCodingSeq'\n"
 "           InfoPairs           \n"
+"           DiscordantPairs           \n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
 int main(int argc, char **argv) {
@@ -222,6 +224,8 @@ int main(int argc, char **argv) {
             regionPiMain(argc - 1, argv + 1);
         else if (command == "InfoPairs")
             InfoPairsMain(argc - 1, argv + 1);
+        else if (command == "DiscordantPairs")
+            DiscordPairsMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";

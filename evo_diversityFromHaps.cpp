@@ -15,7 +15,8 @@
 
 static const char *REGION_PI_USAGE_MESSAGE =
 "Usage: " PROGRAM_BIN " " SUBPROGRAM " [OPTIONS] regions.bed variants.vcf\n"
-"Calculate Dxy (and possibly other statistics) for regions defined in the .bed file\n"
+"Calculate pi and heterozygosity for regions defined in the .bed file\n"
+"Other statistics may be added ....\n"
 "\n"
 "       -h, --help                          display this help and exit\n"
 "       -o, --outfile=FILE                  (optional; default=) output file name\n"
@@ -117,6 +118,7 @@ int regionPiMain(int argc, char** argv) {
     
     std::vector<string> elementNames = coords.getElementNames();
     std::vector<std::vector<string> > elementOuterBounds = coords.getElementOuterBoundaries();
+    *outPiFile << "scaffold" << "\t" << "regionStartOnScaffold" << "\t" << "regionEndOnScaffold" << "\t" << "regionName" << "\t" << "pi" << "\t" << "heterozygosity" << std::endl;
     for (int i = 0; i < (int)elementPiValues.size(); i++) {
         *outPiFile << elementOuterBounds[i][0] << "\t" << elementOuterBounds[i][1] << "\t" << elementOuterBounds[i][2] << "\t" << elementNames[i] << "\t" << elementPiValues[i] << "\t" << elementHetValues[i] << std::endl;
     }
