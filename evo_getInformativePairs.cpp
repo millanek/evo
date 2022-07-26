@@ -90,7 +90,7 @@ int InfoPairsMain(int argc, char** argv) {
         else std::iota(posCovered1.begin(), posCovered1.end(), pair1pos-150);
         
         std::vector<int> posCovered2; posCovered2.resize(150);
-        if (pair1strand == "+") std::iota(posCovered2.begin(), posCovered2.end(), pair2pos);
+        if (pair2strand == "+") std::iota(posCovered2.begin(), posCovered2.end(), pair2pos);
         else std::iota(posCovered2.begin(), posCovered2.end(), pair2pos-150);
         
         int phasedHetsOnPair = 0;
@@ -113,9 +113,9 @@ int InfoPairsMain(int argc, char** argv) {
         
         if (phasedHetsOnPair > 1) {
             std::cout << line << std::endl;
-            std::cerr << "pair1pos: " << pair1pos << " ; pair2pos: " << pair2pos << std::endl;
-            std::cerr << "pair1strand: " << pair1strand << " ; pair2strand: " << pair2strand << std::endl;
-            print_vector(hetPosVec, std::cerr);
+            //std::cerr << "pair1pos: " << pair1pos << " ; pair2pos: " << pair2pos << std::endl;
+            //std::cerr << "pair1strand: " << pair1strand << " ; pair2strand: " << pair2strand << std::endl;
+            //print_vector(hetPosVec, std::cerr);
         }
         
     }
