@@ -51,6 +51,7 @@ class HetInfo {
 
 class PhaseInfo {
     public:
+    PhaseInfo() {};
     
     PhaseInfo(int position, double qual, int cov, std::vector<char>& phasedVarsIn) {
         pos = position; quality = qual;
@@ -64,6 +65,30 @@ class PhaseInfo {
     int coverage;
     
 };
+
+class PhasePair {
+    public:
+    PhasePair(): phase1(NULL), phase2(NULL) {};
+    
+    PhaseInfo* phase1;
+    PhaseInfo* phase2;
+    
+};
+
+class ReadLinkSNPpair {
+    public:
+    ReadLinkSNPpair(int p1, int p2, char b1, char b2) {
+        pos1 = p1; pos2 = p2;
+        base1.push_back(b1); base2.push_back(b2);
+    };
+    
+    int pos1; int pos2;
+    std::vector<char> base1; std::vector<char> base2;
+    
+};
+
+
+
 
 class RecombRead {
     public:
@@ -136,5 +161,19 @@ class RecombReadPair {
     
 
 };
+
+inline unsigned nChoosek( unsigned n, unsigned k )
+{
+    if (k > n) return 0;
+    if (k * 2 > n) k = n-k;
+    if (k == 0) return 1;
+    
+    int result = n;
+    for( int i = 2; i <= k; ++i ) {
+        result *= (n-i+1);
+        result /= i;
+    }
+    return result;
+}
 
 #endif /* evo_findDiscordantPairs_h */

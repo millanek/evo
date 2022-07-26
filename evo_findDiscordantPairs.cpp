@@ -82,6 +82,8 @@ int DiscordPairsMain(int argc, char** argv) {
     std::map<string,std::vector<string>> infoPairNameToStrands;
     
     std::map<string,std::vector<RecombRead*>> samNameToReads;
+    int numHetPairs = 0;
+    std::unordered_map<string, ReadLinkSNPpair*> SNPpairs;
     
     if (opt::hapcutFormat) {
         // Parse the Hapcut blocks file
@@ -128,7 +130,10 @@ int DiscordPairsMain(int argc, char** argv) {
             PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
             positionToPhase[snpPos] = thisPhase;
         }
+        numHetPairs = nChoosek((int)positionToPhase.size(),2);
     }
+    
+    
     
     // Now parse the pairtools file to record the exact readpairs
     while (getline(*pairtoolsFile,line)) {
@@ -217,60 +222,88 @@ int DiscordPairsMain(int argc, char** argv) {
         goodReadPairs[r]->filterHetsByQuality(opt::minBQ);
         //std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
         
-       for (int i = 0; i < goodReadPairs[r]->hetSites.size(); i++) {
-            HetInfo* thisHet = goodReadPairs[r]->hetSites[i];
-            if (thisHet->readPhaseBaseMismatch) {
-                /*  std::cout << "Bases don't match" << std::endl;
-                  std::cout << "sequence: " << thisRead->readSeq << std::endl;
-                  std::cout << "readBase: " << thisRead->readSeq[i-1] << "[" << readBase << "]" << thisRead->readSeq[i+1] << std::endl;
-                  std::cout << "readQual[i]: " << thisRead->readQual[i] << "; score: " << int(thisRead->readQual[i])-33 << std::endl;
-                  std::cout << "readPos: " << thisRead->readPos << std::endl;
-                  std::cout << "i: " << i << std::endl;
-                  std::cout << "readPos + i: " << thisRead->readPos + i << std::endl;
-                  std::cout << "phasedSNPbases[0]: " << phasedSNPbases[0] << std::endl;
-                  std::cout << "phasedSNPbases[1]: " << phasedSNPbases[1] << std::endl; */
-                numMismatch++;
-                mismatchBaseScores.push_back(thisHet->thisBaseQuality);
-            } else {
-                // std::cout << "Fine: " << std::endl;
-                 matchBaseScores.push_back(thisHet->thisBaseQuality);
-                 numMatch++;
-            }
-        }
-        
-        if (goodReadPairs[r]->hetSites.size() > 1) {
-            int phaseOfPrevious; int posOfPrevious; bool allConcordant = true;
-            if (goodReadPairs[r]->hetSites[0]->thisBase == goodReadPairs[r]->hetSites[0]->thisHetPhase0) phaseOfPrevious = 0;
-            if (goodReadPairs[r]->hetSites[0]->thisBase == goodReadPairs[r]->hetSites[0]->thisHetPhase1) phaseOfPrevious = 1;
-            for (int i = 1; i < goodReadPairs[r]->hetSites.size(); i++) {
-                int phaseThis;
-                if (goodReadPairs[r]->hetSites[i]->thisBase == goodReadPairs[r]->hetSites[i]->thisHetPhase0) phaseThis = 0;
-                if (goodReadPairs[r]->hetSites[i]->thisBase == goodReadPairs[r]->hetSites[i]->thisHetPhase1) phaseThis = 1;
-                
-                if (phaseThis != phaseOfPrevious) {
-                    allConcordant = false;
-                    PhaseSwitch* thisSwitch = new PhaseSwitch(goodReadPairs[r]->hetSites[i-1]->pos, goodReadPairs[r]->hetSites[i]->pos, goodReadPairs[r]->hetSites[i-1]->thisPhaseQuality, goodReadPairs[r]->hetSites[i]->thisPhaseQuality);
-                    phaseSwitches.push_back(thisSwitch);
-                }
-                posOfPrevious = goodReadPairs[r]->hetSites[i]->pos;
-                phaseOfPrevious = phaseThis;
-            }
-            if (allConcordant == false) numDiscordant++;
-            else numConcordant++;
-        }
     }
     
-    
-    std::cout << "numConcordant: " << numConcordant << std::endl;
-    std::cout << "numDiscordant: " << numDiscordant << std::endl;
-    
-    std::cout << "numMatch: " << numMatch << std::endl;
-    std::cout << "numMismatch: " << numMismatch << std::endl;
-    std::cout << "Mean mismatchBaseScores: " << vector_average(mismatchBaseScores) << std::endl;
-    std::cout << "Mean matchBaseScores: " << vector_average(matchBaseScores) << std::endl;
-    
-    for (int i = 0; i != phaseSwitches.size(); i++) {
-        *phaseSwitchFile << phaseSwitches[i]->posLeft << "\t" << phaseSwitches[i]->posRight << "\t" << phaseSwitches[i]->dist << "\t" << phaseSwitches[i]->phaseQualLeft << "\t" << phaseSwitches[i]->phaseQualRight << std::endl;
+    if (opt::hapcutFormat) {
+        
+        for (int r = 0; r < goodReadPairs.size(); r++) {
+           for (int i = 0; i < goodReadPairs[r]->hetSites.size(); i++) {
+                HetInfo* thisHet = goodReadPairs[r]->hetSites[i];
+                if (thisHet->readPhaseBaseMismatch) {
+                    /*  std::cout << "Bases don't match" << std::endl;
+                      std::cout << "sequence: " << thisRead->readSeq << std::endl;
+                      std::cout << "readBase: " << thisRead->readSeq[i-1] << "[" << readBase << "]" << thisRead->readSeq[i+1] << std::endl;
+                      std::cout << "readQual[i]: " << thisRead->readQual[i] << "; score: " << int(thisRead->readQual[i])-33 << std::endl;
+                      std::cout << "readPos: " << thisRead->readPos << std::endl;
+                      std::cout << "i: " << i << std::endl;
+                      std::cout << "readPos + i: " << thisRead->readPos + i << std::endl;
+                      std::cout << "phasedSNPbases[0]: " << phasedSNPbases[0] << std::endl;
+                      std::cout << "phasedSNPbases[1]: " << phasedSNPbases[1] << std::endl; */
+                    numMismatch++;
+                    mismatchBaseScores.push_back(thisHet->thisBaseQuality);
+                } else {
+                    // std::cout << "Fine: " << std::endl;
+                     matchBaseScores.push_back(thisHet->thisBaseQuality);
+                     numMatch++;
+                }
+            }
+            
+            if (goodReadPairs[r]->hetSites.size() > 1) {
+                int phaseOfPrevious; int posOfPrevious; bool allConcordant = true;
+                if (goodReadPairs[r]->hetSites[0]->thisBase == goodReadPairs[r]->hetSites[0]->thisHetPhase0) phaseOfPrevious = 0;
+                if (goodReadPairs[r]->hetSites[0]->thisBase == goodReadPairs[r]->hetSites[0]->thisHetPhase1) phaseOfPrevious = 1;
+                for (int i = 1; i < goodReadPairs[r]->hetSites.size(); i++) {
+                    int phaseThis;
+                    if (goodReadPairs[r]->hetSites[i]->thisBase == goodReadPairs[r]->hetSites[i]->thisHetPhase0) phaseThis = 0;
+                    if (goodReadPairs[r]->hetSites[i]->thisBase == goodReadPairs[r]->hetSites[i]->thisHetPhase1) phaseThis = 1;
+                    
+                    if (phaseThis != phaseOfPrevious) {
+                        allConcordant = false;
+                        PhaseSwitch* thisSwitch = new PhaseSwitch(goodReadPairs[r]->hetSites[i-1]->pos, goodReadPairs[r]->hetSites[i]->pos, goodReadPairs[r]->hetSites[i-1]->thisPhaseQuality, goodReadPairs[r]->hetSites[i]->thisPhaseQuality);
+                        phaseSwitches.push_back(thisSwitch);
+                    }
+                    posOfPrevious = goodReadPairs[r]->hetSites[i]->pos;
+                    phaseOfPrevious = phaseThis;
+                }
+                if (allConcordant == false) numDiscordant++;
+                else numConcordant++;
+            }
+        }
+        std::cout << "numConcordant: " << numConcordant << std::endl;
+        std::cout << "numDiscordant: " << numDiscordant << std::endl;
+        
+        std::cout << "numMatch: " << numMatch << std::endl;
+        std::cout << "numMismatch: " << numMismatch << std::endl;
+        std::cout << "Mean mismatchBaseScores: " << vector_average(mismatchBaseScores) << std::endl;
+        std::cout << "Mean matchBaseScores: " << vector_average(matchBaseScores) << std::endl;
+        
+        for (int i = 0; i != phaseSwitches.size(); i++) {
+            *phaseSwitchFile << phaseSwitches[i]->posLeft << "\t" << phaseSwitches[i]->posRight << "\t" << phaseSwitches[i]->dist << "\t" << phaseSwitches[i]->phaseQualLeft << "\t" << phaseSwitches[i]->phaseQualRight << std::endl;
+        }
+        
+    } else {
+        for (int r = 0; r < goodReadPairs.size(); r++) {
+            if (goodReadPairs[r]->hetSites.size() > 1) {
+                for (int i = 0; i < goodReadPairs[r]->hetSites.size() - 1; i++) {
+                    for (int j = 1; j < goodReadPairs[r]->hetSites.size() - 1; j++) {
+                        char readBase1 = goodReadPairs[r]->hetSites[i]->thisBase;
+                        char readBase2 = goodReadPairs[r]->hetSites[j]->thisBase;
+                        int pos1 = goodReadPairs[r]->hetSites[i]->pos;
+                        int pos2 = goodReadPairs[r]->hetSites[j]->pos;
+                        string pairIndex = numToString(pos1)+"_"+numToString(pos2);
+                        if (!SNPpairs.count(pairIndex)) {
+                            SNPpairs[pairIndex] = new ReadLinkSNPpair(pos1,pos2,readBase1,readBase2);
+                        } else {
+                            SNPpairs[pairIndex]->base1.push_back(readBase1);
+                            SNPpairs[pairIndex]->base1.push_back(readBase2);
+                        }
+                    }
+                }
+            }
+        }
+        std::cout << "goodReadPairs.size(): " << goodReadPairs.size() << std::endl;
+        std::cout << "SNPpairs.size(): " << SNPpairs.size() << std::endl;
+        
     }
     
     return 0;
