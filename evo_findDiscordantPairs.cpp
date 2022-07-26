@@ -60,7 +60,7 @@ namespace opt
     static string pairtoolsFile;
     static string runName = "";
     static int minMQ = 20;
-    static int minBQ = 30;
+    static int minBQ = 10;
     static int minPQ = 30;
 }
 
