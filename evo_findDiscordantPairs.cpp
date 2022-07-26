@@ -216,11 +216,17 @@ int DiscordPairsMain(int argc, char** argv) {
     std::vector<double> concordantBaseScores; std::vector<double> discordantBaseScores;
     std::vector<PhaseSwitch*> phaseSwitches;
     
+    int numFullLenghtReadPairs = 0;
+    
     for (int r = 0; r < goodReadPairs.size(); r++) {
         
         goodReadPairs[r]->findAndCombinePairHets(positionToPhase);
         goodReadPairs[r]->filterHetsByQuality(opt::minBQ);
         //std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
+        
+        if (goodReadPairs[r]->read1->CIGAR == "151M" && goodReadPairs[r]->read2->CIGAR == "151M") {
+            numFullLenghtReadPairs++;
+        }
         
     }
     
@@ -303,6 +309,7 @@ int DiscordPairsMain(int argc, char** argv) {
         }
         std::cout << "goodReadPairs.size(): " << goodReadPairs.size() << std::endl;
         std::cout << "SNPpairs.size(): " << SNPpairs.size() << std::endl;
+        std::cout << "numFullLenghtReadPairs: " << numFullLenghtReadPairs << std::endl;
         
     }
     
