@@ -285,7 +285,7 @@ int DiscordPairsMain(int argc, char** argv) {
         for (int r = 0; r < goodReadPairs.size(); r++) {
             if (goodReadPairs[r]->hetSites.size() > 1) {
                 for (int i = 0; i < goodReadPairs[r]->hetSites.size() - 1; i++) {
-                    for (int j = 1; j < goodReadPairs[r]->hetSites.size() - 1; j++) {
+                    for (int j = 1; j < goodReadPairs[r]->hetSites.size(); j++) {
                         char readBase1 = goodReadPairs[r]->hetSites[i]->thisBase;
                         char readBase2 = goodReadPairs[r]->hetSites[j]->thisBase;
                         int pos1 = goodReadPairs[r]->hetSites[i]->pos;
