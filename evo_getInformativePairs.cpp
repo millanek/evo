@@ -95,16 +95,27 @@ int InfoPairsMain(int argc, char** argv) {
         
         int phasedHetsOnPair = 0;
         
+        std::vector<int> hetPosVec;
+        
         for (int i = 0; i < posCovered1.size(); i++) {
-            if (phasedHetsPos.count(posCovered1[i]) == 1) phasedHetsOnPair++;
+            if (phasedHetsPos.count(posCovered1[i]) == 1) {
+                phasedHetsOnPair++;
+                hetPosVec.push_back(posCovered1[i]);
+            }
         }
         
         for (int i = 0; i < posCovered2.size(); i++) {
-            if (phasedHetsPos.count(posCovered2[i]) == 1) phasedHetsOnPair++;
+            if (phasedHetsPos.count(posCovered2[i]) == 1) {
+                phasedHetsOnPair++;
+                hetPosVec.push_back(posCovered2[i]);
+            }
         }
         
         if (phasedHetsOnPair > 1) {
             std::cout << line << std::endl;
+            std::cerr << "pair1pos: " << pair1pos << " ; pair2pos: " << pair2pos << std::endl;
+            std::cerr << "pair1strand: " << pair1strand << " ; pair2strand: " << pair2strand << std::endl;
+            print_vector(hetPosVec, std::cerr);
         }
         
     }
