@@ -217,6 +217,7 @@ int DiscordPairsMain(int argc, char** argv) {
     std::vector<PhaseSwitch*> phaseSwitches;
     
     int numFullLenghtReadPairs = 0;
+    int totalUsedLength = 0;
     
     for (int r = 0; r < goodReadPairs.size(); r++) {
         
@@ -227,6 +228,9 @@ int DiscordPairsMain(int argc, char** argv) {
         if (goodReadPairs[r]->read1->CIGAR == "151M" && goodReadPairs[r]->read2->CIGAR == "151M") {
             numFullLenghtReadPairs++;
         }
+        
+        totalUsedLength = totalUsedLength + goodReadPairs[r]->read1->usedLength;
+        totalUsedLength = totalUsedLength + goodReadPairs[r]->read2->usedLength;
         
     }
     
@@ -310,7 +314,8 @@ int DiscordPairsMain(int argc, char** argv) {
         std::cout << "goodReadPairs.size(): " << goodReadPairs.size() << std::endl;
         std::cout << "SNPpairs.size(): " << SNPpairs.size() << std::endl;
         std::cout << "numFullLenghtReadPairs: " << numFullLenghtReadPairs << std::endl;
-        
+        std::cout << "totalUsedLength: " << totalUsedLength << std::endl;
+        std::cout << "totalUsedLength/(goodReadPairs.size()*300): " << (double)totalUsedLength/(double)(goodReadPairs.size()*300) << std::endl;
     }
     
     return 0;
@@ -344,6 +349,8 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(std::map<int,PhaseInfo*>& posit
             }
         }
     }
+    usedLength = (int)readSeq.length();
+    
     return hetsOnThisRead;
 }
 

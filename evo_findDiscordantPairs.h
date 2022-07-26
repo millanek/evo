@@ -110,6 +110,8 @@ class RecombRead {
     std::vector<int> GIGARnums; std::vector<char> GIGARtypes;
     std::vector<int> GIGARnumsNoSI;
     
+    int usedLength;
+    
     std::vector<HetInfo*> findHetsInRead(std::map<int,PhaseInfo*>& positionToPhase);
     
     private:
