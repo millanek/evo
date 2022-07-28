@@ -175,6 +175,7 @@ int DiscordPairsMain(int argc, char** argv) {
         } else {
             adjusted5pReadPos = thisRead->readPos;
         }
+        thisRead->adjustedReadPos = adjusted5pReadPos;
         
         string readSeq; string readQual;
         if(infoPairNameToPos.count(thisRead->readName) != 1) {
@@ -230,9 +231,11 @@ int DiscordPairsMain(int argc, char** argv) {
             std::cout << "goodReadPairs[r]->read1->readPos: " << goodReadPairs[r]->read1->readPos << std::endl;
             std::cout << "goodReadPairs[r]->read1->readStrand: " << goodReadPairs[r]->read1->readStrand << std::endl;
             std::cout << "goodReadPairs[r]->read1->usedLength: " << goodReadPairs[r]->read1->usedLength << std::endl;
+            std::cout << "goodReadPairs[r]->read1->adjustedReadPos: " << goodReadPairs[r]->read1->adjustedReadPos << std::endl;
             std::cout << "goodReadPairs[r]->read2->readPos: " << goodReadPairs[r]->read2->readPos << std::endl;
             std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read2->readStrand << std::endl;
             std::cout << "goodReadPairs[r]->read2->usedLength: " << goodReadPairs[r]->read2->usedLength << std::endl;
+            std::cout << "goodReadPairs[r]->read2->adjustedReadPos: " << goodReadPairs[r]->read2->adjustedReadPos << std::endl;
             std::cout <<  std::endl;
             //std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read1-> << std::endl;
         }

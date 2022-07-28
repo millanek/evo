@@ -104,7 +104,7 @@ class RecombRead {
     };
     
     int flag;
-    string readStrand; string readName; int readPos;
+    string readStrand; string readName; int readPos; int adjustedReadPos;
     string readSeq; string readQual;
     int MQ; string CIGAR;
     std::vector<int> GIGARnums; std::vector<char> GIGARtypes;
