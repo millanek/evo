@@ -218,12 +218,14 @@ int DiscordPairsMain(int argc, char** argv) {
     
     int numFullLenghtReadPairs = 0;
     int totalUsedLength = 0;
+    std::vector<int> numHets;
     
     for (int r = 0; r < goodReadPairs.size(); r++) {
         
         goodReadPairs[r]->findAndCombinePairHets(positionToPhase);
         goodReadPairs[r]->filterHetsByQuality(opt::minBQ);
-        //std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
+        
+        std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
         
         if (goodReadPairs[r]->read1->CIGAR == "151M" && goodReadPairs[r]->read2->CIGAR == "151M") {
             numFullLenghtReadPairs++;
