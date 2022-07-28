@@ -260,6 +260,7 @@ int DiscordPairsMain(int argc, char** argv) {
         
     }
     
+    std::cout << "goodReadPairs.size(): " << goodReadPairs.size() << std::endl;
     std::cout << "num0het: " << num0het << std::endl;
     std::cout << "num1het: " << num1het << std::endl;
     std::cout << "num2hets: " << num2hets << std::endl;
@@ -342,7 +343,6 @@ int DiscordPairsMain(int argc, char** argv) {
                 }
             }
         }
-        std::cout << "goodReadPairs.size(): " << goodReadPairs.size() << std::endl;
         std::cout << "SNPpairs.size(): " << SNPpairs.size() << std::endl;
         std::cout << "numFullLenghtReadPairs: " << numFullLenghtReadPairs << std::endl;
         std::cout << "totalUsedLength: " << totalUsedLength << std::endl;
