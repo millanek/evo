@@ -220,6 +220,7 @@ int DiscordPairsMain(int argc, char** argv) {
     int numFullLenghtReadPairs = 0;
     int totalUsedLength = 0;
     std::vector<int> numHets;
+    int num0het = 0; int num1het = 0; int num2hets = 0; int num3hets = 0;
     
     for (int r = 0; r < goodReadPairs.size(); r++) {
         
@@ -227,7 +228,8 @@ int DiscordPairsMain(int argc, char** argv) {
         goodReadPairs[r]->filterHetsByQuality(opt::minBQ);
         
         if (goodReadPairs[r]->hetSites.size() == 0) {
-            std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
+            num0het++;
+           /* std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
             std::cout << "goodReadPairs[r]->read1->readPos: " << goodReadPairs[r]->read1->readPos << std::endl;
             std::cout << "goodReadPairs[r]->read1->readStrand: " << goodReadPairs[r]->read1->readStrand << std::endl;
             std::cout << "goodReadPairs[r]->read1->usedLength: " << goodReadPairs[r]->read1->usedLength << std::endl;
@@ -239,7 +241,13 @@ int DiscordPairsMain(int argc, char** argv) {
             std::cout << "goodReadPairs[r]->read2->adjustedReadPos: " << goodReadPairs[r]->read2->adjustedReadPos << std::endl;
             std::cout << "goodReadPairs[r]->read2->CIGAR: " << goodReadPairs[r]->read2->CIGAR << std::endl;
             std::cout <<  std::endl;
-            //std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read1-> << std::endl;
+            //std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read1-> << std::endl; */
+        } else if (goodReadPairs[r]->hetSites.size() == 1) {
+            num1het++;
+        } else if (goodReadPairs[r]->hetSites.size() == 2) {
+            num2hets++;
+        } else if (goodReadPairs[r]->hetSites.size() == 3) {
+            num3hets++;
         }
         
         /* Just debug
@@ -251,6 +259,11 @@ int DiscordPairsMain(int argc, char** argv) {
         totalUsedLength = totalUsedLength + goodReadPairs[r]->read2->usedLength;
         
     }
+    
+    std::cout << "num0het: " << num0het << std::endl;
+    std::cout << "num1het: " << num1het << std::endl;
+    std::cout << "num2hets: " << num2hets << std::endl;
+    std::cout << "num3hets: " << num3hets << std::endl;
     
     if (opt::hapcutFormat) {
         
