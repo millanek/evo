@@ -187,11 +187,11 @@ int DiscordPairsMain(int argc, char** argv) {
                     samNameToReads[thisRead->readName].push_back(thisRead);
                    // std::cout << "Good" << std::endl;
                 } else {
-                   // std::cout << "Bad" << "\t" << adjusted5pReadPos << "\t" << pairPosVec[0] << "\t" << pairPosVec[1] << std::endl;
-                   // std::cout << "CIGAR: " << CIGAR << std::endl;
-                   // print_vector(GIGARnums, std::cout);
-                   // std::cout << "CIGARlengthTotal: " << CIGARlengthTotal << std::endl;
-                   // std::cout << "readStrand: " << readStrand << std::endl;
+                    std::cout << "Bad" << "\t" << adjusted5pReadPos << "\t" << pairPosVec[0] << "\t" << pairPosVec[1] << std::endl;
+                    std::cout << "CIGAR: " << thisRead->CIGAR << std::endl;
+                    print_vector(thisRead->GIGARnums, std::cout);
+                    std::cout << "CIGARlengthTotal: " << CIGARlengthTotal << std::endl;
+                    std::cout << "readStrand: " << thisRead->readStrand << std::endl;
                 }
             }
         }
