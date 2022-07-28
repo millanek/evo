@@ -225,11 +225,19 @@ int DiscordPairsMain(int argc, char** argv) {
         goodReadPairs[r]->findAndCombinePairHets(positionToPhase);
         goodReadPairs[r]->filterHetsByQuality(opt::minBQ);
         
-        std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
-        
-        if (goodReadPairs[r]->read1->CIGAR == "151M" && goodReadPairs[r]->read2->CIGAR == "151M") {
-            numFullLenghtReadPairs++;
+        if (goodReadPairs[r]->hetSites.size() == 0) {
+            std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
+            std::cout << "goodReadPairs[r]->read1->readPos: " << goodReadPairs[r]->read1->readPos << std::endl;
+            std::cout << "goodReadPairs[r]->read1->readStrand: " << goodReadPairs[r]->read1->readStrand << std::endl;
+            std::cout << "goodReadPairs[r]->read2->readPos: " << goodReadPairs[r]->read2->readPos << std::endl;
+            std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read2->readStrand << std::endl;
+            //std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read1-> << std::endl;
         }
+        
+        /* Just debug
+         if (goodReadPairs[r]->read1->CIGAR == "151M" && goodReadPairs[r]->read2->CIGAR == "151M") {
+            numFullLenghtReadPairs++;
+        } */
         
         totalUsedLength = totalUsedLength + goodReadPairs[r]->read1->usedLength;
         totalUsedLength = totalUsedLength + goodReadPairs[r]->read2->usedLength;
