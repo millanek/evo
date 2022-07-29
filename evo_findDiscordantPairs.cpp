@@ -206,7 +206,7 @@ int DiscordPairsMain(int argc, char** argv) {
             RecombReadPair* thisReadPair = new RecombReadPair(it->second[0], it->second[1]);
             goodReadPairs.push_back(thisReadPair);
         } else {
-            std::cout << "it->second.size(): " << it->second.size() << std::endl;
+            // std::cout << "it->second.size(): " << it->second.size() << std::endl;
         }
     }
     std::sort(goodReadPairs.begin(), goodReadPairs.end());
@@ -248,7 +248,9 @@ int DiscordPairsMain(int argc, char** argv) {
             num1het++;
         } else {
             num2plusHets++;
-            *goodReadPairsFile << goodReadPairs[r]->read1->readPos << "\t" << goodReadPairs[r]->read2->readPos << std::endl;
+            if(goodReadPairs[r]->read1->hetSites.size() >= 1 && goodReadPairs[r]->read2->hetSites.size() >= 1) {
+                *goodReadPairsFile << goodReadPairs[r]->read1->readPos << "\t" << goodReadPairs[r]->read2->readPos << std::endl;
+            }
         }
         
         /* Just debug
@@ -419,14 +421,14 @@ void RecombRead::generateCIGARvectors() {
 }
 
 void RecombReadPair::findAndCombinePairHets(std::map<int,PhaseInfo*>& positionToPhase) {
-    std::vector<HetInfo*> hetsRead1 = read1->findHetsInRead(positionToPhase);
-    std::vector<HetInfo*> hetsRead2 = read2->findHetsInRead(positionToPhase);
+    read1->hetSites = read1->findHetsInRead(positionToPhase);
+    read2->hetSites = read2->findHetsInRead(positionToPhase);
     
-    if (hetsRead1.size() > 0) hetSites = hetsRead1;
+    if (read1->hetSites.size() > 0) hetSites = read1->hetSites;
     
-    if (hetsRead2.size() > 0) {
-        if (hetSites.size() == 0) hetSites = hetsRead2;
-        else hetSites.insert(hetSites.end(), hetsRead2.begin(), hetsRead2.end());
+    if (read2->hetSites.size() > 0) {
+        if (hetSites.size() == 0) hetSites = read2->hetSites;
+        else hetSites.insert(hetSites.end(), read2->hetSites.begin(), read2->hetSites.end());
     }
 }
 
