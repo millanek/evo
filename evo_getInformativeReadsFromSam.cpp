@@ -111,7 +111,7 @@ int InfoReadsMain(int argc, char** argv) {
         }
     }
     
-    std::cerr << "Finished reading het sites..." << std::endl;
+    std::cerr << "Finished reading het sites. There are " << positionToPhase.size() << " hets." << std::endl;
     std::cerr << "Processing reads:" << std::endl;
     
     int readsProcessed = 0;
@@ -129,7 +129,6 @@ int InfoReadsMain(int argc, char** argv) {
         int MQ = atoi(samRecVec[4].c_str());
         if (MQ < opt::minMQ) continue;
         
-        std::cerr << "Here" << std::endl;
         
         RecombRead* thisRead = new RecombRead(samRecVec);
         
