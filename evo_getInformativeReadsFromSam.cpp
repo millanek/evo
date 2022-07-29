@@ -111,8 +111,16 @@ int InfoReadsMain(int argc, char** argv) {
         }
     }
     
+    std::cerr << "Finished reading het sites..." << std::endl;
+    std::cerr << "Processing reads:" << std::endl;
+    
+    int readsProcessed = 0;
     // Now parse the pairtools file to find read pairs that can be informative about the phasing and recombination
     while (getline(*samtoolsFile,line)) {
+        readsProcessed++;
+        if (readsProcessed % 100000 == 0) {
+            std::cerr << "Processed " << readsProcessed << " reads:" << std::endl;
+        }
         // std::cerr << line << std::endl;
         std::vector<string> samRecVec = split(line, '\t'); //assert(pairVec.size() == 8);
         int flag = atoi(samRecVec[1].c_str());
