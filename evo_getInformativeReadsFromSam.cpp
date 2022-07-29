@@ -17,7 +17,8 @@
 // 161 - Paired, second in pair, + strand
 // 177 - Paired, second in pair, - strand
 // >2000 - secondary alignment
-// 73 - Paired, mate unmapped, + strand
+// 73 -     Paired, mate unmapped, + strand
+// 185 -    Paired, mate unmapped, mate - strand, - strand
 
 
 #include "evo_getInformativeReadsFromSam.h"

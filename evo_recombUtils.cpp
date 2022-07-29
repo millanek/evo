@@ -43,7 +43,7 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(std::map<int,PhaseInfo*>& posit
 
 string RecombRead::assignStrandFromFlag() {
     string strand = "?";
-    if (flag == 81 || flag == 113 || flag == 145 || flag == 177) {
+    if (flag == 81 || flag == 113 || flag == 145 || flag == 177 || flag == 185) {
         strand = "-";
     } else if (flag == 65 || flag == 73 || flag == 97 || flag == 129 || flag == 161) {
         strand = "+";
