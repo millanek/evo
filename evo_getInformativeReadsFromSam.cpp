@@ -132,7 +132,7 @@ int InfoReadsMain(int argc, char** argv) {
         
         RecombRead* thisRead = new RecombRead(samRecVec);
         
-        thisRead->findHetsInRead(positionToPhase);
+        thisRead->hetSites = thisRead->findHetsInRead(positionToPhase);
         
         if (thisRead->hetSites.size() > 0) {
             std::cout << line << std::endl;
