@@ -45,7 +45,7 @@ string RecombRead::assignStrandFromFlag() {
     string strand = "?";
     if (flag == 81 || flag == 113 || flag == 145 || flag == 177) {
         strand = "-";
-    } else if (flag == 65 || flag == 97 || flag == 129 || flag == 161) {
+    } else if (flag == 65 || flag == 73 || flag == 97 || flag == 129 || flag == 161) {
         strand = "+";
     } else {
         std::cerr << "Unexpected read flag: " << flag << std::endl;
