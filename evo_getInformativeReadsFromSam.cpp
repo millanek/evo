@@ -17,7 +17,8 @@
 // 161 - Paired, second in pair, + strand
 // 177 - Paired, second in pair, - strand
 // >2000 - secondary alignment
-// 73 -     Paired, mate unmapped, + strand
+// 73 -     Paired, mate unmapped, first in pair, + strand
+// 137 -    Paired, mate unmapped, second in pair, + strand
 // 185 -    Paired, mate unmapped, mate - strand, second in pair, - strand
 // 121 -    Paired, mate unmapped, mate - strand, first in pair, - strand
 
