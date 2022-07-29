@@ -140,6 +140,7 @@ int InfoReadsMain(int argc, char** argv) {
         if (thisRead->hetSites.size() > 0) {
             std::cout << line << std::endl;
         }
+        delete thisRead;
     }
     
     return 0;
