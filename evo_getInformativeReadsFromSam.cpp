@@ -119,7 +119,7 @@ int InfoReadsMain(int argc, char** argv) {
     while (getline(*samtoolsFile,line)) {
         readsProcessed++;
         if (readsProcessed % 100000 == 0) {
-            std::cerr << "Processed " << readsProcessed << " reads:" << std::endl;
+            std::cerr << "Processed " << readsProcessed << " reads" << std::endl;
         }
         // std::cerr << line << std::endl;
         std::vector<string> samRecVec = split(line, '\t'); //assert(pairVec.size() == 8);
@@ -129,6 +129,7 @@ int InfoReadsMain(int argc, char** argv) {
         int MQ = atoi(samRecVec[4].c_str());
         if (MQ < opt::minMQ) continue;
         
+        std::cerr << "Here" << std::endl;
         
         RecombRead* thisRead = new RecombRead(samRecVec);
         
