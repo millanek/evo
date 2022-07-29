@@ -76,6 +76,7 @@ int DiscordPairsMain(int argc, char** argv) {
     std::ifstream* samFile = new std::ifstream(opt::samFile.c_str());
     
     std::ofstream* phaseSwitchFile = new std::ofstream("switches" + opt::runName + ".txt");
+    std::ofstream* goodReadPairsFile = new std::ofstream("goodReadPairs" + opt::runName + ".txt");
     
     std::map<int,PhaseInfo*> positionToPhase;
     std::map<string,std::vector<int>> infoPairNameToPos;
@@ -181,7 +182,7 @@ int DiscordPairsMain(int argc, char** argv) {
         if(infoPairNameToPos.count(thisRead->readName) != 1) {
             std::cerr << "Not in info pair file: " << thisRead->readName << std::endl;
         } else {
-            if (thisRead->MQ > 20) {
+            if (thisRead->MQ > opt::minMQ) {
                 std::vector<int> pairPosVec = infoPairNameToPos.at(thisRead->readName);
                 if (adjusted5pReadPos == pairPosVec[0] || adjusted5pReadPos == pairPosVec[1]) {
                     samNameToReads[thisRead->readName].push_back(thisRead);
@@ -198,7 +199,7 @@ int DiscordPairsMain(int argc, char** argv) {
     }
     
     int goodPairs = 0;
-    std::vector<RecombReadPair*> goodReadPairs;
+    std::vector<RecombReadPair*> goodReadPairs; goodReadPairs.reserve(samNameToReads.size());
     for (std::map<string,std::vector<RecombRead*>>::iterator it = samNameToReads.begin(); it != samNameToReads.end(); it++) {
         if (it->second.size() == 2) {
             goodPairs++;
@@ -208,6 +209,7 @@ int DiscordPairsMain(int argc, char** argv) {
             std::cout << "it->second.size(): " << it->second.size() << std::endl;
         }
     }
+    std::sort(goodReadPairs.begin(), goodReadPairs.end());
     
     
     
@@ -220,7 +222,7 @@ int DiscordPairsMain(int argc, char** argv) {
     int numFullLenghtReadPairs = 0;
     int totalUsedLength = 0;
     std::vector<int> numHets;
-    int num0het = 0; int num1het = 0; int num2hets = 0; int num3hets = 0;
+    int num0het = 0; int num1het = 0; int num2plusHets = 0;
     
     for (int r = 0; r < goodReadPairs.size(); r++) {
         
@@ -244,10 +246,9 @@ int DiscordPairsMain(int argc, char** argv) {
             //std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read1-> << std::endl; */
         } else if (goodReadPairs[r]->hetSites.size() == 1) {
             num1het++;
-        } else if (goodReadPairs[r]->hetSites.size() == 2) {
-            num2hets++;
-        } else if (goodReadPairs[r]->hetSites.size() == 3) {
-            num3hets++;
+        } else {
+            num2plusHets++;
+            *goodReadPairsFile << goodReadPairs[r]->read1->readPos << "\t" << goodReadPairs[r]->read2->readPos << std::endl;
         }
         
         /* Just debug
@@ -263,8 +264,7 @@ int DiscordPairsMain(int argc, char** argv) {
     std::cout << "goodReadPairs.size(): " << goodReadPairs.size() << std::endl;
     std::cout << "num0het: " << num0het << std::endl;
     std::cout << "num1het: " << num1het << std::endl;
-    std::cout << "num2hets: " << num2hets << std::endl;
-    std::cout << "num3hets: " << num3hets << std::endl;
+    std::cout << "num2plusHets: " << num2plusHets << std::endl;
     
     if (opt::hapcutFormat) {
         

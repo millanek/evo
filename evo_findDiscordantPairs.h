@@ -103,6 +103,11 @@ class RecombRead {
         generateCIGARvectors();
     };
     
+    bool operator< (const RecombRead &other) const {
+            return readPos < other.readPos;
+    }
+    
+    
     int flag;
     string readStrand; string readName; int readPos; int adjustedReadPos;
     string readSeq; string readQual;
@@ -147,9 +152,20 @@ class PhaseSwitch {
 class RecombReadPair {
     public:
     RecombReadPair(RecombRead* r1, RecombRead* r2) {
-        read1 = r1;
-        read2 = r2;
+        if (r1 < r2) {
+            read1 = r1;
+            read2 = r2;
+        } else {
+            read1 = r2;
+            read2 = r1;
+        }
     };
+    
+    bool operator< (const RecombReadPair &other) const {
+            return read1->readPos < other.read1->readPos;
+    }
+    
+    
     
     RecombRead* read1;
     RecombRead* read2;
