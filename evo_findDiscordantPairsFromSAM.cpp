@@ -324,11 +324,11 @@ void parseDiscordPairsFromSAMOptions(int argc, char** argv) {
         }
     }
     
-    if (argc - optind < 3) {
+    if (argc - optind < 2) {
         std::cerr << "missing arguments\n";
         die = true;
     }
-    else if (argc - optind > 3)
+    else if (argc - optind > 2)
     {
         std::cerr << "too many arguments\n";
         die = true;
