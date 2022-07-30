@@ -73,6 +73,7 @@ int InfoReadsMain(int argc, char** argv) {
     
     std::unordered_set<int> phasedHetsPos;
     std::map<int,PhaseInfo*> positionToPhase;
+    std::map<string,std::vector<string> > readNameToSamRecords;
     
     
     if (opt::hapcutFormat) {
@@ -138,9 +139,16 @@ int InfoReadsMain(int argc, char** argv) {
         thisRead->hetSites = thisRead->findHetsInRead(positionToPhase);
         
         if (thisRead->hetSites.size() > 0) {
-            std::cout << line << std::endl;
+            readNameToSamRecords[thisRead->readName].push_back(line);
         }
         delete thisRead;
+    }
+    
+    for (std::map<string,std::vector<string>>::iterator it = readNameToSamRecords.begin(); it != readNameToSamRecords.end(); it++) {
+        if (it->second.size() > 1) {
+            std::cout << it->second[0] << std::endl;
+            std::cout << it->second[1] << std::endl;
+        }
     }
     
     return 0;
