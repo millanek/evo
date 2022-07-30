@@ -54,6 +54,7 @@
 #include "evo_getInformativePairs.h"
 #include "evo_findDiscordantPairs.h"
 #include "evo_getInformativeReadsFromSam.h"
+#include "evo_findDiscordantPairsFromSAM.h"
 
 
 //#define TESTING 1
@@ -116,6 +117,7 @@ static const char *USAGE_MESSAGE =
 "           AnnotationPreformat Extract CDS coordinates from ANNOTATION.gtf for use in 'getCodingSeq'\n"
 "           InfoPairs           \n"
 "           DiscordantPairs           \n"
+"           DiscordantPairsFromSAM \n"
 "           InfoReadsSam            \n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
@@ -230,6 +232,8 @@ int main(int argc, char **argv) {
             DiscordPairsMain(argc - 1, argv + 1);
         else if (command == "InfoReadsSam")
             InfoReadsMain(argc - 1, argv + 1);
+        else if (command == "DiscordantPairsFromSAM")
+            DiscordPairsFromSAMMain(argc - 1, argv + 1);
         else
         {
             std::cerr << "Unrecognized command: " << command << "\n";
