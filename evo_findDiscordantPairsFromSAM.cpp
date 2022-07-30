@@ -190,7 +190,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             num1het++;
         } else {
             num2plusHets++;
-            if(goodReadPairs[r]->read1->hetSites.size() >= 1 && goodReadPairs[r]->read2->hetSites.size() >= 1) {
+            if(informativeReadPairs[r]->read1->hetSites.size() >= 1 && informativeReadPairs[r]->read2->hetSites.size() >= 1) {
                 *goodReadPairsFile << informativeReadPairs[r]->read1->readPos << "\t" << informativeReadPairs[r]->read2->readPos << std::endl;
             }
         }
