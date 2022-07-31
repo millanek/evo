@@ -10,11 +10,11 @@
 
 void RecombRead::findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead, const string& matchSeq, int startPos, const std::map<int,PhaseInfo*>& positionToPhase) {
     for (int i = 0; i < matchSeq.length(); i++) {
-        if (positionToPhase.count(readPos + i) == 1) {
-            PhaseInfo* thisHetPhase = positionToPhase.at(readPos + i);
+        if (positionToPhase.count(startPos + i) == 1) {
+            PhaseInfo* thisHetPhase = positionToPhase.at(startPos + i);
             std::vector<char> phasedSNPbases = thisHetPhase->phasedVars;
             char readBase = matchSeq[i];
-            int snpPos = readPos + i;
+            int snpPos = startPos + i;
             HetInfo* het = new HetInfo(snpPos, readBase, int(readQual[i])-33, phasedSNPbases[0], phasedSNPbases[1], thisHetPhase->quality);
             hetsOnThisRead.push_back(het);
         }
@@ -36,11 +36,11 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>&
                 break;
                 
             case DELETION_CIGAR:
-                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+                startPos = startPos + GIGARnums[0];
                 break;
                 
             case INSERTION_CIGAR:
-                startPos = startPos + GIGARnums[0];
+                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
                 break;
                 
             case MATCH_CIGAR:
