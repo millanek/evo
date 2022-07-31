@@ -61,9 +61,6 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>&
         }
         
     }
-        
-        
-    }
     
     return hetsOnThisRead;
 }
