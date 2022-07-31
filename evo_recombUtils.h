@@ -17,6 +17,7 @@
 #define HARD_CLIP_CIGAR 'H'
 #define MATCH_CIGAR 'M'
 #define INSERTION_CIGAR 'I'
+#define DELETION_CIGAR 'D'
 
 class HetInfo {
     public:
@@ -115,11 +116,13 @@ class RecombRead {
     int usedLength;
     std::vector<HetInfo*> hetSites;
     
-    std::vector<HetInfo*> findHetsInRead(std::map<int,PhaseInfo*>& positionToPhase);
+    std::vector<HetInfo*> findHetsInRead(const std::map<int,PhaseInfo*>& positionToPhase);
     
     private:
         string assignStrandFromFlag();
         void generateCIGARvectors();
+        void findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead, const string& matchSeq, int startPos,
+                                      const std::map<int,PhaseInfo*>& positionToPhase);
 
 };
 

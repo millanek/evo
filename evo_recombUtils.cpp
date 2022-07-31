@@ -8,34 +8,62 @@
 
 #include "evo_recombUtils.h"
 
-std::vector<HetInfo*> RecombRead::findHetsInRead(std::map<int,PhaseInfo*>& positionToPhase) {
-    std::vector<HetInfo*> hetsOnThisRead;
-    if (GIGARtypes[0] == SOFT_CLIP_CIGAR) {
-        readSeq = readSeq.substr(GIGARnums[0]);
-        GIGARtypes.erase(GIGARtypes.begin());
-        GIGARnums.erase(GIGARnums.begin());
-    }
-
-    if (GIGARtypes[0] == HARD_CLIP_CIGAR) {
-        GIGARtypes.erase(GIGARtypes.begin());
-        GIGARnums.erase(GIGARnums.begin());
-    }
-
-    if (GIGARtypes[0] == MATCH_CIGAR) {
-        readSeq = readSeq.substr(0, GIGARnums[0]);
-        
-        for (int i = 0; i < readSeq.length(); i++) {
-            if (positionToPhase.count(readPos + i) == 1) {
-                PhaseInfo* thisHetPhase = positionToPhase.at(readPos + i);
-                std::vector<char> phasedSNPbases = thisHetPhase->phasedVars;
-                char readBase = readSeq[i];
-                int snpPos = readPos + i;
-                HetInfo* het = new HetInfo(snpPos, readBase, int(readQual[i])-33, phasedSNPbases[0], phasedSNPbases[1], thisHetPhase->quality);
-                hetsOnThisRead.push_back(het);
-            }
+void RecombRead::findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead, const string& matchSeq, int startPos, const std::map<int,PhaseInfo*>& positionToPhase) {
+    for (int i = 0; i < matchSeq.length(); i++) {
+        if (positionToPhase.count(readPos + i) == 1) {
+            PhaseInfo* thisHetPhase = positionToPhase.at(readPos + i);
+            std::vector<char> phasedSNPbases = thisHetPhase->phasedVars;
+            char readBase = matchSeq[i];
+            int snpPos = readPos + i;
+            HetInfo* het = new HetInfo(snpPos, readBase, int(readQual[i])-33, phasedSNPbases[0], phasedSNPbases[1], thisHetPhase->quality);
+            hetsOnThisRead.push_back(het);
         }
     }
-    usedLength = (int)readSeq.length();
+}
+
+std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>& positionToPhase) {
+    std::vector<HetInfo*> hetsOnThisRead;
+    
+    int startPos = readPos; string processedReadSeq = readSeq;
+    while (GIGARtypes.size() > 0) {
+        if (GIGARtypes[0] == SOFT_CLIP_CIGAR) {
+            readSeq = readSeq.substr(GIGARnums[0]);
+            GIGARtypes.erase(GIGARtypes.begin());
+            GIGARnums.erase(GIGARnums.begin());
+        }
+
+        if (GIGARtypes[0] == HARD_CLIP_CIGAR) {
+            GIGARtypes.erase(GIGARtypes.begin());
+            GIGARnums.erase(GIGARnums.begin());
+        }
+        
+        if (GIGARtypes[0] == MATCH_CIGAR) {
+            string matchSeq = processedReadSeq.substr(0, GIGARnums[0]);
+            findHetsInMatchingString(hetsOnThisRead, matchSeq, startPos, positionToPhase);
+            startPos = startPos + GIGARnums[0];
+            usedLength = usedLength + GIGARnums[0];
+            processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+            
+            GIGARtypes.erase(GIGARtypes.begin());
+            GIGARnums.erase(GIGARnums.begin());
+        }
+        
+        if (GIGARtypes[0] == DELETION_CIGAR) {
+            startPos = startPos + GIGARnums[0];
+            GIGARtypes.erase(GIGARtypes.begin());
+            GIGARnums.erase(GIGARnums.begin());
+        }
+        
+        if (GIGARtypes[0] == INSERTION_CIGAR) {
+            processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+            GIGARtypes.erase(GIGARtypes.begin());
+            GIGARnums.erase(GIGARnums.begin());
+        }
+        
+    }
+        
+        
+    }
     
     return hetsOnThisRead;
 }
