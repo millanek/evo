@@ -90,7 +90,7 @@ class ReadLinkSNPpair {
 
 class RecombRead {
     public:
-    RecombRead(const std::vector<string> samRecVec) {
+    RecombRead(const std::vector<string> samRecVec) : usedLength(0) {
         
         flag = atoi(samRecVec[1].c_str());
         readStrand = assignStrandFromFlag();
