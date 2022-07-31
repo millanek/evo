@@ -21,11 +21,12 @@
 
 class HetInfo {
     public:
-    HetInfo(int position, char readBase, int readBaseQuality, char phase0, char phase1, double phaseQuality) {
+    HetInfo(int position, char readBase, int readBaseQuality, char phase0, char phase1, double phaseQuality, int phaseBlockIn) {
         pos = position;
         thisBase = readBase; thisBaseQuality = readBaseQuality;
         thisHetPhase0 = phase0; thisHetPhase1 = phase1;
         thisPhaseQuality = phaseQuality;
+        phaseBlock = phaseBlockIn;
         
         if (thisBase != thisHetPhase0 && thisBase != thisHetPhase1) {
             readPhaseBaseMismatch = true;
@@ -35,6 +36,7 @@ class HetInfo {
     };
     
     int pos;
+    int phaseBlock;
     
     char thisBase;
     int thisBaseQuality;
@@ -51,16 +53,18 @@ class PhaseInfo {
     public:
     PhaseInfo() {};
     
-    PhaseInfo(int position, double qual, int cov, std::vector<char>& phasedVarsIn) {
+    PhaseInfo(int position, double qual, int cov, std::vector<char>& phasedVarsIn, int blockNumIn) {
         pos = position; quality = qual;
         coverage = cov;
         phasedVars = phasedVarsIn;
+        blockNum = blockNumIn;
     };
     
     int pos;
     std::vector<char> phasedVars;
     double quality;
     int coverage;
+    int blockNum;
     
 };
 

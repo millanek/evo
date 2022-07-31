@@ -15,7 +15,7 @@ void RecombRead::findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead,
             std::vector<char> phasedSNPbases = thisHetPhase->phasedVars;
             char readBase = matchSeq[i];
             int snpPos = startPos + i;
-            HetInfo* het = new HetInfo(snpPos, readBase, int(readQual[i])-33, phasedSNPbases[0], phasedSNPbases[1], thisHetPhase->quality);
+            HetInfo* het = new HetInfo(snpPos, readBase, int(readQual[i])-33, phasedSNPbases[0], phasedSNPbases[1], thisHetPhase->quality, thisHetPhase->blockNum);
             hetsOnThisRead.push_back(het);
         }
     }

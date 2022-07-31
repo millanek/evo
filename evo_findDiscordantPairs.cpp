@@ -87,12 +87,13 @@ int DiscordPairsMain(int argc, char** argv) {
     std::unordered_map<string, ReadLinkSNPpair*> SNPpairs;
     
     if (opt::hapcutFormat) {
+        int blockNum = 0;
         // Parse the Hapcut blocks file
         while (getline(*hetsFile, line)) {
             if (line[0] == '*') {
             
             } else if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
-                
+                blockNum++;
             } else {
                 std::vector<string> phasedSNPdetails = split(line, '\t');
                 int snpPos = atoi(phasedSNPdetails[4].c_str());
@@ -113,7 +114,7 @@ int DiscordPairsMain(int argc, char** argv) {
                 } else{
                     continue;
                 }
-                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
+                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,blockNum);
                 positionToPhase[snpPos] = thisPhase;
             }
         }
@@ -128,7 +129,7 @@ int DiscordPairsMain(int argc, char** argv) {
             std::vector<char> phasedVars;
             phasedVars.push_back(refBase); phasedVars.push_back(altBase);
             double phaseQual = 0; int snpCoverage = 0;
-            PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
+            PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,1);
             positionToPhase[snpPos] = thisPhase;
         }
         numHetPairs = nChoosek((int)positionToPhase.size(),2);

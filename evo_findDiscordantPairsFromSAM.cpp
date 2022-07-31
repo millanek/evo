@@ -74,7 +74,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::ifstream* samFile = new std::ifstream(opt::samFile.c_str());
     
     std::ofstream* phaseSwitchFile = new std::ofstream("switches" + opt::runName + ".txt");
-    std::ofstream* goodReadPairsFile = new std::ofstream("goodReadPairs" + opt::runName + ".txt");
     
     std::map<int,PhaseInfo*> positionToPhase;
     std::map<string,std::vector<int>> infoPairNameToPos;
@@ -85,12 +84,13 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::unordered_map<string, ReadLinkSNPpair*> SNPpairs;
     
     if (opt::hapcutFormat) {
+        int blockNum = 0;
         // Parse the Hapcut blocks file
         while (getline(*hetsFile, line)) {
             if (line[0] == '*') {
             
             } else if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
-                
+                blockNum++;
             } else {
                 std::vector<string> phasedSNPdetails = split(line, '\t');
                 int snpPos = atoi(phasedSNPdetails[4].c_str());
@@ -111,7 +111,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 } else{
                     continue;
                 }
-                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
+                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,blockNum);
                 positionToPhase[snpPos] = thisPhase;
             }
         }
@@ -126,7 +126,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             std::vector<char> phasedVars;
             phasedVars.push_back(refBase); phasedVars.push_back(altBase);
             double phaseQual = 0; int snpCoverage = 0;
-            PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
+            PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,1);
             positionToPhase[snpPos] = thisPhase;
         }
         numHetPairs = nChoosek((int)positionToPhase.size(),2);
@@ -173,26 +173,10 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         if (informativeReadPairs[r]->hetSites.size() == 0) {
             num0het++;
-           /* std::cout << "goodReadPairs[r]->hetSites.size(): " << goodReadPairs[r]->hetSites.size() << std::endl;
-            std::cout << "goodReadPairs[r]->read1->readPos: " << goodReadPairs[r]->read1->readPos << std::endl;
-            std::cout << "goodReadPairs[r]->read1->readStrand: " << goodReadPairs[r]->read1->readStrand << std::endl;
-            std::cout << "goodReadPairs[r]->read1->usedLength: " << goodReadPairs[r]->read1->usedLength << std::endl;
-            std::cout << "goodReadPairs[r]->read1->adjustedReadPos: " << goodReadPairs[r]->read1->adjustedReadPos << std::endl;
-            std::cout << "goodReadPairs[r]->read1->CIGAR: " << goodReadPairs[r]->read1->CIGAR << std::endl;
-            std::cout << "goodReadPairs[r]->read2->readPos: " << goodReadPairs[r]->read2->readPos << std::endl;
-            std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read2->readStrand << std::endl;
-            std::cout << "goodReadPairs[r]->read2->usedLength: " << goodReadPairs[r]->read2->usedLength << std::endl;
-            std::cout << "goodReadPairs[r]->read2->adjustedReadPos: " << goodReadPairs[r]->read2->adjustedReadPos << std::endl;
-            std::cout << "goodReadPairs[r]->read2->CIGAR: " << goodReadPairs[r]->read2->CIGAR << std::endl;
-            std::cout <<  std::endl;
-            //std::cout << "goodReadPairs[r]->read2->readStrand: " << goodReadPairs[r]->read1-> << std::endl; */
         } else if (informativeReadPairs[r]->hetSites.size() == 1) {
             num1het++;
         } else {
             num2plusHets++;
-            if(informativeReadPairs[r]->read1->hetSites.size() >= 1 && informativeReadPairs[r]->read2->hetSites.size() >= 1) {
-                *goodReadPairsFile << informativeReadPairs[r]->read1->readPos << "\t" << informativeReadPairs[r]->read2->readPos << std::endl;
-            }
         }
         
         /* Just debug
@@ -216,15 +200,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
            for (int i = 0; i < informativeReadPairs[r]->hetSites.size(); i++) {
                 HetInfo* thisHet = informativeReadPairs[r]->hetSites[i];
                 if (thisHet->readPhaseBaseMismatch) {
-                    /*  std::cout << "Bases don't match" << std::endl;
-                      std::cout << "sequence: " << thisRead->readSeq << std::endl;
-                      std::cout << "readBase: " << thisRead->readSeq[i-1] << "[" << readBase << "]" << thisRead->readSeq[i+1] << std::endl;
-                      std::cout << "readQual[i]: " << thisRead->readQual[i] << "; score: " << int(thisRead->readQual[i])-33 << std::endl;
-                      std::cout << "readPos: " << thisRead->readPos << std::endl;
-                      std::cout << "i: " << i << std::endl;
-                      std::cout << "readPos + i: " << thisRead->readPos + i << std::endl;
-                      std::cout << "phasedSNPbases[0]: " << phasedSNPbases[0] << std::endl;
-                      std::cout << "phasedSNPbases[1]: " << phasedSNPbases[1] << std::endl; */
                     numMismatch++;
                     mismatchBaseScores.push_back(thisHet->thisBaseQuality);
                 } else {
