@@ -36,11 +36,11 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>&
                 break;
                 
             case DELETION_CIGAR:
-                startPos = startPos + GIGARnums[0];
+                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
                 break;
                 
             case INSERTION_CIGAR:
-                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+                startPos = startPos + GIGARnums[0];
                 break;
                 
             case MATCH_CIGAR:
