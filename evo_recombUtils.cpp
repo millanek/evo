@@ -26,39 +26,35 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>&
     
     int startPos = readPos; string processedReadSeq = readSeq;
     while (GIGARtypes.size() > 0) {
-        if (GIGARtypes[0] == SOFT_CLIP_CIGAR) {
-            readSeq = readSeq.substr(GIGARnums[0]);
-            GIGARtypes.erase(GIGARtypes.begin());
-            GIGARnums.erase(GIGARnums.begin());
-        }
-
-        if (GIGARtypes[0] == HARD_CLIP_CIGAR) {
-            GIGARtypes.erase(GIGARtypes.begin());
-            GIGARnums.erase(GIGARnums.begin());
+        switch (GIGARtypes[0])
+        {
+            case SOFT_CLIP_CIGAR:
+                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+                break;
+                
+            case HARD_CLIP_CIGAR:
+                break;
+                
+            case DELETION_CIGAR:
+                startPos = startPos + GIGARnums[0];
+                break;
+                
+            case INSERTION_CIGAR:
+                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+                break;
+                
+            case MATCH_CIGAR:
+                string matchSeq = processedReadSeq.substr(0, GIGARnums[0]);
+                findHetsInMatchingString(hetsOnThisRead, matchSeq, startPos, positionToPhase);
+                startPos = startPos + GIGARnums[0];
+                usedLength = usedLength + GIGARnums[0];
+                processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
+                
+                break;
         }
         
-        if (GIGARtypes[0] == MATCH_CIGAR) {
-            string matchSeq = processedReadSeq.substr(0, GIGARnums[0]);
-            findHetsInMatchingString(hetsOnThisRead, matchSeq, startPos, positionToPhase);
-            startPos = startPos + GIGARnums[0];
-            usedLength = usedLength + GIGARnums[0];
-            processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
-            
-            GIGARtypes.erase(GIGARtypes.begin());
-            GIGARnums.erase(GIGARnums.begin());
-        }
-        
-        if (GIGARtypes[0] == DELETION_CIGAR) {
-            startPos = startPos + GIGARnums[0];
-            GIGARtypes.erase(GIGARtypes.begin());
-            GIGARnums.erase(GIGARnums.begin());
-        }
-        
-        if (GIGARtypes[0] == INSERTION_CIGAR) {
-            processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
-            GIGARtypes.erase(GIGARtypes.begin());
-            GIGARnums.erase(GIGARnums.begin());
-        }
+        GIGARtypes.erase(GIGARtypes.begin());
+        GIGARnums.erase(GIGARnums.begin());
         
     }
     
