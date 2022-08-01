@@ -136,7 +136,7 @@ int InfoReadsMain(int argc, char** argv) {
         
         RecombRead* thisRead = new RecombRead(samRecVec);
         
-        thisRead->hetSites = thisRead->findHetsInRead(positionToPhase);
+        thisRead->findHetsInRead(positionToPhase);
         
         if (thisRead->hetSites.size() > 0) {
             readNameToSamRecords[thisRead->readName].push_back(line);
