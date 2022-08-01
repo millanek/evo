@@ -193,12 +193,10 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
     
     if (opt::hapcutFormat) {
-        
-        std::vector<int> phaseBlocks;
+        int readPairsProcessed = 0;
         for (int r = 0; r < informativeReadPairs.size(); r++) {
            for (int i = 0; i < informativeReadPairs[r]->hetSites.size(); i++) {
                 HetInfo* thisHet = informativeReadPairs[r]->hetSites[i];
-               phaseBlocks.push_back(thisHet->phaseBlock);
                 if (thisHet->readPhaseBaseMismatch) {
                     numMismatch++;
                     mismatchBaseScores.push_back(thisHet->thisBaseQuality);
@@ -237,6 +235,10 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 phaseSwitches.push_back(thisPairSwitches[0]);
             } else {
                 numConcordant++;
+            }
+            readPairsProcessed++;
+            if (readPairsProcessed % 100 == 0) {
+                std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
             }
         }
         
