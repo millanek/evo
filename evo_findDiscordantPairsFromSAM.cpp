@@ -177,6 +177,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 }
             }
         }
+        delete thisReadPair;
     }
     
     std::cout << "Initial Read Pairs.size(): " << informativeReads.size()/2.0 << std::endl;
@@ -195,7 +196,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
     
     if (opt::hapcutFormat) {
-        int readPairsProcessed = 0; int maxHetsNum = 0;
         for (int r = 0; r < informativeReadPairs.size(); r++) {
             
            for (int i = 0; i < informativeReadPairs[r]->hetSites.size(); i++) {
@@ -245,7 +245,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             } else {
                 numConcordant++;
             }
-            readPairsProcessed++;
             /*if (readPairsProcessed % 100 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
                 std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
