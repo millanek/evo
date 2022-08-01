@@ -238,6 +238,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             if (readPairsProcessed % 100 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
                 std::cout << "thisPairSwitches.size(): " << thisPairSwitches.size() << std::endl;
+                std::cout << "phaseSwitches.size(): " << phaseSwitches.size() << std::endl;
             }
         }
         
