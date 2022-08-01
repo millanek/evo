@@ -177,7 +177,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 }
             }
         }
-        delete thisReadPair;
     }
     
     std::cout << "Initial Read Pairs.size(): " << informativeReads.size()/2.0 << std::endl;
