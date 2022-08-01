@@ -242,16 +242,17 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 int jQual = informativeReadPairs[r]->hetSites[switchPairJ[0]]->thisPhaseQuality;
                 PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
                 phaseSwitches.push_back(thisSwitch);
-                switchPairI.empty(); switchPairJ.empty(); 
+                switchPairI.empty(); switchPairJ.empty();
             } else {
                 numConcordant++;
             }
             readPairsProcessed++;
-            if (readPairsProcessed % 100 == 0) {
+            //if (readPairsProcessed % 100 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
+                std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
                 std::cout << "maxHetsNum: " << maxHetsNum << std::endl;
                 std::cout << "phaseSwitches.size(): " << phaseSwitches.size() << std::endl;
-            }
+            //}
         }
         
         std::cout << "numConcordant: " << numConcordant << std::endl;
