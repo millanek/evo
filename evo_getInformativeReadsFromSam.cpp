@@ -103,7 +103,7 @@ int InfoReadsMain(int argc, char** argv) {
                 } else{
                     continue;
                 }
-                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars);
+                PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,1);
                 positionToPhase[snpPos] = thisPhase;
             }
         }

@@ -103,8 +103,8 @@ void RecombRead::generateCIGARvectors() {
 }
 
 void RecombReadPair::findAndCombinePairHets(const std::map<int,PhaseInfo*> & positionToPhase) {
-    read1->hetSites = read1->findHetsInRead(positionToPhase);
-    read2->hetSites = read2->findHetsInRead(positionToPhase);
+    read1->findHetsInRead(positionToPhase);
+    read2->findHetsInRead(positionToPhase);
     
     if (read1->hetSites.size() > 0) hetSites = read1->hetSites;
     

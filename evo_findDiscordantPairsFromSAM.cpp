@@ -129,7 +129,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             std::vector<char> phasedVars;
             phasedVars.push_back(refBase); phasedVars.push_back(altBase);
             double phaseQual = 0; int snpCoverage = 0;
-            PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,1);
+            PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars, 1);
             posToPhase[snpPos] = thisPhase;
         }
         numHetPairs = nChoosek((int)posToPhase.size(),2);
