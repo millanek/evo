@@ -169,7 +169,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         for (std::map<int, std::vector<int>>::iterator it = thisReadPair->read1->BlockIDsToHetPos.begin();
              it != thisReadPair->read1->BlockIDsToHetPos.end(); it++) {
-            if (thisReadPair->read1->BlockIDsToHetPos.count(it->first) == 1) {
+            if (thisReadPair->read2->BlockIDsToHetPos.count(it->first) == 1) {
                 informativeReadPairs.push_back(thisReadPair);
                 totalUsedLength = totalUsedLength + thisReadPair->read1->usedLength;
                 totalUsedLength = totalUsedLength + thisReadPair->read2->usedLength;
