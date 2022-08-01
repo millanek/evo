@@ -215,26 +215,34 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             
             // Prod_i ((1-Z_i)(G(y_i)-G(x_i)) + Z_i*(1 -(G(y_i)-G(x_i))
             
-            std::vector<PhaseSwitch*> thisPairSwitches;
+            // std::vector<PhaseSwitch*> thisPairSwitches;
+            std::vector<int> switchPairI; std::vector<int> switchPairJ;
             for (int i = 0; i < informativeReadPairs[r]->hetSites.size() - 1; i++) {
                 for (int j = 1; j < informativeReadPairs[r]->hetSites.size(); j++) {
                     if (informativeReadPairs[r]->hetSites[i]->phaseBlock == informativeReadPairs[r]->hetSites[j]->phaseBlock) {
                         int phaseI = informativeReadPairs[r]->hetSites[i]->thisHetPhase01;
                         int phaseJ = informativeReadPairs[r]->hetSites[j]->thisHetPhase01;
                         if (phaseI != phaseJ) {
-                            int iPos = informativeReadPairs[r]->hetSites[i]->pos;
-                            int jPos = informativeReadPairs[r]->hetSites[j]->pos;
-                            int iQual = informativeReadPairs[r]->hetSites[i]->thisPhaseQuality;
-                            int jQual = informativeReadPairs[r]->hetSites[j]->thisPhaseQuality;
-                            PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
-                            thisPairSwitches.push_back(thisSwitch);
+                            switchPairI.push_back(i); switchPairJ.push_back(j);
+                            //int iPos = informativeReadPairs[r]->hetSites[i]->pos;
+                            //int jPos = informativeReadPairs[r]->hetSites[j]->pos;
+                            //int iQual = informativeReadPairs[r]->hetSites[i]->thisPhaseQuality;
+                            //int jQual = informativeReadPairs[r]->hetSites[j]->thisPhaseQuality;
+                            // PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
+                            // thisPairSwitches.push_back(thisSwitch);
                         }
                     }
                 }
             }
-            if (thisPairSwitches.size() > 0) {
+            if (switchPairI.size() > 0) {
                 numDiscordant++;
-                phaseSwitches.push_back(thisPairSwitches[0]);
+                int iPos = informativeReadPairs[r]->hetSites[switchPairI[0]]->pos;
+                int jPos = informativeReadPairs[r]->hetSites[switchPairJ[0]]->pos;
+                int iQual = informativeReadPairs[r]->hetSites[switchPairI[0]]->thisPhaseQuality;
+                int jQual = informativeReadPairs[r]->hetSites[switchPairJ[0]]->thisPhaseQuality;
+                PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
+                phaseSwitches.push_back(thisSwitch);
+                switchPairI.empty(); switchPairJ.empty(); 
             } else {
                 numConcordant++;
             }
