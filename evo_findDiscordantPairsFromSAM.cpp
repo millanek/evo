@@ -213,29 +213,33 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             
             // Prod_i ((1-Z_i)(G(y_i)-G(x_i)) + Z_i*(1 -(G(y_i)-G(x_i))
             
-            
-            
-            if (informativeReadPairs[r]->hetSites.size() > 1) {
-                int phaseOfPrevious; int posOfPrevious; bool allConcordant = true;
-                if (informativeReadPairs[r]->hetSites[0]->thisBase == informativeReadPairs[r]->hetSites[0]->thisHetPhase0) phaseOfPrevious = 0;
-                if (informativeReadPairs[r]->hetSites[0]->thisBase == informativeReadPairs[r]->hetSites[0]->thisHetPhase1) phaseOfPrevious = 1;
-                for (int i = 1; i < informativeReadPairs[r]->hetSites.size(); i++) {
-                    int phaseThis;
-                    if (informativeReadPairs[r]->hetSites[i]->thisBase == informativeReadPairs[r]->hetSites[i]->thisHetPhase0) phaseThis = 0;
-                    if (informativeReadPairs[r]->hetSites[i]->thisBase == informativeReadPairs[r]->hetSites[i]->thisHetPhase1) phaseThis = 1;
-                    
-                    if (phaseThis != phaseOfPrevious) {
-                        allConcordant = false;
-                        PhaseSwitch* thisSwitch = new PhaseSwitch(informativeReadPairs[r]->hetSites[i-1]->pos, informativeReadPairs[r]->hetSites[i]->pos, informativeReadPairs[r]->hetSites[i-1]->thisPhaseQuality, informativeReadPairs[r]->hetSites[i]->thisPhaseQuality);
-                        phaseSwitches.push_back(thisSwitch);
+            int phaseOfPrevious; int posOfPrevious; bool allConcordant = true;
+            std::vector<PhaseSwitch*> thisPairSwitches;
+            for (int i = 0; i < informativeReadPairs[r]->hetSites.size() - 1; i++) {
+                for (int j = 1; j < informativeReadPairs[r]->hetSites.size(); j++) {
+                    if (informativeReadPairs[r]->hetSites[i]->phaseBlock == informativeReadPairs[r]->hetSites[j]->phaseBlock) {
+                        int phaseI = informativeReadPairs[r]->hetSites[i]->thisHetPhase01;
+                        int phaseJ = informativeReadPairs[r]->hetSites[j]->thisHetPhase01;
+                        if (phaseI != phaseJ) {
+                            allConcordant = false;
+                            int iPos = informativeReadPairs[r]->hetSites[i]->pos;
+                            int jPos = informativeReadPairs[r]->hetSites[j]->pos;
+                            int iQual = informativeReadPairs[r]->hetSites[i]->thisPhaseQuality;
+                            int jQual = informativeReadPairs[r]->hetSites[j]->thisPhaseQuality;
+                            PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
+                            thisPairSwitches.push_back(thisSwitch);
+                        }
                     }
-                    posOfPrevious = informativeReadPairs[r]->hetSites[i]->pos;
-                    phaseOfPrevious = phaseThis;
                 }
-                if (allConcordant == false) numDiscordant++;
-                else numConcordant++;
+            }
+            if (thisPairSwitches.size() > 0) {
+                numDiscordant++;
+                phaseSwitches.push_back(thisPairSwitches[0]);
+            } else {
+                numConcordant++;
             }
         }
+        
         std::cout << "numConcordant: " << numConcordant << std::endl;
         std::cout << "numDiscordant: " << numDiscordant << std::endl;
         

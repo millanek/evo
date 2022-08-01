@@ -33,6 +33,13 @@ class HetInfo {
         } else {
             readPhaseBaseMismatch = false;
         }
+        
+        if (thisBase == thisHetPhase0) {
+            thisHetPhase01 = 0;
+        } else if (thisBase == thisHetPhase1) {
+            thisHetPhase01 = 1;
+        }
+        
     };
     
     int pos;
@@ -44,6 +51,8 @@ class HetInfo {
     char thisHetPhase0;
     char thisHetPhase1;
     double thisPhaseQuality;
+    
+    int thisHetPhase01;
     
     bool readPhaseBaseMismatch;
 
