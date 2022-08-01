@@ -8,7 +8,7 @@
 
 #include "evo_recombUtils.h"
 
-void RecombRead::findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead, const string& matchSeq, int startPos, const std::map<int,PhaseInfo*>& positionToPhase) {
+void RecombRead::findHetsInMatchingString(const string& matchSeq, int startPos, const std::map<int,PhaseInfo*>& positionToPhase) {
     for (int i = 0; i < matchSeq.length(); i++) {
         if (positionToPhase.count(startPos + i) == 1) {
             PhaseInfo* thisHetPhase = positionToPhase.at(startPos + i);
@@ -16,12 +16,12 @@ void RecombRead::findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead,
             char readBase = matchSeq[i];
             int snpPos = startPos + i;
             HetInfo* het = new HetInfo(snpPos, readBase, int(readQual[i])-33, phasedSNPbases[0], phasedSNPbases[1], thisHetPhase->quality, thisHetPhase->blockNum);
-            hetsOnThisRead.push_back(het);
+            hetSites.push_back(het);
         }
     }
 }
 
-std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>& positionToPhase) {
+void RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>& positionToPhase) {
     std::vector<HetInfo*> hetsOnThisRead;
     
     int startPos = readPos; string processedReadSeq = readSeq;
@@ -45,7 +45,7 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>&
                 
             case MATCH_CIGAR:
                 string matchSeq = processedReadSeq.substr(0, GIGARnums[0]);
-                findHetsInMatchingString(hetsOnThisRead, matchSeq, startPos, positionToPhase);
+                findHetsInMatchingString(matchSeq, startPos, positionToPhase);
                 startPos = startPos + GIGARnums[0];
                 usedLength = usedLength + GIGARnums[0];
                 processedReadSeq = processedReadSeq.substr(GIGARnums[0]);
@@ -58,7 +58,15 @@ std::vector<HetInfo*> RecombRead::findHetsInRead(const std::map<int,PhaseInfo*>&
         
     }
     
-    return hetsOnThisRead;
+    for (int i = 0; i < hetSites.size(); i++) {
+        int thisHetPhaseBlock = hetSites[i]->phaseBlock;
+        if (BlockIDsToHetPos.count(thisHetPhaseBlock) == 1) {
+            BlockIDsToHetPos.at(thisHetPhaseBlock).push_back(hetSites[i]->pos);
+        } else {
+            BlockIDsToHetPos[thisHetPhaseBlock].push_back(hetSites[i]->pos);
+        }
+        
+    }
 }
 
 
@@ -94,7 +102,7 @@ void RecombRead::generateCIGARvectors() {
     }
 }
 
-void RecombReadPair::findAndCombinePairHets(std::map<int,PhaseInfo*>& positionToPhase) {
+void RecombReadPair::findAndCombinePairHets(const std::map<int,PhaseInfo*> & positionToPhase) {
     read1->hetSites = read1->findHetsInRead(positionToPhase);
     read2->hetSites = read2->findHetsInRead(positionToPhase);
     

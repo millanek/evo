@@ -119,14 +119,14 @@ class RecombRead {
     
     int usedLength;
     std::vector<HetInfo*> hetSites;
+    std::map<int,std::vector<int>> BlockIDsToHetPos;
     
-    std::vector<HetInfo*> findHetsInRead(const std::map<int,PhaseInfo*>& positionToPhase);
+    void findHetsInRead(const std::map<int,PhaseInfo*>& positionToPhase);
     
     private:
         string assignStrandFromFlag();
         void generateCIGARvectors();
-        void findHetsInMatchingString(std::vector<HetInfo*>& hetsOnThisRead, const string& matchSeq, int startPos,
-                                      const std::map<int,PhaseInfo*>& positionToPhase);
+        void findHetsInMatchingString(const string& matchSeq, int startPos, const std::map<int,PhaseInfo*>& positionToPhase);
 
 };
 
@@ -178,8 +178,10 @@ class RecombReadPair {
     int pairSpan;
     bool pairDiscordant;
     std::vector<HetInfo*> hetSites;
+    //std::map<int,std::vector<int>> BlockIDsToHetPos;
+    //std::map<int> HetPosToBlockIDs;
     
-    void findAndCombinePairHets(std::map<int,PhaseInfo*>& positionToPhase);
+    void findAndCombinePairHets(const std::map<int,PhaseInfo*> & positionToPhase);
     void filterHetsByQuality(int minQuality);
     void filterHetsByBlock(int blockNum);
     
