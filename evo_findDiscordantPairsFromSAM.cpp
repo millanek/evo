@@ -167,12 +167,14 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             num2plusHets++;
         }
         
-        for (std::map<int, std::vector<int>>::iterator it = thisReadPair->read1->BlockIDsToHetPos.begin();
-             it != thisReadPair->read1->BlockIDsToHetPos.end(); it++) {
-            if (thisReadPair->read2->BlockIDsToHetPos.count(it->first) == 1) {
-                informativeReadPairs.push_back(thisReadPair);
-                totalUsedLength = totalUsedLength + thisReadPair->read1->usedLength;
-                totalUsedLength = totalUsedLength + thisReadPair->read2->usedLength;
+        if (thisReadPair->hetSites.size() > 1) {
+            for (std::map<int, std::vector<int>>::iterator it = thisReadPair->read1->BlockIDsToHetPos.begin();
+                 it != thisReadPair->read1->BlockIDsToHetPos.end(); it++) {
+                if (thisReadPair->read2->BlockIDsToHetPos.count(it->first) == 1) {
+                    informativeReadPairs.push_back(thisReadPair);
+                    totalUsedLength = totalUsedLength + thisReadPair->read1->usedLength;
+                    totalUsedLength = totalUsedLength + thisReadPair->read2->usedLength;
+                }
             }
         }
     }
@@ -195,9 +197,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     if (opt::hapcutFormat) {
         int readPairsProcessed = 0; int maxHetsNum = 0;
         for (int r = 0; r < informativeReadPairs.size(); r++) {
-            if (informativeReadPairs[r]->hetSites.size() > maxHetsNum) {
-                maxHetsNum = informativeReadPairs[r]->hetSites.size();
-            }
             
            for (int i = 0; i < informativeReadPairs[r]->hetSites.size(); i++) {
                 HetInfo* thisHet = informativeReadPairs[r]->hetSites[i];
