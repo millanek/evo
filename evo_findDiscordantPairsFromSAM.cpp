@@ -211,7 +211,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             
             // Prod_i ((1-Z_i)(G(y_i)-G(x_i)) + Z_i*(1 -(G(y_i)-G(x_i))
             
-            int phaseOfPrevious; int posOfPrevious; bool allConcordant = true;
             std::vector<PhaseSwitch*> thisPairSwitches;
             for (int i = 0; i < informativeReadPairs[r]->hetSites.size() - 1; i++) {
                 for (int j = 1; j < informativeReadPairs[r]->hetSites.size(); j++) {
@@ -219,7 +218,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                         int phaseI = informativeReadPairs[r]->hetSites[i]->thisHetPhase01;
                         int phaseJ = informativeReadPairs[r]->hetSites[j]->thisHetPhase01;
                         if (phaseI != phaseJ) {
-                            allConcordant = false;
                             int iPos = informativeReadPairs[r]->hetSites[i]->pos;
                             int jPos = informativeReadPairs[r]->hetSites[j]->pos;
                             int iQual = informativeReadPairs[r]->hetSites[i]->thisPhaseQuality;
@@ -239,6 +237,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             readPairsProcessed++;
             if (readPairsProcessed % 100 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
+                std::cout << "thisPairSwitches.size(): " << thisPairSwitches.size() << std::endl;
             }
         }
         
