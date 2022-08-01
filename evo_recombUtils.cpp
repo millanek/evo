@@ -116,3 +116,15 @@ void RecombReadPair::filterHetsByQuality(int minQuality) {
     }
     hetSites = goodHets;
 }
+
+void RecombReadPair::filterHetsByBlock(int blockNum) {
+    
+    std::vector<HetInfo*> goodHets;
+    for (std::vector<HetInfo*>::iterator it = hetSites.begin(); it != hetSites.end(); it++) {
+        if ((*it)->phaseBlock == blockNum) {
+            goodHets.push_back((*it));
+        }
+    }
+    hetSites = goodHets;
+}
+

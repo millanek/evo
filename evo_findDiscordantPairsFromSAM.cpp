@@ -78,11 +78,13 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::map<int,PhaseInfo*> positionToPhase;
     std::map<string,std::vector<int>> infoPairNameToPos;
     std::map<string,std::vector<string>> infoPairNameToStrands;
+    std::vector<int> phaseBlockSNPnums;
     
     std::map<string,std::vector<RecombRead*>> samNameToReads;
     int numHetPairs = 0;
     std::unordered_map<string, ReadLinkSNPpair*> SNPpairs;
     
+    int maxBlockIndex = 0;
     if (opt::hapcutFormat) {
         int blockNum = 0;
         // Parse the Hapcut blocks file
@@ -90,7 +92,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             if (line[0] == '*') {
             
             } else if (line[0] == 'B' && line[1] == 'L') { // New block - should in the future separate the hets by blocks
-                blockNum++;
+                blockNum++; phaseBlockSNPnums.push_back(0);
             } else {
                 std::vector<string> phasedSNPdetails = split(line, '\t');
                 int snpPos = atoi(phasedSNPdetails[4].c_str());
@@ -113,8 +115,10 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 }
                 PhaseInfo* thisPhase = new PhaseInfo(snpPos,phaseQual,snpCoverage, phasedVars,blockNum);
                 positionToPhase[snpPos] = thisPhase;
+                phaseBlockSNPnums[blockNum-1]++;
             }
         }
+        maxBlockIndex = (int)std::distance(phaseBlockSNPnums.begin(),std::max_element(phaseBlockSNPnums.begin(), phaseBlockSNPnums.end()));
     } else {
         while (getline(*hetsFile, line)) {
             std::vector<string> phasedSNPdetails = split(line, '\t');
@@ -170,6 +174,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         informativeReadPairs[r]->findAndCombinePairHets(positionToPhase);
         informativeReadPairs[r]->filterHetsByQuality(opt::minBQ);
+        informativeReadPairs[r]->filterHetsByBlock(maxBlockIndex + 1);
         
         if (informativeReadPairs[r]->hetSites.size() == 0) {
             num0het++;
@@ -196,9 +201,11 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     
     if (opt::hapcutFormat) {
         
+        std::vector<int> phaseBlocks;
         for (int r = 0; r < informativeReadPairs.size(); r++) {
            for (int i = 0; i < informativeReadPairs[r]->hetSites.size(); i++) {
                 HetInfo* thisHet = informativeReadPairs[r]->hetSites[i];
+               phaseBlocks.push_back(thisHet->phaseBlock);
                 if (thisHet->readPhaseBaseMismatch) {
                     numMismatch++;
                     mismatchBaseScores.push_back(thisHet->thisBaseQuality);

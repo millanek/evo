@@ -181,6 +181,7 @@ class RecombReadPair {
     
     void findAndCombinePairHets(std::map<int,PhaseInfo*>& positionToPhase);
     void filterHetsByQuality(int minQuality);
+    void filterHetsByBlock(int blockNum);
     
 
 };
