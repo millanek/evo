@@ -279,7 +279,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 thisConcordantCoords.push_back(jPosDindex);
                 phaseConcordanceCoords.push_back(thisConcordantCoords);
             }
-            if (readPairsProcessed % 1000 == 0) {
+            if (readPairsProcessed % 10000 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
                 std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
                 std::cout << "phaseSwitches.size(): " << phaseSwitches.size() << std::endl;
