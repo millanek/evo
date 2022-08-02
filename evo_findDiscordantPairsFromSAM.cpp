@@ -248,16 +248,15 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 int jPos = informativeReadPairs[r]->hetSites[switchPairJ[0]]->pos;
                 int iQual = informativeReadPairs[r]->hetSites[switchPairI[0]]->thisPhaseQuality;
                 int jQual = informativeReadPairs[r]->hetSites[switchPairJ[0]]->thisPhaseQuality;
+                if (jPos - iPos < 0) {
+                    int tmp = iPos; iPos = jPos; jPos = tmp;
+                    tmp = iQual; iQual = jQual; jQual = tmp;
+                }
                 PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
                 phaseSwitches.push_back(thisSwitch);
                 switchPairI.empty(); switchPairJ.empty();
                 totalEffectiveLength = totalEffectiveLength + (jPos - iPos);
-                if (jPos - iPos < 0) {
-                    std::cout << "read r: " << r << std::endl;
-                    std::cout << "iPos: " << iPos << std::endl;
-                    std::cout << "jPos: " << jPos << std::endl;
-                    std::cout << "totalEffectiveLength: " << totalEffectiveLength << std::endl;
-                }
+                
             } else {
                 numConcordant++;
                 std::vector<int> thisConcordantCoords;
@@ -273,10 +272,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 int jPosDindex = informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos;
                 totalEffectiveLength = totalEffectiveLength + (jPosDindex - iPosDindex);
                 if (jPosDindex - iPosDindex < 0) {
-                    std::cout << "read r: " << r << std::endl;
-                    std::cout << "iPosDindex: " << iPosDindex << std::endl;
-                    std::cout << "jPosDindex: " << jPosDindex << std::endl;
-                    std::cout << "totalEffectiveLength: " << totalEffectiveLength << std::endl;
+                    
                 }
                 
                 thisConcordantCoords.push_back(iPosDindex);
