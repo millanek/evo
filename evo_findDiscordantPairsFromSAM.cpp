@@ -317,8 +317,8 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         std::sort(coveredHetPos.begin(), coveredHetPos.end());
         std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
         coveredHetPos.resize(distance(coveredHetPos.begin(),it));
-        
-        print_vector(coveredHetPos, std::cout);
+        std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
+        //print_vector(coveredHetPos, std::cout);
         
         
     } else {
