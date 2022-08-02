@@ -281,9 +281,10 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             }
             if (readPairsProcessed % 10000 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
-                std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
+               // std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
                 std::cout << "phaseSwitches.size(): " << phaseSwitches.size() << std::endl;
                 std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
+                std::cout << std::endl;
             }
         }
         
