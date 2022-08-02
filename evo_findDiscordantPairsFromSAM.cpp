@@ -254,6 +254,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     std::cout << "read r: " << r << std::endl;
                     std::cout << "iPos: " << iPos << std::endl;
                     std::cout << "jPos: " << jPos << std::endl;
+                    std::cout << "totalEffectiveLength: " << totalEffectiveLength << std::endl;
                 }
             } else {
                 numConcordant++;
@@ -273,6 +274,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     std::cout << "read r: " << r << std::endl;
                     std::cout << "iPosDindex: " << iPosDindex << std::endl;
                     std::cout << "jPosDindex: " << jPosDindex << std::endl;
+                    std::cout << "totalEffectiveLength: " << totalEffectiveLength << std::endl;
                 }
                 
                 thisConcordantCoords.push_back(iPosDindex);
