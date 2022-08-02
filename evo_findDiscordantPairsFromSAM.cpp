@@ -84,6 +84,8 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     int numHetPairs = 0;
     std::unordered_map<string, ReadLinkSNPpair*> SNPpairs;
     
+    
+    std::cout << "Processing hets: " << std::endl;
     if (opt::hapcutFormat) {
         int blockNum = 0;
         // Parse the Hapcut blocks file
@@ -138,7 +140,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     
     
     
-    
+    std::cout << "Reading read-pairs: " << std::endl;
     // Now parse the samtools file to find reads that match records from the pairstools file
     // and therefore  can be informative about the phasing and recombination
     int readN = 0;
@@ -151,6 +153,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         informativeReads.push_back(thisRead);
     }
     
+    std::cout << "Linking read-pairs and hets: " << std::endl;
     int num0het = 0; int num1het = 0; int num2plusHets = 0;
     int totalUsedLength = 0;
     std::vector<RecombReadPair*> informativeReadPairs;
@@ -179,14 +182,15 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         }
     }
     
+    std::cout << "DONE: " << std::endl;
     std::cout << "Initial Read Pairs.size(): " << informativeReads.size()/2.0 << std::endl;
     std::cout << "num0het: " << num0het << std::endl;
     std::cout << "num1het: " << num1het << std::endl;
     std::cout << "num2plusHets: " << num2plusHets << std::endl;
     std::cout << "informativeReadPairs.size(): " << informativeReadPairs.size() << std::endl;
+    std::cout << std::endl;
     
-    
-    
+    std::cout << "Categorising concordant-discordant read-pairs: " << std::endl;
     int numConcordant = 0; int numDiscordant = 0;
     int numMatch = 0; int numMismatch = 0; long long int totalEffectiveLength = 0;
     std::vector<double> matchBaseScores; std::vector<double> mismatchBaseScores;
