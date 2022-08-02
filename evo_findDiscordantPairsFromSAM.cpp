@@ -152,7 +152,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     }
     
     int num0het = 0; int num1het = 0; int num2plusHets = 0;
-    int totalUsedLength = 0; int totalEffectiveLength = 0;
+    int totalUsedLength = 0;
     std::vector<RecombReadPair*> informativeReadPairs;
     for (int r = 0; r < informativeReads.size(); r=r+2) {
         RecombReadPair* thisReadPair = new RecombReadPair(informativeReads[r], informativeReads[r+1]);
@@ -174,7 +174,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     informativeReadPairs.push_back(thisReadPair);
                     totalUsedLength += thisReadPair->read1->usedLength;
                     totalUsedLength += thisReadPair->read2->usedLength;
-                    totalEffectiveLength += abs(thisReadPair->read2->readPos - thisReadPair->read1->readPos) + thisReadPair->read2->usedLength;
                 }
             }
         }
@@ -185,12 +184,11 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::cout << "num1het: " << num1het << std::endl;
     std::cout << "num2plusHets: " << num2plusHets << std::endl;
     std::cout << "informativeReadPairs.size(): " << informativeReadPairs.size() << std::endl;
-    std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
     
     
     
     int numConcordant = 0; int numDiscordant = 0;
-    int numMatch = 0; int numMismatch = 0;
+    int numMatch = 0; int numMismatch = 0; int totalEffectiveLength = 0;
     std::vector<double> matchBaseScores; std::vector<double> mismatchBaseScores;
     std::vector<double> concordantBaseScores; std::vector<double> discordantBaseScores;
     std::vector<PhaseSwitch*> phaseSwitches;
@@ -251,6 +249,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
                 phaseSwitches.push_back(thisSwitch);
                 switchPairI.empty(); switchPairJ.empty();
+                totalEffectiveLength = totalEffectiveLength + (jPos - iPos);
             } else {
                 numConcordant++;
                 std::vector<int> thisConcordantCoords;
@@ -262,8 +261,12 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                         maxDindex = i;
                     }
                 }
-                thisConcordantCoords.push_back(informativeReadPairs[r]->hetSites[concordPairI[maxDindex]]->pos);
-                thisConcordantCoords.push_back(informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos);
+                int iPosDindex = informativeReadPairs[r]->hetSites[concordPairI[maxDindex]]->pos;
+                int jPosDindex = informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos;
+                totalEffectiveLength = totalEffectiveLength + (jPosDindex - iPosDindex);
+                
+                thisConcordantCoords.push_back(iPosDindex);
+                thisConcordantCoords.push_back(jPosDindex);
                 phaseConcordanceCoords.push_back(thisConcordantCoords);
             }
             /*if (readPairsProcessed % 100 == 0) {
@@ -274,6 +277,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             } */
         }
         
+        std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
         std::cout << "numConcordant: " << numConcordant << std::endl;
         std::cout << "numDiscordant: " << numDiscordant << std::endl;
         std::cout << "phaseConcordanceCoords.size(): " << phaseConcordanceCoords.size() << std::endl;
