@@ -264,9 +264,11 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 int iPosDindex = informativeReadPairs[r]->hetSites[concordPairI[maxDindex]]->pos;
                 int jPosDindex = informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos;
                 totalEffectiveLength = totalEffectiveLength + (jPosDindex - iPosDindex);
-                std::cout << "read r: " << r << std::endl;
-                std::cout << "iPosDindex: " << iPosDindex << std::endl;
-                std::cout << "jPosDindex: " << jPosDindex << std::endl;
+                if (jPosDindex - iPosDindex < 0) {
+                    std::cout << "read r: " << r << std::endl;
+                    std::cout << "iPosDindex: " << iPosDindex << std::endl;
+                    std::cout << "jPosDindex: " << jPosDindex << std::endl;
+                }
                 
                 thisConcordantCoords.push_back(iPosDindex);
                 thisConcordantCoords.push_back(jPosDindex);
