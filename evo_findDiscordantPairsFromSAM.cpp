@@ -317,6 +317,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         // TO DO - make a map from the concordant/discordant read-pairs
         std::cout << "5) Making a genetic map: " << std::endl;
+        std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
         std::sort(coveredHetPos.begin(), coveredHetPos.end());
         std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
         coveredHetPos.resize(distance(coveredHetPos.begin(),it));
