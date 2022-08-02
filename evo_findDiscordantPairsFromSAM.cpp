@@ -196,7 +196,9 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
     
     if (opt::hapcutFormat) {
+        int readPairsProcessed = 0;
         for (int r = 0; r < informativeReadPairs.size(); r++) {
+            readPairsProcessed++;
             
            for (int i = 0; i < informativeReadPairs[r]->hetSites.size(); i++) {
                 HetInfo* thisHet = informativeReadPairs[r]->hetSites[i];
@@ -281,12 +283,12 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 thisConcordantCoords.push_back(jPosDindex);
                 phaseConcordanceCoords.push_back(thisConcordantCoords);
             }
-            /*if (readPairsProcessed % 100 == 0) {
+            if (readPairsProcessed % 1000 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
                 std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
-                std::cout << "maxHetsNum: " << maxHetsNum << std::endl;
                 std::cout << "phaseSwitches.size(): " << phaseSwitches.size() << std::endl;
-            } */
+                std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
+            }
         }
         
         std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
