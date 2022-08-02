@@ -85,7 +85,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::unordered_map<string, ReadLinkSNPpair*> SNPpairs;
     
     
-    std::cout << "Processing hets: " << std::endl;
+    std::cout << "1) Processing hets..." << std::endl;
     if (opt::hapcutFormat) {
         int blockNum = 0;
         // Parse the Hapcut blocks file
@@ -140,7 +140,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     
     
     
-    std::cout << "Reading read-pairs: " << std::endl;
+    std::cout << "2) Loading read-pairs.. " << std::endl;
     // Now parse the samtools file to find reads that match records from the pairstools file
     // and therefore  can be informative about the phasing and recombination
     int readN = 0;
@@ -153,7 +153,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         informativeReads.push_back(thisRead);
     }
     
-    std::cout << "Linking read-pairs and hets: " << std::endl;
+    std::cout << "3) Linking read-pairs and hets: " << std::endl;
     int num0het = 0; int num1het = 0; int num2plusHets = 0;
     int totalUsedLength = 0;
     std::vector<RecombReadPair*> informativeReadPairs;
@@ -190,7 +190,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::cout << "informativeReadPairs.size(): " << informativeReadPairs.size() << std::endl;
     std::cout << std::endl;
     
-    std::cout << "Categorising concordant-discordant read-pairs: " << std::endl;
+    std::cout << "4) Categorising concordant-discordant read-pairs: " << std::endl;
     int numConcordant = 0; int numDiscordant = 0;
     int numMatch = 0; int numMismatch = 0; long long int totalEffectiveLength = 0;
     std::vector<double> matchBaseScores; std::vector<double> mismatchBaseScores;
@@ -199,6 +199,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::vector<std::vector<int>> phaseConcordanceCoords;
         
     
+    std::vector<int> coveredHetPos;
     if (opt::hapcutFormat) {
         int readPairsProcessed = 0;
         for (int r = 0; r < informativeReadPairs.size(); r++) {
@@ -214,6 +215,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                      matchBaseScores.push_back(thisHet->thisBaseQuality);
                      numMatch++;
                 }
+               coveredHetPos.push_back(thisHet->pos);
             }
             
             // Now consider all HiC pairs i that map to the chromosome and cover a het at each end - lets call the physical locations of the hets x_i, y_i ( x < y) and let Z_i = 1 if they are in phase, 0 if out of phase (recombined)
@@ -283,13 +285,13 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 thisConcordantCoords.push_back(jPosDindex);
                 phaseConcordanceCoords.push_back(thisConcordantCoords);
             }
-            if (readPairsProcessed % 10000 == 0) {
+          /*  if (readPairsProcessed % 10000 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
                // std::cout << "informativeReadPairs[r]->hetSites.size(): " << informativeReadPairs[r]->hetSites.size() << std::endl;
                 std::cout << "phaseSwitches.size(): " << phaseSwitches.size() << std::endl;
                 std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
                 std::cout << std::endl;
-            }
+            } */
         }
         
         std::cout << "FINAL RESULTS: " << std::endl;
@@ -306,6 +308,21 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         for (int i = 0; i != phaseSwitches.size(); i++) {
             *phaseSwitchFile << phaseSwitches[i]->posLeft << "\t" << phaseSwitches[i]->posRight << "\t" << phaseSwitches[i]->dist << "\t" << phaseSwitches[i]->phaseQualLeft << "\t" << phaseSwitches[i]->phaseQualRight << std::endl;
         }
+        
+        std::vector<int> coveredHetPos;
+        for (int r = 0; r < informativeReadPairs.size(); r++) {
+            
+        }
+        
+        
+        // TO DO - make a map from the concordant/discordant read-pairs
+        std::cout << "5) Making a genetic map: " << std::endl;
+        std::sort(coveredHetPos.begin(), coveredHetPos.end());
+        std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
+        coveredHetPos.resize(distance(coveredHetPos.begin(),it));
+        
+        print_vector(coveredHetPos, std::cout);
+        
         
     } else {
         for (int r = 0; r < informativeReadPairs.size(); r++) {
