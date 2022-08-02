@@ -309,10 +309,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             *phaseSwitchFile << phaseSwitches[i]->posLeft << "\t" << phaseSwitches[i]->posRight << "\t" << phaseSwitches[i]->dist << "\t" << phaseSwitches[i]->phaseQualLeft << "\t" << phaseSwitches[i]->phaseQualRight << std::endl;
         }
         
-        std::vector<int> coveredHetPos;
-        for (int r = 0; r < informativeReadPairs.size(); r++) {
-            
-        }
         
         
         // TO DO - make a map from the concordant/discordant read-pairs
