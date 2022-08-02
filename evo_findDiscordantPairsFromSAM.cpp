@@ -288,6 +288,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             }
         }
         
+        std::cout << "FINAL RESULTS: " << std::endl;
         std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
         std::cout << "numConcordant: " << numConcordant << std::endl;
         std::cout << "numDiscordant: " << numDiscordant << std::endl;
