@@ -264,7 +264,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 for (int i = 0; i != concordPairI.size(); i++) {
                     int iPos = informativeReadPairs[r]->hetSites[concordPairI[i]]->pos;
                     int jPos = informativeReadPairs[r]->hetSites[concordPairJ[i]]->pos;
-                    if (jPos - iPos > maxD) {
+                    if (abs(jPos - iPos) > maxD) {
                         maxDindex = i;
                     }
                 }
@@ -272,7 +272,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 int jPosDindex = informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos;
                 totalEffectiveLength = totalEffectiveLength + (jPosDindex - iPosDindex);
                 if (jPosDindex - iPosDindex < 0) {
-                    
+                    int tmp = iPosDindex; iPosDindex = jPosDindex; jPosDindex = tmp;
                 }
                 
                 thisConcordantCoords.push_back(iPosDindex);
