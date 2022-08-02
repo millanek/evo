@@ -250,6 +250,11 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 phaseSwitches.push_back(thisSwitch);
                 switchPairI.empty(); switchPairJ.empty();
                 totalEffectiveLength = totalEffectiveLength + (jPos - iPos);
+                if (jPos - iPos < 0) {
+                    std::cout << "read r: " << r << std::endl;
+                    std::cout << "iPos: " << iPos << std::endl;
+                    std::cout << "jPos: " << jPos << std::endl;
+                }
             } else {
                 numConcordant++;
                 std::vector<int> thisConcordantCoords;
