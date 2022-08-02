@@ -188,7 +188,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     
     
     int numConcordant = 0; int numDiscordant = 0;
-    int numMatch = 0; int numMismatch = 0; int totalEffectiveLength = 0;
+    int numMatch = 0; int numMismatch = 0; long long int totalEffectiveLength = 0;
     std::vector<double> matchBaseScores; std::vector<double> mismatchBaseScores;
     std::vector<double> concordantBaseScores; std::vector<double> discordantBaseScores;
     std::vector<PhaseSwitch*> phaseSwitches;
