@@ -174,7 +174,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     informativeReadPairs.push_back(thisReadPair);
                     totalUsedLength += thisReadPair->read1->usedLength;
                     totalUsedLength += thisReadPair->read2->usedLength;
-                    totalEffectiveLength += (thisReadPair->read2->readPos - thisReadPair->read1->readPos) + thisReadPair->read2->usedLength;
+                    totalEffectiveLength += abs(thisReadPair->read2->readPos - thisReadPair->read1->readPos) + thisReadPair->read2->usedLength;
                 }
             }
         }
