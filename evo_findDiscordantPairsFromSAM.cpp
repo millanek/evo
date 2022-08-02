@@ -152,7 +152,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     }
     
     int num0het = 0; int num1het = 0; int num2plusHets = 0;
-    int totalUsedLength = 0;
+    int totalUsedLength = 0; int totalEffectiveLength = 0;
     std::vector<RecombReadPair*> informativeReadPairs;
     for (int r = 0; r < informativeReads.size(); r=r+2) {
         RecombReadPair* thisReadPair = new RecombReadPair(informativeReads[r], informativeReads[r+1]);
@@ -172,18 +172,20 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                  it != thisReadPair->read1->BlockIDsToHetPos.end(); it++) {
                 if (thisReadPair->read2->BlockIDsToHetPos.count(it->first) == 1) {
                     informativeReadPairs.push_back(thisReadPair);
-                    totalUsedLength = totalUsedLength + thisReadPair->read1->usedLength;
-                    totalUsedLength = totalUsedLength + thisReadPair->read2->usedLength;
+                    totalUsedLength += thisReadPair->read1->usedLength;
+                    totalUsedLength += thisReadPair->read2->usedLength;
+                    totalEffectiveLength += (thisReadPair->read2->readPos - thisReadPair->read1->readPos) + thisReadPair->read2->usedLength;
                 }
             }
         }
     }
     
     std::cout << "Initial Read Pairs.size(): " << informativeReads.size()/2.0 << std::endl;
-    std::cout << "informativeReadPairs.size(): " << informativeReadPairs.size() << std::endl;
     std::cout << "num0het: " << num0het << std::endl;
     std::cout << "num1het: " << num1het << std::endl;
     std::cout << "num2plusHets: " << num2plusHets << std::endl;
+    std::cout << "informativeReadPairs.size(): " << informativeReadPairs.size() << std::endl;
+    std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
     
     
     
@@ -192,6 +194,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::vector<double> matchBaseScores; std::vector<double> mismatchBaseScores;
     std::vector<double> concordantBaseScores; std::vector<double> discordantBaseScores;
     std::vector<PhaseSwitch*> phaseSwitches;
+    std::vector<std::vector<int>> phaseConcordanceCoords;
         
     
     if (opt::hapcutFormat) {
@@ -215,6 +218,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             
             // std::vector<PhaseSwitch*> thisPairSwitches;
             std::vector<int> switchPairI; std::vector<int> switchPairJ;
+            std::vector<int> concordPairI; std::vector<int> concordPairJ;
             for (int i = 0; i < informativeReadPairs[r]->hetSites.size() - 1; i++) {
                 for (int j = 1; j < informativeReadPairs[r]->hetSites.size(); j++) {
                     if (informativeReadPairs[r]->hetSites[i]->phaseBlock == informativeReadPairs[r]->hetSites[j]->phaseBlock) {
@@ -228,10 +232,16 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                             //int jQual = informativeReadPairs[r]->hetSites[j]->thisPhaseQuality;
                             // PhaseSwitch* thisSwitch = new PhaseSwitch(iPos, jPos, iQual, jQual);
                             // thisPairSwitches.push_back(thisSwitch);
+                        } else {
+                            concordPairI.push_back(i); concordPairJ.push_back(j);
                         }
                     }
                 }
             }
+            
+            // TO DO:
+            // Select the 'right' switch pair if there are multiple options:
+            // The shortest one? Needs more thought....
             if (switchPairI.size() > 0) {
                 numDiscordant++;
                 int iPos = informativeReadPairs[r]->hetSites[switchPairI[0]]->pos;
@@ -243,6 +253,18 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 switchPairI.empty(); switchPairJ.empty();
             } else {
                 numConcordant++;
+                std::vector<int> thisConcordantCoords;
+                int maxD = 0; int maxDindex = 0;
+                for (int i = 0; i != concordPairI.size(); i++) {
+                    int iPos = informativeReadPairs[r]->hetSites[concordPairI[i]]->pos;
+                    int jPos = informativeReadPairs[r]->hetSites[concordPairJ[i]]->pos;
+                    if (jPos - iPos > maxD) {
+                        maxDindex = i;
+                    }
+                }
+                thisConcordantCoords.push_back(informativeReadPairs[r]->hetSites[concordPairI[maxDindex]]->pos);
+                thisConcordantCoords.push_back(informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos);
+                phaseConcordanceCoords.push_back(thisConcordantCoords);
             }
             /*if (readPairsProcessed % 100 == 0) {
                 std::cout << "readPairsProcessed: " << readPairsProcessed << std::endl;
@@ -254,6 +276,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         std::cout << "numConcordant: " << numConcordant << std::endl;
         std::cout << "numDiscordant: " << numDiscordant << std::endl;
+        std::cout << "phaseConcordanceCoords.size(): " << phaseConcordanceCoords.size() << std::endl;
         
         std::cout << "numMatch: " << numMatch << std::endl;
         std::cout << "numMismatch: " << numMismatch << std::endl;
