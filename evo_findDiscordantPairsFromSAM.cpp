@@ -145,7 +145,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     
     
     std::cout << std::endl;
-    std::cout << "2) Loading read-pairs.. " << std::endl;
+    std::cout << "2) Loading read-pairs... " << std::endl;
     // Now parse the samtools file to find reads that match records from the pairstools file
     // and therefore  can be informative about the phasing and recombination
     int readN = 0;
@@ -159,7 +159,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     }
     
     std::cout << std::endl;
-    std::cout << "3) Linking read-pairs and hets: " << std::endl;
+    std::cout << "3) Linking read-pairs and hets... " << std::endl;
     int num0het = 0; int num1het = 0; int num2plusHets = 0;
     int totalUsedLength = 0;
     std::vector<RecombReadPair*> informativeReadPairs;
@@ -195,7 +195,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::cout << "informativeReadPairs.size(): " << informativeReadPairs.size() << std::endl;
     std::cout << std::endl;
     
-    std::cout << "4) Categorising concordant-discordant read-pairs: " << std::endl;
+    std::cout << "4) Categorising concordant-discordant read-pairs... " << std::endl;
     int numConcordant = 0; int numDiscordant = 0;
     int numMatch = 0; int numMismatch = 0; long long int totalEffectiveLength = 0;
     std::vector<double> matchBaseScores; std::vector<double> mismatchBaseScores;
@@ -320,7 +320,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         
         std::cout << std::endl;
-        std::cout << "5) Making a genetic map: " << std::endl;
+        std::cout << "5) Making a genetic map... " << std::endl;
         std::sort(coveredHetPos.begin(), coveredHetPos.end());
         std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
         coveredHetPos.resize(distance(coveredHetPos.begin(),it));
@@ -344,9 +344,9 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     coveringReadPairs++;
                     double phaseFraction = (double)distSNPs/(double)phaseSwitches[j]->dist;
                     totalRecombFraction += phaseFraction;
-                    //std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
                 }
             }
+            std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
             
             double totalConcordantFraction = 0;
             for (int j = 0; j != phaseConcordanceCoords.size(); j++) {
@@ -356,6 +356,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     totalConcordantFraction += concordPairFraction;
                 }
             }
+            std::cout << "totalConcordantFraction: " << totalConcordantFraction << std::endl;
             
             if (coveringReadPairs > 10) {
                 recombFractions[i+1] = totalRecombFraction/totalConcordantFraction;
