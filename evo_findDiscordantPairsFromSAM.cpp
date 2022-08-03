@@ -32,12 +32,14 @@ static const char *DISCORDPAIRS_USAGE_MESSAGE =
 "       -n, --run-name                          run-name will be included in the output file name\n"
 "       -m, --min-MQ                            (default: 20) the minimum mapping quality for a read to be considered\n"
 "       -b, --min-BQ                            (default: 30) the minimum base quality for assesssing discordant phase\n"
+"       -d, --min-Dist                          (default: 500) the minimum distance (bp) to consider discordant phase a recombination\n"
+"                                               as opposed to gene conversion\n"
 "       -p, --min-PQ                            (default: 30) the minimum phase quality for assesssing discordant phase (relevant with the --hapCut option)\n"
 "       --hapCut                                the het positions come from HapCut output\n"
 "\n"
 "\nReport bugs to " PACKAGE_BUGREPORT "\n\n";
 
-static const char* shortopts = "hn:b:m:p:";
+static const char* shortopts = "hn:b:m:p:d:";
 
 //enum { OPT_ANNOT, OPT_AF  };
 enum { OPT_HAPCUT  };
@@ -48,6 +50,7 @@ static const struct option longopts[] = {
     { "min-MQ",   required_argument, NULL, 'm' },
     { "min-BQ",   required_argument, NULL, 'b' },
     { "min-PQ",   required_argument, NULL, 'p' },
+    { "min-Dist",   required_argument, NULL, 'd' },
     { "hapCut",   no_argument, NULL, OPT_HAPCUT },
     { NULL, 0, NULL, 0 }
 };
@@ -61,6 +64,7 @@ namespace opt
     static int minMQ = 20;
     static int minBQ = 30;
     static int minPQ = 30;
+    static int minDist = 500;
 }
 
 
@@ -231,7 +235,9 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     if (informativeReadPairs[r]->hetSites[i]->phaseBlock == informativeReadPairs[r]->hetSites[j]->phaseBlock) {
                         int phaseI = informativeReadPairs[r]->hetSites[i]->thisHetPhase01;
                         int phaseJ = informativeReadPairs[r]->hetSites[j]->thisHetPhase01;
-                        if (phaseI != phaseJ) {
+                        int iPos = informativeReadPairs[r]->hetSites[i]->pos;
+                        int jPos = informativeReadPairs[r]->hetSites[j]->pos;
+                        if (phaseI != phaseJ && abs(jPos - iPos) > opt::minDist) {
                             switchPairI.push_back(i); switchPairJ.push_back(j);
                             //int iPos = informativeReadPairs[r]->hetSites[i]->pos;
                             //int jPos = informativeReadPairs[r]->hetSites[j]->pos;
@@ -416,6 +422,7 @@ void parseDiscordPairsFromSAMOptions(int argc, char** argv) {
             case 'n': arg >> opt::runName; break;
             case 'b': arg >> opt::minBQ; break;
             case 'm': arg >> opt::minMQ; break;
+            case 'd': arg >> opt::minDist; break;
             case OPT_HAPCUT: opt::hapcutFormat = true; break;
             case 'h':
                 std::cout << DISCORDPAIRS_USAGE_MESSAGE;
