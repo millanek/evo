@@ -339,7 +339,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     coveringReadPairs++;
                     double phaseFraction = (double)distSNPs/(double)phaseSwitches[j]->dist;
                     totalRecombFraction += phaseFraction;
-                    std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
+                    //std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
                 }
             }
             
