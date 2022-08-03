@@ -334,16 +334,16 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         for (int i = 0; i != coveredHetPos.size() - 1; i++) {
             int left = coveredHetPos[i];
             int right = coveredHetPos[i + 1];
-            int distSNPs = (right - left) + 1;
+            //int distSNPs = (right - left) + 1;
             
             int coveringReadPairs = 0;
             
-            double totalRecombFraction = 0;
+            double totalRecombFractionPerBP = 0;
             for (int j = 0; j != phaseSwitches.size(); j++) {
                 if(phaseSwitches[j]->posLeft <= left && phaseSwitches[j]->posRight >= right){
                     coveringReadPairs++;
-                    double phaseFraction = (double)distSNPs/(double)phaseSwitches[j]->dist;
-                    totalRecombFraction += phaseFraction;
+                    double recombFractionPerBP = (double)1.0/(double)phaseSwitches[j]->dist;
+                    totalRecombFractionPerBP += recombFractionPerBP;
                 }
             }
           //  std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
@@ -359,7 +359,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
            // std::cout << "totalConcordantFraction: " << totalConcordantFraction << std::endl;
             
             if (coveringReadPairs > 10) {
-                recombFractions[i+1] = totalRecombFraction/totalConcordantFraction;
+                recombFractions[i+1] = totalRecombFractionPerBP/totalConcordantFraction;
             }
             
             numProcessedHets++;
