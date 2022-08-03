@@ -74,6 +74,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     std::ifstream* samFile = new std::ifstream(opt::samFile.c_str());
     
     std::ofstream* phaseSwitchFile = new std::ofstream("switches" + opt::runName + ".txt");
+    std::ofstream* recombFile = new std::ofstream("recombMap" + opt::runName + ".txt");
     
     std::map<int,PhaseInfo*> posToPhase;
     std::map<string,std::vector<int>> infoPairNameToPos;
@@ -276,13 +277,15 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                 }
                 int iPosDindex = informativeReadPairs[r]->hetSites[concordPairI[maxDindex]]->pos;
                 int jPosDindex = informativeReadPairs[r]->hetSites[concordPairJ[maxDindex]]->pos;
-                totalEffectiveLength = totalEffectiveLength + (jPosDindex - iPosDindex);
                 if (jPosDindex - iPosDindex < 0) {
                     int tmp = iPosDindex; iPosDindex = jPosDindex; jPosDindex = tmp;
                 }
                 
+                int concordantPairDist = jPosDindex - iPosDindex;
+                totalEffectiveLength = totalEffectiveLength + concordantPairDist;
                 thisConcordantCoords.push_back(iPosDindex);
                 thisConcordantCoords.push_back(jPosDindex);
+                thisConcordantCoords.push_back(concordantPairDist);
                 phaseConcordanceCoords.push_back(thisConcordantCoords);
             }
           /*  if (readPairsProcessed % 10000 == 0) {
@@ -313,11 +316,52 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         // TO DO - make a map from the concordant/discordant read-pairs
         std::cout << "5) Making a genetic map: " << std::endl;
-        std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
         std::sort(coveredHetPos.begin(), coveredHetPos.end());
         std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
         coveredHetPos.resize(distance(coveredHetPos.begin(),it));
         std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
+        std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
+        
+        double meanRecombinationRate = (double)numDiscordant/(double)totalEffectiveLength;
+        std::vector<double> recombFractions(coveredHetPos.size()+1, meanRecombinationRate);
+        
+        for (int i = 0; i != coveredHetPos.size() - 1; i++) {
+            int left = coveredHetPos[i];
+            int right = coveredHetPos[i + 1];
+            int distSNPs = (right - left) + 1;
+            
+            int coveringReadPairs = 0;
+            
+            double totalRecombFraction = 0;
+            for (int j = 0; j != phaseSwitches.size(); j++) {
+                if(phaseSwitches[j]->posLeft <= left && phaseSwitches[j]->posLeft >= right){
+                    coveringReadPairs++;
+                    double phaseFraction = (double)distSNPs/(double)phaseSwitches[j]->dist;
+                    totalRecombFraction += phaseFraction;
+                }
+            }
+            
+            double totalConcordantFraction = 0;
+            for (int j = 0; j != phaseConcordanceCoords.size(); j++) {
+                if(phaseConcordanceCoords[j][0] <= left && phaseConcordanceCoords[j][1] >= right){
+                    coveringReadPairs++;
+                    double concordPairFraction = (double)distSNPs/(double)(phaseConcordanceCoords[j][2]);
+                    totalConcordantFraction += concordPairFraction;
+                }
+            }
+            
+            if (coveringReadPairs > 10) {
+                recombFractions[i+1] = totalRecombFraction/totalConcordantFraction;
+            }
+            
+        }
+        
+        *recombFile << "0\t" << coveredHetPos[0] << "\t" << recombFractions[0] << std::endl;
+        for (int i = 1; i != coveredHetPos.size(); i++) {
+            *recombFile << coveredHetPos[i-1] << "\t" << coveredHetPos[i] << "\t" << recombFractions[i] << std::endl;
+        }
+        //int chrSize = 0;
+        //*recombFile << coveredHetPos.back() << "\t" <<  << "\t" << recombFractions[i] << std::endl;
         //print_vector(coveredHetPos, std::cout);
         
         
