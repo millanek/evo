@@ -335,7 +335,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             
             double totalRecombFraction = 0;
             for (int j = 0; j != phaseSwitches.size(); j++) {
-                if(phaseSwitches[j]->posLeft <= left && phaseSwitches[j]->posLeft >= right){
+                if(phaseSwitches[j]->posLeft <= left && phaseSwitches[j]->posRight >= right){
                     coveringReadPairs++;
                     double phaseFraction = (double)distSNPs/(double)phaseSwitches[j]->dist;
                     totalRecombFraction += phaseFraction;
