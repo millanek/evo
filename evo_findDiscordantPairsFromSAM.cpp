@@ -356,9 +356,9 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             }
             
             numProcessedHets++;
-            if (numProcessedHets % 100 == 0) {
-                std::cout << "numProcessedHets: " << numProcessedHets << std::endl;
-                std::cout << "pos: " << left << "(bp)"<< std::endl;
+            if (numProcessedHets % 1000 == 0) {
+                std::cout << "numProcessedHets: " << numProcessedHets << "; ("<< (double)numProcessedHets/coveredHetPos.size() << "%)"<< std::endl;
+                std::cout << "pos: " << left << "bp"<< std::endl;
                 
             }
             
