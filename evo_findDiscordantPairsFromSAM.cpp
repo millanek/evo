@@ -352,8 +352,8 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             for (int j = 0; j != phaseConcordanceCoords.size(); j++) {
                 if(phaseConcordanceCoords[j][0] <= left && phaseConcordanceCoords[j][1] >= right){
                     coveringReadPairs++;
-                    double concordPairFraction = (double)distSNPs/(double)(phaseConcordanceCoords[j][2]);
-                    totalConcordantFraction += concordPairFraction;
+                    //double concordPairFraction = (double)distSNPs/(double)(phaseConcordanceCoords[j][2]);
+                    totalConcordantFraction++;
                 }
             }
             std::cout << "totalConcordantFraction: " << totalConcordantFraction << std::endl;
