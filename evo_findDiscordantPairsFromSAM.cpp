@@ -140,7 +140,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
     
     
     
-    
+    std::cout << std::endl;
     std::cout << "2) Loading read-pairs.. " << std::endl;
     // Now parse the samtools file to find reads that match records from the pairstools file
     // and therefore  can be informative about the phasing and recombination
@@ -154,6 +154,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         informativeReads.push_back(thisRead);
     }
     
+    std::cout << std::endl;
     std::cout << "3) Linking read-pairs and hets: " << std::endl;
     int num0het = 0; int num1het = 0; int num2plusHets = 0;
     int totalUsedLength = 0;
@@ -183,7 +184,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         }
     }
     
-    std::cout << "DONE: " << std::endl;
     std::cout << "Initial Read Pairs.size(): " << informativeReads.size()/2.0 << std::endl;
     std::cout << "num0het: " << num0het << std::endl;
     std::cout << "num1het: " << num1het << std::endl;
@@ -297,7 +297,6 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             } */
         }
         
-        std::cout << "FINAL RESULTS: " << std::endl;
         std::cout << "Effective coverage (bp): " << totalEffectiveLength << std::endl;
         std::cout << "numConcordant: " << numConcordant << std::endl;
         std::cout << "numDiscordant: " << numDiscordant << std::endl;
@@ -314,7 +313,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         
         
         
-        // TO DO - make a map from the concordant/discordant read-pairs
+        std::cout << std::endl;
         std::cout << "5) Making a genetic map: " << std::endl;
         std::sort(coveredHetPos.begin(), coveredHetPos.end());
         std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
