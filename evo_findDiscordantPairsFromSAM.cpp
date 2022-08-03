@@ -339,6 +339,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     coveringReadPairs++;
                     double phaseFraction = (double)distSNPs/(double)phaseSwitches[j]->dist;
                     totalRecombFraction += phaseFraction;
+                    std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
                 }
             }
             
@@ -356,8 +357,8 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             }
             
             numProcessedHets++;
-            if (numProcessedHets % 1000 == 0) {
-                std::cout << "numProcessedHets: " << numProcessedHets << "; ("<< (double)numProcessedHets/coveredHetPos.size() << "%)"<< std::endl;
+            if (numProcessedHets % 10000 == 0) {
+                std::cout << "numProcessedHets: " << numProcessedHets << " ("<< (double)numProcessedHets/coveredHetPos.size() << "%)"<< std::endl;
                 std::cout << "pos: " << left << "bp"<< std::endl;
                 
             }
