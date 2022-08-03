@@ -320,11 +320,12 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
         std::vector<int>::iterator it = std::unique(coveredHetPos.begin(), coveredHetPos.end());
         coveredHetPos.resize(distance(coveredHetPos.begin(),it));
         std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
-        std::cout << "coveredHetPos.size() " << coveredHetPos.size() << std::endl;
         
         double meanRecombinationRate = (double)numDiscordant/(double)totalEffectiveLength;
+        std::cout << "meanRecombinationRate " << meanRecombinationRate << std::endl;
         std::vector<double> recombFractions(coveredHetPos.size()+1, meanRecombinationRate);
         
+        int numProcessedHets = 0;
         for (int i = 0; i != coveredHetPos.size() - 1; i++) {
             int left = coveredHetPos[i];
             int right = coveredHetPos[i + 1];
@@ -352,6 +353,13 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
             
             if (coveringReadPairs > 10) {
                 recombFractions[i+1] = totalRecombFraction/totalConcordantFraction;
+            }
+            
+            numProcessedHets++;
+            if (numProcessedHets % 100 == 0) {
+                std::cout << "numProcessedHets: " << numProcessedHets << std::endl;
+                std::cout << "pos: " << left << "(bp)"<< std::endl;
+                
             }
             
         }
