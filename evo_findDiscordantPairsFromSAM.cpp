@@ -346,7 +346,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     totalRecombFraction += phaseFraction;
                 }
             }
-            std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
+          //  std::cout << "totalRecombFraction: " << totalRecombFraction << std::endl;
             
             double totalConcordantFraction = 0;
             for (int j = 0; j != phaseConcordanceCoords.size(); j++) {
@@ -356,7 +356,7 @@ int DiscordPairsFromSAMMain(int argc, char** argv) {
                     totalConcordantFraction++;
                 }
             }
-            std::cout << "totalConcordantFraction: " << totalConcordantFraction << std::endl;
+           // std::cout << "totalConcordantFraction: " << totalConcordantFraction << std::endl;
             
             if (coveringReadPairs > 10) {
                 recombFractions[i+1] = totalRecombFraction/totalConcordantFraction;
